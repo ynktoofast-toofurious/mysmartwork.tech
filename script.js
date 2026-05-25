@@ -1,34 +1,32 @@
 const AUTH_KEY = "mwangaza_auth";
 
-const openLogin = document.getElementById("openLogin");
-const heroLogin = document.getElementById("heroLogin");
-const dialog = document.getElementById("loginDialog");
-const closeDialog = document.getElementById("closeDialog");
-const loginForm = document.getElementById("loginForm");
+const scriptElement = document.currentScript;
+const baseUrl = scriptElement ? new URL(".", scriptElement.src).href : new URL("./", window.location.href).href;
+const adminUrl = new URL("admin/", baseUrl).href;
 
-const openAuthDialog = () => {
-  if (dialog && typeof dialog.showModal === "function") {
-    dialog.showModal();
-  }
+const isSignInElement = (el) => {
+  if (!el) return false;
+  const text = (el.textContent || "").trim().toLowerCase();
+  return text === "se connecter" || text.includes("se connecter");
 };
 
-openLogin?.addEventListener("click", openAuthDialog);
-heroLogin?.addEventListener("click", openAuthDialog);
+document.addEventListener(
+  "click",
+  (event) => {
+    const target = event.target;
+    if (!(target instanceof Element)) return;
 
-closeDialog?.addEventListener("click", () => {
-  dialog?.close();
-});
+    const action = target.closest("button, a");
+    if (!isSignInElement(action)) return;
 
-loginForm?.addEventListener("submit", (event) => {
-  event.preventDefault();
+    event.preventDefault();
+    event.stopPropagation();
+    if (typeof event.stopImmediatePropagation === "function") {
+      event.stopImmediatePropagation();
+    }
 
-  const email = document.getElementById("email")?.value.trim();
-  const password = document.getElementById("password")?.value.trim();
-
-  if (!email || !password) {
-    return;
-  }
-
-  localStorage.setItem(AUTH_KEY, "true");
-  window.location.href = "./admin/";
-});
+    localStorage.setItem(AUTH_KEY, "true");
+    window.location.assign(adminUrl);
+  },
+  true
+);

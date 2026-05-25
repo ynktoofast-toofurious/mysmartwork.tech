@@ -1,174 +1,98 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="utf-8" />
+    <link href="https://media.base44.com/images/public/69eb8ab182e08aaab36c58a2/ed38f1b1f_logo.png" rel="icon" type="image/svg+xml" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <link href="https://mwangazamail.base44.app/manifest.json" rel="manifest" />
     <title>MwangazaMail</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@500;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="styles.css" />
+    <script crossorigin="" src="https://mwangazamail.base44.app/assets/index-CQrzHCsW.js" type="module"></script>
+    <link crossorigin="" href="https://mwangazamail.base44.app/assets/index-6kXQZik7.css" rel="stylesheet" />
+    <script type="module">
+      if (window.self === window.top) {
+        let lastPath = "";
+        function getPageNameFromPath(path) {
+          const segments = path.split("/").filter(Boolean);
+          return segments[0] || null;
+        }
+        function trackPageView() {
+          const path = window.location.pathname;
+          if (path === lastPath) return;
+          lastPath = path;
+          const pageName = getPageNameFromPath(path) || "home";
+          const appId = "69eb8ab182e08aaab36c58a2";
+          if (!appId) return;
+          fetch(`https://mwangazamail.base44.app/api/app-logs/${appId}/log-user-in-app/${pageName}`, {
+            method: "POST"
+          }).catch(() => {});
+        }
+        const originalPushState = history.pushState.bind(history);
+        history.pushState = function (...args) {
+          originalPushState(...args);
+          trackPageView();
+        };
+        const originalReplaceState = history.replaceState.bind(history);
+        history.replaceState = function (...args) {
+          originalReplaceState(...args);
+          trackPageView();
+        };
+        window.addEventListener("popstate", trackPageView);
+        trackPageView();
+      }
+    </script>
+    <meta content="The secure, anonymous reporting gateway for civic integrity, powering transparent communication between citizens and institutions via encrypted WhatsApp intelli" name="description" />
+    <meta content="MwangazaMail" property="og:title" />
+    <meta content="The secure, anonymous reporting gateway for civic integrity, powering transparent communication between citizens and institutions via encrypted WhatsApp intelli" property="og:description" />
+    <meta content="https://media.base44.com/images/public/69eb8ab182e08aaab36c58a2/ed38f1b1f_logo.png/v1/fill/w_1200,h_630/ed38f1b1f_logo.png" property="og:image" />
+    <meta content="https://mwangazamail.base44.app" property="og:url" />
+    <meta content="website" property="og:type" />
+    <meta content="MwangazaMail" property="og:site_name" />
+    <meta content="MwangazaMail" name="twitter:title" />
+    <meta content="The secure, anonymous reporting gateway for civic integrity, powering transparent communication between citizens and institutions via encrypted WhatsApp intelli" name="twitter:description" />
+    <meta content="https://media.base44.com/images/public/69eb8ab182e08aaab36c58a2/ed38f1b1f_logo.png/v1/fill/w_1200,h_630/ed38f1b1f_logo.png" name="twitter:image" />
+    <meta content="summary_large_image" name="twitter:card" />
+    <meta content="https://mwangazamail.base44.app" name="twitter:url" />
+    <meta content="yes" name="mobile-web-app-capable" />
+    <meta content="black" name="apple-mobile-web-app-status-bar-style" />
+    <meta content="MwangazaMail" name="apple-mobile-web-app-title" />
+    <link href="https://mwangazamail.base44.app" rel="canonical" />
+    <script data-seo-source="builder" type="application/ld+json">
+      {"name": "MwangazaMail", "@context": "https://schema.org", "@type": "WebSite", "url": "https://mwangazamail.kesug.com"}
+    </script>
+    <script data-seo-source="builder" type="application/ld+json">
+      {"name": "MwangazaMail", "logo": "https://media.base44.com/images/public/69eb8ab182e08aaab36c58a2/ed38f1b1f_logo.png", "@context": "https://schema.org", "@type": "Organization", "url": "https://mwangazamail.kesug.com"}
+    </script>
   </head>
   <body>
-    <div class="landing-shell">
-      <header class="site-header">
-        <a class="brand" href="#">
-          <span class="brand-mark"></span>
-          <span class="brand-text">MwangazaMail</span>
-        </a>
-        <nav class="header-nav">
-          <a href="#solution">Solution</a>
-          <a href="#fonctionnalites">Fonctionnalites</a>
-          <a href="#demo">Demo</a>
-          <a href="#tarification">Tarification</a>
-          <a href="#faq">FAQ</a>
+    <div id="root">
+      <div data-seo-source="builder" id="seo-snapshot" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;">
+        <h1>MwangazaMail</h1>
+        <p>The secure, anonymous reporting gateway for civic integrity, powering transparent communication between citizens and institutions via encrypted WhatsApp intelli</p>
+        <nav aria-label="Pages">
+          <h2>Pages</h2>
+          <ul>
+            <li><a href="/dashboard">Dashboard</a></li>
+            <li><a href="/pricing">Pricing</a></li>
+            <li><a href="/rapport-public">Public Report</a></li>
+            <li><a href="/admin/AdminAnalytics">Admin / Admin Analytics</a></li>
+            <li><a href="/admin/AdminDashboard">Admin / Admin Dashboard</a></li>
+            <li><a href="/admin/AdminFeatures">Admin / Admin Features</a></li>
+            <li><a href="/admin/AdminSubscriptions">Admin / Admin Subscriptions</a></li>
+            <li><a href="/admin/AdminUsers">Admin / Admin Users</a></li>
+            <li><a href="/user/UserAbonnement">User / User Abonnement</a></li>
+            <li><a href="/user/UserAnalytics">User / User Analytics</a></li>
+            <li><a href="/user/UserDashboard">User / User Dashboard</a></li>
+            <li><a href="/user/UserEquipe">User / User Equipe</a></li>
+            <li><a href="/user/UserFeatures">User / User Features</a></li>
+            <li><a href="/user/UserParametres">User / User Parametres</a></li>
+            <li><a href="/user/UserRapportsPublics">User / User Rapports Publics</a></li>
+            <li><a href="/user/UserSignalements">User / User Signalements</a></li>
+            <li><a href="/user/UserSubscription">User / User Subscription</a></li>
+            <li><a href="/admin/AdminClientDetail">Admin / Admin Client Detail</a></li>
+          </ul>
         </nav>
-        <div class="header-actions">
-          <button id="openLogin" class="btn btn-outline" type="button">Se connecter</button>
-          <a class="btn btn-solid" href="#contact">Demander une demo</a>
-        </div>
-      </header>
-
-      <main>
-        <section class="hero" id="solution">
-          <div class="hero-copy">
-            <p class="eyebrow">Utilise par +50 institutions en RDC</p>
-            <h1>Signalez la corruption via WhatsApp, en securite</h1>
-            <p class="lead">
-              MwangazaMail permet aux citoyens de signaler anonymement fraudes et abus.
-              Les institutions recoivent des rapports actionnables en temps reel.
-            </p>
-            <div class="hero-actions">
-              <a class="btn btn-solid" href="#contact">Demander une demo gratuite</a>
-              <a class="btn btn-muted" href="#demo">Voir la demo</a>
-            </div>
-            <ul class="security-points">
-              <li>Anonymat total</li>
-              <li>Chiffrement AES-256</li>
-              <li>Via WhatsApp</li>
-              <li>Dashboard temps reel</li>
-            </ul>
-          </div>
-          <div class="hero-panel" id="demo">
-            <p class="panel-url">app.mwangazamail.cd/dashboard</p>
-            <div class="mini-kpis">
-              <article><span>Signalements</span><strong>1,284</strong><em>+12%</em></article>
-              <article><span>Traites</span><strong>1,091</strong><em>+8%</em></article>
-              <article><span>En cours</span><strong>143</strong><em>stable</em></article>
-              <article><span>Taux resolution</span><strong>85%</strong><em>+5pts</em></article>
-            </div>
-            <div class="mini-chart">
-              <span style="height: 32%"></span>
-              <span style="height: 44%"></span>
-              <span style="height: 40%"></span>
-              <span style="height: 54%"></span>
-              <span style="height: 66%"></span>
-              <span style="height: 72%"></span>
-              <span style="height: 86%"></span>
-            </div>
-            <div class="incident-feed">
-              <div><b>Corruption</b><small>Douanes - Matadi</small><span>Nouveau</span></div>
-              <div><b>Surfacturation</b><small>Mairie - Goma</small><span>En cours</span></div>
-              <div><b>Abus autorite</b><small>Police - Kinshasa</small><span>Resolu</span></div>
-            </div>
-          </div>
-        </section>
-
-        <section class="problem">
-          <div class="section-head">
-            <p class="eyebrow">Le probleme</p>
-            <h2>La corruption prospere dans le silence force</h2>
-            <p>
-              Les abus ne sont pas signales faute de canal fiable. MwangazaMail transforme
-              WhatsApp en canal officiel rapide, structure et securise.
-            </p>
-          </div>
-          <div class="problem-grid">
-            <article><strong>78%</strong><span>abus non signales</span></article>
-            <article><strong>3M+</strong><span>citoyens affectes</span></article>
-            <article><strong>0</strong><span>canal securise standard</span></article>
-          </div>
-        </section>
-
-        <section class="features" id="fonctionnalites">
-          <div class="section-head">
-            <p class="eyebrow">Fonctionnalites</p>
-            <h2>Tout ce dont vous avez besoin, rien de superflu</h2>
-          </div>
-          <div class="feature-grid">
-            <article><h3>Bot WhatsApp integre</h3><p>Signalement sans application et sans friction.</p></article>
-            <article><h3>IA de classification</h3><p>Categorie, severite et priorite en quelques secondes.</p></article>
-            <article><h3>Anonymat total</h3><p>Suppression des metadonnees personnelles et chiffrement fort.</p></article>
-            <article><h3>Dashboard analytique</h3><p>Tendances, cartes de risques et KPIs en temps reel.</p></article>
-            <article><h3>Alertes automatiques</h3><p>Les gestionnaires sont notifies en cas de dossier critique.</p></article>
-            <article><h3>Export institutionnel</h3><p>Exports PDF/CSV pour supervision et audit.</p></article>
-          </div>
-        </section>
-
-        <section class="pricing" id="tarification">
-          <div class="section-head">
-            <p class="eyebrow">Tarification</p>
-            <h2>Plans simples pour institutions de toutes tailles</h2>
-          </div>
-          <div class="pricing-grid">
-            <article>
-              <h3>Pilote</h3>
-              <p class="price">$499/mois</p>
-              <ul><li>1 institution</li><li>Support standard</li><li>Rapports de base</li></ul>
-            </article>
-            <article class="featured">
-              <h3>Standard</h3>
-              <p class="price">$1,500/mois</p>
-              <ul><li>3 institutions</li><li>Automatisation IA complete</li><li>Dashboard avance</li></ul>
-            </article>
-            <article>
-              <h3>Premium</h3>
-              <p class="price">$7,500/mois</p>
-              <ul><li>Illimite</li><li>SLA dedie</li><li>Integrations sur mesure</li></ul>
-            </article>
-          </div>
-        </section>
-
-        <section class="faq" id="faq">
-          <div class="section-head">
-            <p class="eyebrow">FAQ</p>
-            <h2>Questions frequentes</h2>
-          </div>
-          <div class="faq-grid">
-            <details open><summary>Combien de temps pour le deploiement ?</summary><p>Moins de 7 jours pour une institution.</p></details>
-            <details><summary>Faut-il une application mobile ?</summary><p>Non, tout se passe via WhatsApp.</p></details>
-            <details><summary>Les donnees sont-elles securisees ?</summary><p>Oui, chiffrement et controle d'acces strict.</p></details>
-          </div>
-        </section>
-
-        <section class="cta" id="contact">
-          <h2>Pret a lancer votre canal de signalement securise ?</h2>
-          <div class="cta-actions">
-            <button class="btn btn-solid" type="button" id="heroLogin">Se connecter et acceder au dashboard</button>
-            <a class="btn btn-outline" href="mailto:contact@mwangazamail.cd">Parler a l'equipe</a>
-          </div>
-        </section>
-      </main>
+      </div>
     </div>
-
-    <dialog id="loginDialog" class="login-dialog">
-      <form id="loginForm" method="dialog">
-        <h3>Connexion espace admin</h3>
-        <p>Utilisez n'importe quelle adresse mail et mot de passe pour simuler la connexion.</p>
-        <label>Email</label>
-        <input type="email" id="email" required />
-        <label>Mot de passe</label>
-        <input type="password" id="password" required />
-        <div class="dialog-actions">
-          <button type="button" class="btn btn-muted" id="closeDialog">Annuler</button>
-          <button type="submit" class="btn btn-solid">Se connecter</button>
-        </div>
-      </form>
-    </dialog>
-
-    <script src="script.js"></script>
+    <script src="./script.js" defer></script>
   </body>
 </html>
