@@ -247,8 +247,10 @@ const faqItems = [
 const footerColumns = {
   PRODUIT: ["Solution", "Fonctionnalites", "Demo", "Tarification"],
   RESSOURCES: ["Documentation", "Blog", "Cas d'usage", "API"],
-  LEGAL: ["Confidentialite", "CGU", "Securite", "RGPD"]
+  "LÉGAL": ["Confidentialite", "CGU", "Securite", "RGPD"]
 };
+
+const footerSocials = ["𝕏", "in", "✉"];
 
 function LoginPortal({ isOpen, onClose, onSubmit }) {
   const [email, setEmail] = useState("admin@mwangaza.cd");
@@ -640,7 +642,7 @@ function App() {
             <div className="why-copy">
               <p className="eyebrow">Pourquoi MwangazaMail</p>
               <h2>
-                Concu pour l'Afrique.
+                Conçu pour l'Afrique.
                 <span>Performant pour le monde.</span>
               </h2>
               <p>
@@ -674,10 +676,10 @@ function App() {
 
         <section className="impact-banner">
           <p className="impact-eyebrow">Pret a passer a l'action ?</p>
-          <h2>Votre institution merite un outil a la hauteur</h2>
+          <h2>Votre institution mérite un outil a la hauteur</h2>
           <p>Plus de 50 institutions font confiance a MwangazaMail. Rejoignez-les avec une demo gratuite personnalisee.</p>
           <div className="impact-actions">
-            <a className="btn btn-light btn-large" href="#contact">Reserver ma demo gratuite</a>
+            <a className="btn btn-light btn-large" href="#contact">Réserver ma démo gratuite</a>
             <a className="btn btn-ghost-light btn-large" href="#tarification">Voir les tarifs →</a>
           </div>
           <small>✓ Gratuit · ✓ Sans engagement · ✓ Reponse sous 24h</small>
@@ -737,7 +739,7 @@ function App() {
             <p className="eyebrow">Commencer maintenant</p>
             <h2>
               Transformez votre institution
-              <span>des aujourd'hui</span>
+              <span>dès aujourd'hui</span>
             </h2>
             <p>Demo gratuite · Sans engagement · Reponse sous 24h</p>
           </div>
@@ -796,6 +798,9 @@ function App() {
             </a>
             <p>La premiere plateforme SaaS de signalement anonyme via WhatsApp, conçue pour les institutions africaines.</p>
             <span className="footer-status">• Systeme operationnel — RDC 2026</span>
+            <div className="footer-socials">
+              ${footerSocials.map((social) => html`<a href="#" key=${social} aria-label=${`social-${social}`}>${social}</a>`)}
+            </div>
           </div>
           ${Object.entries(footerColumns).map(([title, links]) => html`
             <div className="footer-col" key=${title}>
@@ -808,7 +813,7 @@ function App() {
         </div>
         <div className="footer-bottom">
           <p>© 2026 MwangazaMail. Tous droits reserves.</p>
-          <p>✉ contact@mwangazamail.cd · Propulse pour la transparence en RDC</p>
+          <p>✉ contact@mwangazamail.cd · Propulsé par David B. — Pour la transparence en RDC</p>
         </div>
       </footer>
 
