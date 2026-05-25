@@ -129,8 +129,7 @@ const apiCandidates = (() => {
   const candidates = [
     ...normalizedQueryBases,
     savedApiBase,
-    ...savedApiBases,
-    "https://api.mysmartwork.tech/api/admin"
+    ...savedApiBases
   ];
 
   if (window.location.hostname === "localhost" && window.location.port === "5500") {
