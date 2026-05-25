@@ -10,7 +10,7 @@
       href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css?v=20260525-2" />
+    <link rel="stylesheet" href="styles.css?v=20260525-3" />
   </head>
   <body>
     <script>
@@ -46,7 +46,7 @@
           </div>
           <div class="topbar-right">
             <button class="ghost-btn" type="button">Analyse IA</button>
-            <button class="primary-btn" type="button">Gerer les utilisateurs →</button>
+            <button class="primary-btn" id="openUserDrawerBtn" type="button">Gerer les utilisateurs →</button>
           </div>
         </header>
 
@@ -106,7 +106,10 @@
           </section>
           <section class="panel-card table-card">
             <h2>Liste des utilisateurs</h2>
-            <div class="table-wrap"><table><thead><tr><th>Nom</th><th>Email</th><th>Role</th><th>Ville</th><th>Statut</th><th>Derniere activite</th></tr></thead><tbody id="usersRows"></tbody></table></div>
+            <div class="users-toolbar">
+              <button id="addUserBtn" class="primary-btn" type="button">Ajouter utilisateur</button>
+            </div>
+            <div class="table-wrap"><table><thead><tr><th>Nom</th><th>Email</th><th>Role</th><th>Ville</th><th>Statut</th><th>Derniere activite</th><th>Action</th></tr></thead><tbody id="usersRows"></tbody></table></div>
           </section>
         </section>
 
@@ -175,6 +178,50 @@
       </main>
     </div>
 
-    <script src="script.js?v=20260525-2"></script>
+    <div class="drawer-backdrop" id="userDrawerBackdrop" hidden></div>
+    <aside class="user-drawer" id="userDrawer" aria-hidden="true">
+      <div class="drawer-header">
+        <h3 id="userDrawerTitle">Ajouter un utilisateur</h3>
+        <button id="closeUserDrawerBtn" class="icon-btn" type="button" aria-label="Fermer">✕</button>
+      </div>
+      <form id="userForm" class="drawer-form">
+        <label>
+          Nom complet
+          <input id="userFormName" name="fullName" required maxlength="200" />
+        </label>
+        <label>
+          Email
+          <input id="userFormEmail" name="email" type="email" required maxlength="200" />
+        </label>
+        <label>
+          Role
+          <select id="userFormRole" name="role" required>
+            <option value="admin">admin</option>
+            <option value="agent">agent</option>
+            <option value="viewer">viewer</option>
+          </select>
+        </label>
+        <label>
+          Ville
+          <input id="userFormCity" name="city" required maxlength="80" />
+        </label>
+        <div class="drawer-actions">
+          <button id="cancelUserFormBtn" class="ghost-btn" type="button">Annuler</button>
+          <button id="submitUserFormBtn" class="primary-btn" type="submit">Sauvegarder</button>
+        </div>
+      </form>
+    </aside>
+
+    <div class="confirm-backdrop" id="confirmBackdrop" hidden></div>
+    <section class="confirm-modal" id="confirmModal" aria-hidden="true">
+      <h3>Confirmer le changement</h3>
+      <p id="confirmMessage">Voulez-vous enregistrer cette modification utilisateur ?</p>
+      <div class="confirm-actions">
+        <button id="confirmCancelBtn" class="ghost-btn" type="button">Annuler</button>
+        <button id="confirmOkBtn" class="primary-btn" type="button">Confirmer</button>
+      </div>
+    </section>
+
+    <script src="script.js?v=20260525-3"></script>
   </body>
 </html>

@@ -75,7 +75,10 @@ const state = {
   analytics: fallbackData.analytics,
   seo: [],
   audit: [],
-  source: "api"
+  source: "api",
+  userDraft: null,
+  userEditKey: null,
+  confirmAction: null
 };
 
 const apiCandidates = (() => {
@@ -147,11 +150,101 @@ function renderUsers(rows) {
         <td>${row.city || "-"}</td>
         <td>${row.status || "Actif"}</td>
         <td>${row.last_activity || "-"}</td>
+        <td><button class="edit-user" type="button" data-user-key="${row.user_key}">Modifier</button></td>
       </tr>
     `
       )
       .join("")
   );
+}
+
+function openUserDrawer(mode, row = null) {
+  const drawer = document.getElementById("userDrawer");
+  const backdrop = document.getElementById("userDrawerBackdrop");
+  const title = document.getElementById("userDrawerTitle");
+  const submit = document.getElementById("submitUserFormBtn");
+  const form = document.getElementById("userForm");
+
+  if (!drawer || !backdrop || !title || !submit || !form) return;
+
+  if (mode === "edit" && row) {
+    state.userEditKey = row.user_key;
+    title.textContent = "Mettre a jour utilisateur";
+    submit.textContent = "Mettre a jour";
+    form.fullName.value = row.full_name || "";
+    form.email.value = row.email || "";
+    form.role.value = row.role || "viewer";
+    form.city.value = row.city || "";
+    form.dataset.originalEmail = row.email || "";
+  } else {
+    state.userEditKey = null;
+    title.textContent = "Ajouter un utilisateur";
+    submit.textContent = "Sauvegarder";
+    form.reset();
+    form.role.value = "viewer";
+    form.dataset.originalEmail = "";
+  }
+
+  backdrop.hidden = false;
+  drawer.classList.add("is-open");
+  drawer.setAttribute("aria-hidden", "false");
+}
+
+function closeUserDrawer() {
+  const drawer = document.getElementById("userDrawer");
+  const backdrop = document.getElementById("userDrawerBackdrop");
+  if (!drawer || !backdrop) return;
+  backdrop.hidden = true;
+  drawer.classList.remove("is-open");
+  drawer.setAttribute("aria-hidden", "true");
+  state.userEditKey = null;
+}
+
+function openConfirmModal(message, action) {
+  const modal = document.getElementById("confirmModal");
+  const backdrop = document.getElementById("confirmBackdrop");
+  const text = document.getElementById("confirmMessage");
+  if (!modal || !backdrop || !text) return;
+  text.textContent = message;
+  state.confirmAction = action;
+  backdrop.hidden = false;
+  modal.classList.add("is-open");
+  modal.setAttribute("aria-hidden", "false");
+}
+
+function closeConfirmModal() {
+  const modal = document.getElementById("confirmModal");
+  const backdrop = document.getElementById("confirmBackdrop");
+  if (!modal || !backdrop) return;
+  backdrop.hidden = true;
+  modal.classList.remove("is-open");
+  modal.setAttribute("aria-hidden", "true");
+  state.confirmAction = null;
+}
+
+async function saveUserDraft() {
+  if (!state.userDraft) return;
+  const payload = state.userDraft;
+  const userKey = state.userEditKey;
+  try {
+    await fetchJson(userKey ? `/users/${userKey}` : "/users", {
+      method: userKey ? "PUT" : "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-user-email": "admin@mwangaza.cd"
+      },
+      body: JSON.stringify(payload)
+    });
+    closeConfirmModal();
+    closeUserDrawer();
+    await loadUsers();
+    await loadSeoTab();
+  } catch (_error) {
+    closeConfirmModal();
+    alert("Sauvegarde utilisateur impossible sans API active.");
+  } finally {
+    state.userDraft = null;
+  }
 }
 
 function renderSubscriptions(rows) {
@@ -435,6 +528,53 @@ function registerEvents() {
     const button = event.target.closest(".save-revision");
     if (!button) return;
     saveIncidentRevision(button.dataset.key);
+  });
+
+  document.getElementById("addUserBtn")?.addEventListener("click", () => openUserDrawer("add"));
+  document.getElementById("openUserDrawerBtn")?.addEventListener("click", () => {
+    switchTab("utilisateurs");
+    openUserDrawer("add");
+  });
+
+  document.getElementById("usersRows")?.addEventListener("click", (event) => {
+    const button = event.target.closest(".edit-user");
+    if (!button) return;
+    const row = state.users.find((item) => String(item.user_key) === String(button.dataset.userKey));
+    if (!row) return;
+    openUserDrawer("edit", row);
+  });
+
+  document.getElementById("closeUserDrawerBtn")?.addEventListener("click", closeUserDrawer);
+  document.getElementById("cancelUserFormBtn")?.addEventListener("click", closeUserDrawer);
+  document.getElementById("userDrawerBackdrop")?.addEventListener("click", closeUserDrawer);
+
+  document.getElementById("userForm")?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const payload = {
+      fullName: form.fullName.value.trim(),
+      email: form.email.value.trim(),
+      role: form.role.value,
+      city: form.city.value.trim(),
+      originalEmail: form.dataset.originalEmail || ""
+    };
+    if (!payload.fullName || !payload.email || !payload.role || !payload.city) {
+      alert("Tous les champs utilisateur sont obligatoires.");
+      return;
+    }
+    state.userDraft = payload;
+    openConfirmModal(
+      state.userEditKey ? "Confirmer la mise a jour de cet utilisateur ?" : "Confirmer la creation de cet utilisateur ?",
+      saveUserDraft
+    );
+  });
+
+  document.getElementById("confirmCancelBtn")?.addEventListener("click", closeConfirmModal);
+  document.getElementById("confirmBackdrop")?.addEventListener("click", closeConfirmModal);
+  document.getElementById("confirmOkBtn")?.addEventListener("click", async () => {
+    if (typeof state.confirmAction === "function") {
+      await state.confirmAction();
+    }
   });
 }
 

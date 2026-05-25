@@ -1,12 +1,14 @@
 import { Router } from "express";
 import {
+  createUser,
   getAnalyticsSummary,
   getIncidents,
   getSeoEvents,
   getSubscriptions,
   getUsers,
   logAccessEvent,
-  updateIncident
+  updateIncident,
+  updateUser
 } from "../services/adminService.js";
 import { listAudit } from "../services/auditService.js";
 
@@ -36,6 +38,27 @@ router.put("/incidents/:incidentKey", async (req, res, next) => {
 router.get("/users", async (req, res, next) => {
   try {
     res.json(await getUsers(req.query));
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/users", async (req, res, next) => {
+  try {
+    const user = await createUser(req.body, req.header("x-user-email") || "admin@mwangaza.cd");
+    res.status(201).json(user);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.put("/users/:userKey", async (req, res, next) => {
+  try {
+    const user = await updateUser(req.params.userKey, req.body, req.header("x-user-email") || "admin@mwangaza.cd");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.json(user);
   } catch (error) {
     next(error);
   }

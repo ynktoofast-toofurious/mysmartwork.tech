@@ -132,6 +132,111 @@ export async function getUsers(filters = {}) {
   return result.rows;
 }
 
+async function ensureLocationKey(city) {
+  const existing = await query("select location_key from dim_location where city = $1", [city]);
+  if (existing.rowCount) return existing.rows[0].location_key;
+  await query("insert into dim_location (city) values ($1)", [city]);
+  const created = await query("select location_key from dim_location where city = $1", [city]);
+  return created.rows[0].location_key;
+}
+
+async function getUserByKey(userKey) {
+  const result = await query(
+    `select u.user_key, u.full_name, u.email, u.role_name as role, l.city
+     from dim_user u
+     left join dim_location l on u.location_key = l.location_key
+     where u.user_key = $1`,
+    [userKey]
+  );
+  return result.rows[0] || null;
+}
+
+export async function createUser(payload, changedBy) {
+  const fullName = payload.fullName?.trim();
+  const email = payload.email?.trim().toLowerCase();
+  const role = payload.role?.trim();
+  const city = payload.city?.trim();
+  if (!fullName || !email || !role || !city) {
+    throw new Error("Missing required user fields");
+  }
+
+  const existing = await query("select user_key from dim_user where email = $1", [email]);
+  if (existing.rowCount) {
+    throw new Error("User email already exists");
+  }
+
+  const locationKey = await ensureLocationKey(city);
+  await query(
+    `insert into dim_user (full_name, email, role_name, location_key)
+     values ($1, $2, $3, $4)`,
+    [fullName, email, role, locationKey]
+  );
+
+  const created = await query("select user_key from dim_user where email = $1", [email]);
+  const userKey = created.rows[0].user_key;
+  await writeAudit({
+    tableName: "dim_user",
+    recordId: userKey,
+    actionType: "create",
+    changedBy,
+    oldValue: "",
+    newValue: JSON.stringify({ fullName, email, role, city })
+  });
+
+  return getUserByKey(userKey);
+}
+
+export async function updateUser(userKey, payload, changedBy) {
+  const lookupKey = Number(userKey);
+  const originalEmail = String(payload.originalEmail || payload.email || "").trim().toLowerCase();
+  let current = null;
+
+  if (originalEmail) {
+    const byEmail = await getUsers({ q: originalEmail, limit: 500 });
+    current = byEmail.find((row) => String(row.email).toLowerCase() === originalEmail) || null;
+  }
+
+  if (!current && Number.isFinite(lookupKey)) {
+    const allUsers = await getUsers({ limit: 500 });
+    current = allUsers.find((row) => Number(row.user_key) === lookupKey) || null;
+  }
+
+  if (!current) {
+    return null;
+  }
+
+  const nextFullName = payload.fullName?.trim() || current.full_name;
+  const nextEmail = payload.email?.trim().toLowerCase() || current.email;
+  const nextRole = payload.role?.trim() || current.role;
+  const nextCity = payload.city?.trim() || current.city;
+
+  if (nextEmail !== current.email) {
+    const emailExists = await query("select user_key from dim_user where email = $1 and user_key <> $2", [nextEmail, Number(current.user_key)]);
+    if (emailExists.rowCount) {
+      throw new Error("User email already exists");
+    }
+  }
+
+  const locationKey = await ensureLocationKey(nextCity);
+  await query(
+    `update dim_user
+     set full_name = $1, email = $2, role_name = $3, location_key = $4
+     where user_key = $5`,
+    [nextFullName, nextEmail, nextRole, locationKey, Number(current.user_key)]
+  );
+
+  await writeAudit({
+    tableName: "dim_user",
+    recordId: current.user_key,
+    actionType: "update",
+    changedBy,
+    oldValue: JSON.stringify({ fullName: current.full_name, email: current.email, role: current.role, city: current.city }),
+    newValue: JSON.stringify({ fullName: nextFullName, email: nextEmail, role: nextRole, city: nextCity })
+  });
+
+  return getUserByKey(current.user_key);
+}
+
 export async function getSubscriptions(filters = {}) {
   const params = [];
   const where = [];
