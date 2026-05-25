@@ -4,6 +4,7 @@ import morgan from "morgan";
 import { config } from "./config.js";
 import { query } from "./db.js";
 import adminRoutes from "./routes/adminRoutes.js";
+import whatsappRoutes from "./routes/whatsappRoutes.js";
 
 const app = express();
 
@@ -21,6 +22,7 @@ app.get("/health", async (_req, res) => {
 });
 
 app.use("/api/admin", adminRoutes);
+app.use("/api/whatsapp", whatsappRoutes);
 
 app.use((error, _req, res, _next) => {
   console.error(error);

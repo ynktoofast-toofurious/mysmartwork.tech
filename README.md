@@ -110,3 +110,36 @@ docker compose up --build
 
 Admin access remains local-storage based (`mwangaza_auth`) for lightweight demo use.
 For production, replace with server-side auth and signed session/JWT controls.
+
+## 10) WhatsApp Claim Intake (Webhook + OpenAI + Redshift)
+
+The API now supports WhatsApp Business incoming chat intake:
+
+- Webhook verification endpoint: `GET /api/whatsapp/webhook`
+- Webhook receive endpoint: `POST /api/whatsapp/webhook`
+
+Processing flow:
+
+1. Receive incoming WhatsApp text message
+2. Extract structured claim fields using OpenAI
+3. Generate a unique reference number (`WM-YYYYMMDD-XXXXXX`)
+4. Save claim into Redshift `fact_incident`
+5. Log governance records in `audit_trail`
+6. Reply to WhatsApp with the generated reference number
+
+Required environment variables in `api/.env`:
+
+- `PUBLIC_BASE_URL` (public API base URL, e.g. `https://api.yourdomain.com`)
+- `WHATSAPP_VERIFY_TOKEN`
+- `WHATSAPP_ACCESS_TOKEN`
+- `WHATSAPP_PHONE_NUMBER_ID`
+- `WHATSAPP_GRAPH_VERSION` (default `v20.0`)
+- `OPENAI_API_KEY`
+- `OPENAI_MODEL` (default `gpt-4o-mini`)
+
+Meta webhook setup values:
+
+- Callback URL: `${PUBLIC_BASE_URL}/api/whatsapp/webhook`
+- Verify Token: `${WHATSAPP_VERIFY_TOKEN}`
+
+When Meta sends the verification challenge, API responds with the challenge only when token matches.
