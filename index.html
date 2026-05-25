@@ -6,6 +6,20 @@
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <link href="https://mwangazamail.base44.app/manifest.json" rel="manifest" />
     <title>MwangazaMail</title>
+    <script>
+      (function () {
+        var repoBase = "/joel-1-mwangaza-dashboard";
+        var isGithubProjectSite =
+          window.location.hostname.endsWith("github.io") &&
+          window.location.pathname.indexOf(repoBase) === 0;
+
+        if (!isGithubProjectSite) return;
+
+        var rewrittenPath = window.location.pathname.slice(repoBase.length) || "/";
+        var rewrittenUrl = rewrittenPath + window.location.search + window.location.hash;
+        window.history.replaceState({}, "", rewrittenUrl);
+      })();
+    </script>
     <script crossorigin="" src="https://mwangazamail.base44.app/assets/index-CQrzHCsW.js" type="module"></script>
     <link crossorigin="" href="https://mwangazamail.base44.app/assets/index-6kXQZik7.css" rel="stylesheet" />
     <script type="module">
