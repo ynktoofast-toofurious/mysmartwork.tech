@@ -69,6 +69,11 @@ const severityOptions = ["faible", "moyen", "eleve", "critique"];
 const statusOptions = ["nouveau", "en_cours", "resolu"];
 const STRICT_LIVE_MODE = window.location.hostname !== "localhost";
 const CACHE_KEY = "mwangaza_admin_live_cache_v1";
+const API_BASE_KEY = "mwangaza_api_base";
+const API_BASES_KEY = "mwangaza_api_bases";
+const API_TIMEOUT_MS = 12000;
+const API_HEALTH_TIMEOUT_MS = 5000;
+const API_GET_RETRIES = 2;
 
 const cachedSnapshot = (() => {
   try {
@@ -93,25 +98,108 @@ const state = {
 
 const apiCandidates = (() => {
   const params = new URLSearchParams(window.location.search);
-  const queryApiBase = params.get("apiBase") || "";
-  if (queryApiBase) {
+  const queryApiBase = (params.get("apiBase") || "").trim();
+  const normalizedQueryBases = queryApiBase
+    .split(",")
+    .map((item) => item.trim().replace(/\/$/, ""))
+    .filter(Boolean);
+
+  let savedApiBase = "";
+  let savedApiBases = [];
+  try {
+    savedApiBase = (localStorage.getItem(API_BASE_KEY) || "").trim().replace(/\/$/, "");
+    const parsed = JSON.parse(localStorage.getItem(API_BASES_KEY) || "[]");
+    if (Array.isArray(parsed)) {
+      savedApiBases = parsed.map((item) => String(item || "").trim().replace(/\/$/, "")).filter(Boolean);
+    }
+  } catch (_error) {
+    savedApiBase = "";
+    savedApiBases = [];
+  }
+
+  if (normalizedQueryBases.length) {
     try {
-      localStorage.setItem("mwangaza_api_base", queryApiBase);
+      localStorage.setItem(API_BASE_KEY, normalizedQueryBases[0]);
+      localStorage.setItem(API_BASES_KEY, JSON.stringify(normalizedQueryBases));
     } catch (_error) {
       // Ignore localStorage unavailability.
     }
   }
 
-  const savedApiBase = localStorage.getItem("mwangaza_api_base") || "";
-  if (savedApiBase) {
-    return [savedApiBase.replace(/\/$/, "")];
-  }
+  const candidates = [
+    ...normalizedQueryBases,
+    savedApiBase,
+    ...savedApiBases,
+    "https://api.mysmartwork.tech/api/admin"
+  ];
 
   if (window.location.hostname === "localhost" && window.location.port === "5500") {
-    return ["http://localhost:4000/api/admin"];
+    candidates.push("http://localhost:4000/api/admin");
+  } else {
+    candidates.push("/api/admin");
   }
-  return ["/api/admin"];
+
+  return [...new Set(candidates.filter(Boolean).map((item) => item.replace(/\/$/, "")))];
 })();
+
+let activeApiBase = apiCandidates[0] || "";
+
+function rememberApiBase(base) {
+  if (!base) return;
+  activeApiBase = base;
+  try {
+    localStorage.setItem(API_BASE_KEY, base);
+    const merged = [...new Set([base, ...apiCandidates])];
+    localStorage.setItem(API_BASES_KEY, JSON.stringify(merged.slice(0, 8)));
+  } catch (_error) {
+    // Ignore localStorage unavailability.
+  }
+}
+
+function getCandidateBases() {
+  const ordered = [activeApiBase, ...apiCandidates].filter(Boolean);
+  return [...new Set(ordered)];
+}
+
+function healthUrlForBase(base) {
+  if (!base) return "/health";
+  if (base.endsWith("/api/admin")) {
+    return `${base.slice(0, -"/api/admin".length)}/health`;
+  }
+  return `${base}/health`;
+}
+
+async function fetchWithTimeout(url, options, timeoutMs) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function probeApiBase(base) {
+  try {
+    const response = await fetchWithTimeout(healthUrlForBase(base), { method: "GET" }, API_HEALTH_TIMEOUT_MS);
+    return response.ok;
+  } catch (_error) {
+    return false;
+  }
+}
+
+async function resolveApiBase() {
+  const candidates = getCandidateBases();
+  for (const base of candidates) {
+    const healthy = await probeApiBase(base);
+    if (healthy) {
+      rememberApiBase(base);
+      updateDataStatus("live", "Redshift LIVE");
+      return base;
+    }
+  }
+  return activeApiBase || candidates[0] || "";
+}
 
 function updateDataStatus(kind, text) {
   const badge = document.getElementById("dataStatus");
@@ -141,20 +229,56 @@ function persistCache() {
 }
 
 async function fetchJson(path, options) {
-  for (const base of apiCandidates) {
+  const request = options || {};
+  const method = String(request.method || "GET").toUpperCase();
+  const retries = method === "GET" ? API_GET_RETRIES : 0;
+  const bases = getCandidateBases();
+  let lastError = new Error("API unavailable");
+
+  for (const base of bases) {
     try {
-      const response = await fetch(`${base}${path}`, options);
+      for (let attempt = 0; attempt <= retries; attempt += 1) {
+        const response = await fetchWithTimeout(`${base}${path}`, request, API_TIMEOUT_MS);
+        if (response.ok) {
+          state.source = "api";
+          rememberApiBase(base);
+          updateDataStatus("live", "Redshift LIVE");
+          return await response.json();
+        }
+
+        if (response.status >= 400 && response.status < 500 && response.status !== 408 && response.status !== 429) {
+          const payload = await response.json().catch(() => ({}));
+          const message = payload?.message || `HTTP ${response.status}`;
+          throw new Error(message);
+        }
+
+        if (attempt === retries) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+      }
+    } catch (error) {
+      lastError = error;
+      // Try next endpoint candidate.
+    }
+  }
+
+  const recoveredBase = await resolveApiBase();
+  if (recoveredBase && !bases.includes(recoveredBase)) {
+    try {
+      const response = await fetchWithTimeout(`${recoveredBase}${path}`, request, API_TIMEOUT_MS);
       if (response.ok) {
         state.source = "api";
+        rememberApiBase(recoveredBase);
         updateDataStatus("live", "Redshift LIVE");
         return await response.json();
       }
     } catch (_error) {
-      // Try next endpoint candidate.
+      // Keep offline/cache state.
     }
   }
+
   updateDataStatus(state.users.length || state.incidents.length ? "cache" : "offline", state.users.length || state.incidents.length ? "Cache locale" : "API hors ligne");
-  throw new Error("API unavailable");
+  throw lastError;
 }
 
 function fillRows(id, html) {
@@ -680,6 +804,7 @@ async function bootstrap() {
   registerEvents();
   renderFeatures();
   updateDataStatus("offline", "Connexion...");
+  await resolveApiBase();
   await Promise.all([loadIncidents(), loadUsers(), loadSubscriptions(), loadAnalytics()]);
   await logPageAccess("/admin/dashboard");
 }
