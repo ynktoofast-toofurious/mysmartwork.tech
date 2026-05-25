@@ -156,9 +156,24 @@ const demoTabs = {
       ["< 18h", "Temps de reponse moyen"]
     ],
     quotes: [
-      "En 3 mois d'utilisation, nous avons recu 4x plus de signalements exploitables qu'avec notre ancienne boite a suggestions.",
-      "La facilite d'utilisation est remarquable. Nos agents de terrain signalent maintenant via WhatsApp sans formation.",
-      "Ce que j'apprecie le plus : la protection totale des lanceurs d'alerte. C'est un changement culturel reel."
+      {
+        text: "En 3 mois d'utilisation, nous avons recu 4x plus de signalements exploitables qu'avec notre ancienne boite a suggestions. Le dashboard nous permet enfin d'agir sur des donnees, pas des rumeurs.",
+        initials: "AM",
+        name: "Dr. Alphonse Mbuyi",
+        role: "Directeur General, Ministere des Finances"
+      },
+      {
+        text: "La facilite d'utilisation est remarquable. Nos agents de terrain signalent maintenant via WhatsApp sans formation. L'IA fait le reste. Notre taux de resolution est passe de 40% a 87%.",
+        initials: "MN",
+        name: "Marie-Claire Ntumba",
+        role: "Responsable Conformite, OGEFREM"
+      },
+      {
+        text: "Ce que j'apprecie le plus : la protection totale des lanceurs d'alerte. Nos beneficiaires communautaires osent enfin parler. C'est un changement culturel reel que MwangazaMail a rendu possible.",
+        initials: "KL",
+        name: "Pastor Kizito Lukusa",
+        role: "Coordinateur, ONG Transparence Congo"
+      }
     ]
   }
 };
@@ -592,11 +607,18 @@ function App() {
                 </div>
                 <div className="quote-grid">
                   ${demoTabs.reports.quotes.map(
-                    (quote, index) => html`
-                      <article className="quote-card" key=${index}>
+                    (quote) => html`
+                      <article className="quote-card" key=${quote.name}>
                         <div className="quote-mark">❞</div>
                         <div className="quote-stars">★★★★★</div>
-                        <p>${quote}</p>
+                        <p>${quote.text}</p>
+                        <footer className="quote-author">
+                          <span>${quote.initials}</span>
+                          <div>
+                            <b>${quote.name}</b>
+                            <small>${quote.role}</small>
+                          </div>
+                        </footer>
                       </article>
                     `
                   )}
@@ -626,11 +648,18 @@ function App() {
           </div>
           <div className="quote-grid quote-grid-large">
             ${demoTabs.reports.quotes.map(
-              (quote, index) => html`
-                <article className="quote-card" key=${index}>
+              (quote) => html`
+                <article className="quote-card" key=${quote.name}>
                   <div className="quote-mark">❞</div>
                   <div className="quote-stars">★★★★★</div>
-                  <p>${quote}</p>
+                  <p>${quote.text}</p>
+                  <footer className="quote-author">
+                    <span>${quote.initials}</span>
+                    <div>
+                      <b>${quote.name}</b>
+                      <small>${quote.role}</small>
+                    </div>
+                  </footer>
                 </article>
               `
             )}
