@@ -96,12 +96,6 @@ a {
   font-weight: 700;
 }
 
-.brand-text::after {
-  content: "Mail";
-  color: var(--violet);
-  margin-left: 1px;
-}
-
 .header-nav {
   display: flex;
   gap: 18px;
@@ -949,6 +943,8 @@ details p {
   width: min(520px, 100%);
   position: relative;
   padding: 28px;
+  max-height: calc(100vh - 40px);
+  overflow: auto;
   box-shadow: 0 30px 60px rgba(14, 18, 38, 0.32);
 }
 
@@ -1002,9 +998,15 @@ details p {
 .portal-footer {
   margin-top: 12px;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  align-items: flex-start;
+  flex-direction: column;
+  justify-content: flex-start;
   gap: 16px;
+}
+
+.portal-footer .btn {
+  width: 100%;
+  text-align: center;
 }
 
 .portal-footer span {
@@ -1115,131 +1117,5 @@ details p {
   .demo-copy,
   .portal-card {
     padding: 18px;
-  }
-}
-
-.login-form label {
-  margin-top: 4px;
-  color: #4f5775;
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.login-form input {
-  border: 1px solid #dbe0f0;
-  border-radius: 10px;
-  padding: 10px;
-  font: inherit;
-}
-
-.login-actions {
-  margin-top: 10px;
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-}
-
-.login-dialog {
-  width: min(460px, 96vw);
-  border: 1px solid #dce1f2;
-  border-radius: 16px;
-  padding: 0;
-}
-
-.login-dialog::backdrop {
-  background: #11142ec4;
-}
-
-#loginForm {
-  padding: 18px;
-  display: grid;
-  gap: 8px;
-}
-
-#loginForm h3 {
-  margin: 0;
-  font-size: 28px;
-}
-
-#loginForm p {
-  margin: 0 0 6px;
-  color: #67708d;
-}
-
-#loginForm label {
-  margin-top: 6px;
-  font-weight: 700;
-  font-size: 13px;
-  color: #4f5775;
-}
-
-#loginForm input {
-  border: 1px solid #dbe0f0;
-  border-radius: 10px;
-  padding: 10px;
-  font: inherit;
-}
-
-.dialog-actions {
-  margin-top: 10px;
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-}
-
-@media (max-width: 1024px) {
-  .header-nav {
-    display: none;
-  }
-
-  .hero {
-    grid-template-columns: 1fr;
-  }
-
-  .feature-grid,
-  .workflow-grid,
-  .pricing-grid,
-  .problem-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-@media (max-width: 720px) {
-  .landing-shell {
-    padding: 14px 10px 50px;
-  }
-
-  .site-header {
-    flex-wrap: wrap;
-  }
-
-  .header-actions {
-    width: 100%;
-  }
-
-  .header-actions .btn {
-    flex: 1;
-    text-align: center;
-  }
-
-  .hero-copy h1 {
-    font-size: 37px;
-  }
-
-  .section-head h2,
-  .cta h2 {
-    font-size: 28px;
-  }
-
-  .feature-grid,
-  .workflow-grid,
-  .pricing-grid,
-  .problem-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .support-strip {
-    flex-direction: column;
-    align-items: flex-start;
   }
 }
