@@ -27,7 +27,7 @@
           <a href="#faq">FAQ</a>
         </nav>
         <div class="header-actions">
-          <button class="btn btn-outline" type="button">Se connecter</button>
+          <button class="btn btn-outline login-trigger" type="button" id="openLogin">Se connecter</button>
           <a class="btn btn-solid" href="#contact">Demander une demo</a>
         </div>
       </header>
@@ -77,6 +77,17 @@
           </div>
         </section>
 
+        <section class="support-strip" aria-label="Partenaires">
+          <p>Deploye avec le soutien de</p>
+          <div class="support-logos">
+            <span>Ministere</span>
+            <span>PNUD</span>
+            <span>ONG Congo</span>
+            <span>UNDP</span>
+            <span>Transparency Intl</span>
+          </div>
+        </section>
+
         <section class="problem">
           <div class="section-head">
             <p class="eyebrow">Le probleme</p>
@@ -105,6 +116,19 @@
             <article><h3>Dashboard analytique</h3><p>Tendances, cartes de risques et KPIs en temps reel.</p></article>
             <article><h3>Alertes automatiques</h3><p>Les gestionnaires sont notifies en cas de dossier critique.</p></article>
             <article><h3>Export institutionnel</h3><p>Exports PDF/CSV pour supervision et audit.</p></article>
+          </div>
+        </section>
+
+        <section class="workflow" id="processus">
+          <div class="section-head">
+            <p class="eyebrow">La solution</p>
+            <h2>Un signalement en 30 secondes, une reponse en 24h</h2>
+          </div>
+          <div class="workflow-grid">
+            <article><span>01</span><h3>Le citoyen envoie un message WhatsApp</h3><p>Aucune app a telecharger, zero friction.</p></article>
+            <article><span>02</span><h3>L'IA analyse et classe automatiquement</h3><p>Extraction des faits et priorisation instantanee.</p></article>
+            <article><span>03</span><h3>L'identite est effacee, les donnees chiffrees</h3><p>Anonymisation forte et conservation securisee.</p></article>
+            <article><span>04</span><h3>Le gestionnaire recoit une alerte actionnable</h3><p>Dashboard clair pour decider et agir rapidement.</p></article>
           </div>
         </section>
 
@@ -147,12 +171,27 @@
         <section class="cta" id="contact">
           <h2>Pret a lancer votre canal de signalement securise ?</h2>
           <div class="cta-actions">
-            <button class="btn btn-solid" type="button">Se connecter et acceder au dashboard</button>
+            <button class="btn btn-solid login-trigger" type="button" id="ctaLogin">Se connecter et acceder au dashboard</button>
             <a class="btn btn-outline" href="mailto:contact@mwangazamail.cd">Parler a l'equipe</a>
           </div>
         </section>
       </main>
     </div>
+
+    <dialog id="loginDialog" class="login-dialog">
+      <form id="loginForm" class="login-form" method="dialog">
+        <h3>Connexion espace admin</h3>
+        <p>Entrez votre email et mot de passe pour acceder au portail.</p>
+        <label for="emailInput">Email</label>
+        <input id="emailInput" name="email" type="email" required />
+        <label for="passwordInput">Mot de passe</label>
+        <input id="passwordInput" name="password" type="password" required />
+        <div class="login-actions">
+          <button type="button" class="btn btn-muted" id="closeLogin">Annuler</button>
+          <button type="submit" class="btn btn-solid">Se connecter</button>
+        </div>
+      </form>
+    </dialog>
 
     <script src="./script.js?v=20260525-2" defer></script>
   </body>
