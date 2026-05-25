@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MwangazaMail Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css?v=20260525-3" />
+  </head>
+  <body>
+    <script>
+      if (localStorage.getItem("mwangaza_auth") !== "true") {
+        window.location.replace("../");
+      }
+    </script>
+
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand-block">
+          <div class="brand-mark">O</div>
+          <div class="brand-name">MwangazaMail</div>
+        </div>
+
+        <nav class="main-nav">
+          <button class="nav-item is-active" data-tab="dashboard" type="button">Dashboard</button>
+          <button class="nav-item" data-tab="utilisateurs" type="button">Utilisateurs</button>
+          <button class="nav-item" data-tab="abonnements" type="button">Abonnements</button>
+          <button class="nav-item" data-tab="analytics" type="button">Analytics</button>
+          <button class="nav-item" data-tab="fonctionnalites" type="button">Fonctionnalites</button>
+          <button class="nav-item" data-tab="seo" type="button">SEO</button>
+        </nav>
+
+        <button class="logout-btn" id="logoutBtn" type="button">Deconnexion</button>
+      </aside>
+
+      <main class="main-panel">
+        <header class="topbar">
+          <div class="topbar-left">
+            <button class="icon-btn" id="refreshBtn" type="button" aria-label="Rafraichir">↻</button>
+            <span class="route-pill" id="routePill">/admin/dashboard</span>
+          </div>
+          <div class="topbar-right">
+            <button class="ghost-btn" type="button">Analyse IA</button>
+            <button class="primary-btn" id="openUserDrawerBtn" type="button">Gerer les utilisateurs →</button>
+          </div>
+        </header>
+
+        <section class="page-title">
+          <h1 id="sectionTitle">Dashboard Admin</h1>
+          <p id="sectionSubtitle">Vue d'ensemble de la plateforme</p>
+        </section>
+
+        <section id="dashboardSection" class="tab-section is-visible">
+          <section class="stats-grid" aria-label="KPI">
+            <article class="stat-card"><span class="stat-icon icon-blue">◉</span><p class="stat-value">11</p><p class="stat-label">Utilisateurs actifs</p></article>
+            <article class="stat-card"><span class="stat-icon icon-violet">↗</span><p class="stat-value">$10 100</p><p class="stat-label">Revenus estimes</p></article>
+            <article class="stat-card"><span class="stat-icon icon-green">▭</span><p class="stat-value">11</p><p class="stat-label">Abonnements actifs</p></article>
+            <article class="stat-card"><span class="stat-icon icon-amber">▦</span><p class="stat-value">3</p><p class="stat-label">Plan Premium</p></article>
+          </section>
+
+          <section class="charts-grid">
+            <article class="panel-card">
+              <h2>Revenus par plan</h2>
+              <div class="bar-chart"><div class="bar-track"><span class="bar bar-blue" style="height: 10%"></span></div><div class="bar-track"><span class="bar bar-violet" style="height: 28%"></span></div><div class="bar-track"><span class="bar bar-amber" style="height: 88%"></span></div></div>
+              <div class="bar-labels"><span>Pilote</span><span>Standard</span><span>Premium</span></div>
+            </article>
+            <article class="panel-card">
+              <h2>Repartition par plan</h2>
+              <div class="donut-wrap">
+                <div class="donut"></div>
+                <ul class="legend">
+                  <li><span><i class="dot dot-blue"></i>Pilote</span><b>4 clients</b></li>
+                  <li><span><i class="dot dot-violet"></i>Standard</span><b>4 clients</b></li>
+                  <li><span><i class="dot dot-amber"></i>Premium</span><b>3 clients</b></li>
+                </ul>
+              </div>
+            </article>
+          </section>
+
+          <section class="panel-card table-card">
+            <h2>Derniers signalements (21)</h2>
+            <div class="filter-row" id="incidentFilterRow">
+              <select id="filterCategory"><option value="">Categorie</option></select>
+              <select id="filterCity"><option value="">Ville</option></select>
+              <select id="filterSeverity"><option value="">Severite</option></select>
+              <select id="filterStatus"><option value="">Statut</option></select>
+              <input id="filterSearch" type="search" placeholder="Rechercher ref / institution" />
+              <button id="applyIncidentFilters" type="button">Filtrer</button>
+              <button id="resetIncidentFilters" type="button">Reset</button>
+            </div>
+            <div class="table-wrap"><table><thead><tr><th>Ref.</th><th>Categorie</th><th>Institution</th><th>Ville</th><th>Severite</th><th>Statut</th><th>Revision</th></tr></thead><tbody id="reportRows"></tbody></table></div>
+          </section>
+        </section>
+
+        <section id="utilisateursSection" class="tab-section">
+          <section class="stats-grid">
+            <article class="stat-card"><p class="stat-value">146</p><p class="stat-label">Comptes total</p></article>
+            <article class="stat-card"><p class="stat-value">97</p><p class="stat-label">Actifs ce mois</p></article>
+            <article class="stat-card"><p class="stat-value">12</p><p class="stat-label">Nouveaux (7j)</p></article>
+            <article class="stat-card"><p class="stat-value">6</p><p class="stat-label">En attente validation</p></article>
+          </section>
+          <section class="panel-card table-card">
+            <h2>Liste des utilisateurs</h2>
+            <div class="users-toolbar">
+              <button id="addUserBtn" class="primary-btn" type="button">Ajouter utilisateur</button>
+            </div>
+            <div class="table-wrap"><table><thead><tr><th>Nom</th><th>Email</th><th>Role</th><th>Ville</th><th>Statut</th><th>Derniere activite</th><th>Action</th></tr></thead><tbody id="usersRows"></tbody></table></div>
+          </section>
+        </section>
+
+        <section id="abonnementsSection" class="tab-section">
+          <section class="plan-grid" id="planCards"></section>
+          <section class="panel-card table-card">
+            <h2>Historique des abonnements</h2>
+            <div class="table-wrap"><table><thead><tr><th>Institution</th><th>Plan</th><th>Montant</th><th>Debut</th><th>Renouvellement</th><th>Etat</th></tr></thead><tbody id="subscriptionRows"></tbody></table></div>
+          </section>
+        </section>
+
+        <section id="analyticsSection" class="tab-section">
+          <section class="panel-card">
+            <h2>Tendance mensuelle</h2>
+            <div class="hbars" id="analyticsBars"></div>
+          </section>
+          <section class="panel-card table-card">
+            <h2>Top categories d'incidents</h2>
+            <div class="table-wrap"><table><thead><tr><th>Categorie</th><th>Volume</th><th>Variation</th><th>Delai moyen de resolution</th></tr></thead><tbody id="categoryRows"></tbody></table></div>
+          </section>
+        </section>
+
+        <section id="fonctionnalitesSection" class="tab-section">
+          <section class="panel-card">
+            <h2>Modules de la plateforme</h2>
+            <div class="feature-list" id="featureList"></div>
+          </section>
+        </section>
+
+        <section id="seoSection" class="tab-section">
+          <section class="stats-grid">
+            <article class="stat-card"><p class="stat-value" id="seoEventsCount">0</p><p class="stat-label">Acces traces</p></article>
+            <article class="stat-card"><p class="stat-value" id="seoRouteCount">0</p><p class="stat-label">Routes actives</p></article>
+            <article class="stat-card"><p class="stat-value" id="seoUserCount">0</p><p class="stat-label">Utilisateurs uniques</p></article>
+            <article class="stat-card"><p class="stat-value" id="seoLocationCount">0</p><p class="stat-label">Localisations detectees</p></article>
+          </section>
+
+          <section class="panel-card table-card">
+            <h2>Trafic & acces (SEO)</h2>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Heure</th><th>Route</th><th>Utilisateur</th><th>Localisation</th><th>IP</th><th>Agent</th>
+                  </tr>
+                </thead>
+                <tbody id="seoRows"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="panel-card table-card">
+            <h2>Audit trail</h2>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Heure</th><th>Table</th><th>Record</th><th>Action</th><th>Par</th><th>Avant</th><th>Apres</th>
+                  </tr>
+                </thead>
+                <tbody id="auditRows"></tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+      </main>
+    </div>
+
+    <div class="drawer-backdrop" id="userDrawerBackdrop" hidden></div>
+    <aside class="user-drawer" id="userDrawer" aria-hidden="true">
+      <div class="drawer-header">
+        <h3 id="userDrawerTitle">Ajouter un utilisateur</h3>
+        <button id="closeUserDrawerBtn" class="icon-btn" type="button" aria-label="Fermer">✕</button>
+      </div>
+      <form id="userForm" class="drawer-form">
+        <label>
+          Nom complet
+          <input id="userFormName" name="fullName" required maxlength="200" />
+        </label>
+        <label>
+          Email
+          <input id="userFormEmail" name="email" type="email" required maxlength="200" />
+        </label>
+        <label>
+          Role
+          <select id="userFormRole" name="role" required>
+            <option value="admin">admin</option>
+            <option value="agent">agent</option>
+            <option value="viewer">viewer</option>
+          </select>
+        </label>
+        <label>
+          Ville
+          <input id="userFormCity" name="city" required maxlength="80" />
+        </label>
+        <div class="drawer-actions">
+          <button id="cancelUserFormBtn" class="ghost-btn" type="button">Annuler</button>
+          <button id="submitUserFormBtn" class="primary-btn" type="submit">Sauvegarder</button>
+        </div>
+      </form>
+    </aside>
+
+    <div class="confirm-backdrop" id="confirmBackdrop" hidden></div>
+    <section class="confirm-modal" id="confirmModal" aria-hidden="true">
+      <h3>Confirmer le changement</h3>
+      <p id="confirmMessage">Voulez-vous enregistrer cette modification utilisateur ?</p>
+      <div class="confirm-actions">
+        <button id="confirmCancelBtn" class="ghost-btn" type="button">Annuler</button>
+        <button id="confirmOkBtn" class="primary-btn" type="button">Confirmer</button>
+      </div>
+    </section>
+
+    <script src="script.js?v=20260525-3"></script>
+  </body>
+</html>
