@@ -5,6 +5,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
+$PSNativeCommandUseErrorActionPreference = $true
 
 $env:AWS_PROFILE = $ProfileName
 $App = 'mwangaza-api'
@@ -50,14 +51,8 @@ if (-not $DefaultSg -or $DefaultSg -eq 'None') {
 }
 
 # ECR repository
-$repoExists = $false
-try {
-  aws ecr describe-repositories --repository-names $RepoName --region $Region | Out-Null
-  $repoExists = $true
-} catch {
-  $repoExists = $false
-}
-if (-not $repoExists) {
+$repoExisting = aws ecr describe-repositories --region $Region --query "repositories[?repositoryName=='$RepoName'].repositoryName | [0]" --output text
+if (-not $repoExisting -or $repoExisting -eq 'None') {
   aws ecr create-repository --repository-name $RepoName --image-scanning-configuration scanOnPush=true --region $Region | Out-Null
 }
 $ImageTag = (Get-Date).ToString('yyyyMMddHHmmss')
@@ -86,10 +81,11 @@ if (-not $envMap.ContainsKey('OPENAI_MODEL')) { $envMap['OPENAI_MODEL'] = 'gpt-4
 $SecretName = 'mwangaza/api/prod'
 $SecretJson = ($envMap | ConvertTo-Json -Compress)
 $SecretArn = ''
-try {
-  $SecretArn = aws secretsmanager describe-secret --secret-id $SecretName --region $Region --query ARN --output text
+$SecretExisting = aws secretsmanager list-secrets --region $Region --query "SecretList[?Name=='$SecretName'].ARN | [0]" --output text
+if ($SecretExisting -and $SecretExisting -ne 'None') {
+  $SecretArn = $SecretExisting
   aws secretsmanager put-secret-value --secret-id $SecretName --secret-string $SecretJson --region $Region | Out-Null
-} catch {
+} else {
   $SecretArn = aws secretsmanager create-secret --name $SecretName --secret-string $SecretJson --region $Region --query ARN --output text
 }
 
@@ -144,18 +140,18 @@ try { aws ec2 authorize-security-group-ingress --group-id $DefaultSg --protocol 
 try { aws ecs create-cluster --cluster-name $ClusterName --region $Region | Out-Null } catch {}
 
 # ALB and target group
-$AlbArn = aws elbv2 describe-load-balancers --names $AlbName --region $Region --query "LoadBalancers[0].LoadBalancerArn" --output text 2>$null
+$AlbArn = aws elbv2 describe-load-balancers --region $Region --query "LoadBalancers[?LoadBalancerName=='$AlbName'].LoadBalancerArn | [0]" --output text
 if (-not $AlbArn -or $AlbArn -eq 'None') {
   $AlbArn = aws elbv2 create-load-balancer --name $AlbName --subnets $Subnets --security-groups $AlbSgId --scheme internet-facing --type application --ip-address-type ipv4 --region $Region --query "LoadBalancers[0].LoadBalancerArn" --output text
 }
 $AlbDns = aws elbv2 describe-load-balancers --load-balancer-arns $AlbArn --region $Region --query "LoadBalancers[0].DNSName" --output text
 
-$TgArn = aws elbv2 describe-target-groups --names $TgName --region $Region --query "TargetGroups[0].TargetGroupArn" --output text 2>$null
+$TgArn = aws elbv2 describe-target-groups --region $Region --query "TargetGroups[?TargetGroupName=='$TgName'].TargetGroupArn | [0]" --output text
 if (-not $TgArn -or $TgArn -eq 'None') {
   $TgArn = aws elbv2 create-target-group --name $TgName --protocol HTTP --port 4000 --vpc-id $VpcId --target-type ip --health-check-path /health --health-check-protocol HTTP --health-check-interval-seconds 30 --health-check-timeout-seconds 5 --healthy-threshold-count 2 --unhealthy-threshold-count 3 --matcher HttpCode=200 --region $Region --query "TargetGroups[0].TargetGroupArn" --output text
 }
 
-$ListenerArn = aws elbv2 describe-listeners --load-balancer-arn $AlbArn --region $Region --query "Listeners[?Port==`80`].ListenerArn | [0]" --output text 2>$null
+$ListenerArn = aws elbv2 describe-listeners --load-balancer-arn $AlbArn --region $Region --query "Listeners[?Port==`80`].ListenerArn | [0]" --output text
 if (-not $ListenerArn -or $ListenerArn -eq 'None') {
   aws elbv2 create-listener --load-balancer-arn $AlbArn --protocol HTTP --port 80 --default-actions Type=forward,TargetGroupArn=$TgArn --region $Region | Out-Null
 }
@@ -170,7 +166,7 @@ $CertValidation = aws acm describe-certificate --certificate-arn $CertArn --regi
 # Add HTTPS listener automatically once cert is issued.
 $CertStatus = aws acm describe-certificate --certificate-arn $CertArn --region $Region --query "Certificate.Status" --output text
 if ($CertStatus -eq 'ISSUED') {
-  $HttpsListenerArn = aws elbv2 describe-listeners --load-balancer-arn $AlbArn --region $Region --query "Listeners[?Port==`443`].ListenerArn | [0]" --output text 2>$null
+  $HttpsListenerArn = aws elbv2 describe-listeners --load-balancer-arn $AlbArn --region $Region --query "Listeners[?Port==`443`].ListenerArn | [0]" --output text
   if (-not $HttpsListenerArn -or $HttpsListenerArn -eq 'None') {
     aws elbv2 create-listener --load-balancer-arn $AlbArn --protocol HTTPS --port 443 --certificates CertificateArn=$CertArn --default-actions Type=forward,TargetGroupArn=$TgArn --region $Region | Out-Null
   }
