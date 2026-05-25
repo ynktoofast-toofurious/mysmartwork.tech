@@ -67,14 +67,24 @@ const sectionMeta = {
 
 const severityOptions = ["faible", "moyen", "eleve", "critique"];
 const statusOptions = ["nouveau", "en_cours", "resolu"];
+const STRICT_LIVE_MODE = window.location.hostname !== "localhost";
+const CACHE_KEY = "mwangaza_admin_live_cache_v1";
+
+const cachedSnapshot = (() => {
+  try {
+    return JSON.parse(localStorage.getItem(CACHE_KEY) || "null");
+  } catch (_error) {
+    return null;
+  }
+})();
 
 const state = {
-  incidents: [],
-  users: [],
-  subscriptions: [],
-  analytics: fallbackData.analytics,
-  seo: [],
-  audit: [],
+  incidents: cachedSnapshot?.incidents || [],
+  users: cachedSnapshot?.users || [],
+  subscriptions: cachedSnapshot?.subscriptions || [],
+  analytics: cachedSnapshot?.analytics || fallbackData.analytics,
+  seo: cachedSnapshot?.seo || [],
+  audit: cachedSnapshot?.audit || [],
   source: "api",
   userDraft: null,
   userEditKey: null,
@@ -82,11 +92,53 @@ const state = {
 };
 
 const apiCandidates = (() => {
+  const params = new URLSearchParams(window.location.search);
+  const queryApiBase = params.get("apiBase") || "";
+  if (queryApiBase) {
+    try {
+      localStorage.setItem("mwangaza_api_base", queryApiBase);
+    } catch (_error) {
+      // Ignore localStorage unavailability.
+    }
+  }
+
+  const savedApiBase = localStorage.getItem("mwangaza_api_base") || "";
+  if (savedApiBase) {
+    return [savedApiBase.replace(/\/$/, "")];
+  }
+
   if (window.location.hostname === "localhost" && window.location.port === "5500") {
     return ["http://localhost:4000/api/admin"];
   }
-  return ["/api/admin", "http://localhost:4000/api/admin"];
+  return ["/api/admin"];
 })();
+
+function updateDataStatus(kind, text) {
+  const badge = document.getElementById("dataStatus");
+  if (!badge) return;
+  badge.classList.remove("live", "cache", "offline");
+  if (kind) badge.classList.add(kind);
+  badge.textContent = text;
+}
+
+function persistCache() {
+  try {
+    localStorage.setItem(
+      CACHE_KEY,
+      JSON.stringify({
+        incidents: state.incidents,
+        users: state.users,
+        subscriptions: state.subscriptions,
+        analytics: state.analytics,
+        seo: state.seo,
+        audit: state.audit,
+        updatedAt: new Date().toISOString()
+      })
+    );
+  } catch (_error) {
+    // Ignore storage failures.
+  }
+}
 
 async function fetchJson(path, options) {
   for (const base of apiCandidates) {
@@ -94,12 +146,14 @@ async function fetchJson(path, options) {
       const response = await fetch(`${base}${path}`, options);
       if (response.ok) {
         state.source = "api";
+        updateDataStatus("live", "Redshift LIVE");
         return await response.json();
       }
     } catch (_error) {
       // Try next endpoint candidate.
     }
   }
+  updateDataStatus(state.users.length || state.incidents.length ? "cache" : "offline", state.users.length || state.incidents.length ? "Cache locale" : "API hors ligne");
   throw new Error("API unavailable");
 }
 
@@ -241,7 +295,7 @@ async function saveUserDraft() {
     await loadSeoTab();
   } catch (_error) {
     closeConfirmModal();
-    alert("Sauvegarde utilisateur impossible sans API active.");
+    alert("Sauvegarde impossible: API Redshift hors ligne. Aucun changement n'a ete persiste.");
   } finally {
     state.userDraft = null;
   }
@@ -417,16 +471,19 @@ async function loadIncidents() {
   try {
     const rows = await fetchJson(`/incidents${queryText ? `?${queryText}` : ""}`);
     state.incidents = rows;
+    persistCache();
   } catch (_error) {
-    state.source = "fallback";
-    state.incidents = fallbackData.incidents.filter((row) => {
-      const qPass = !filters.q || row.incident_ref.includes(filters.q) || row.institution.toLowerCase().includes(filters.q.toLowerCase());
-      const categoryPass = !filters.category || row.category === filters.category;
-      const cityPass = !filters.city || row.city === filters.city;
-      const severityPass = !filters.severity || row.severity === filters.severity;
-      const statusPass = !filters.status || row.status === filters.status;
-      return qPass && categoryPass && cityPass && severityPass && statusPass;
-    });
+    if (!STRICT_LIVE_MODE) {
+      state.source = "fallback";
+      state.incidents = fallbackData.incidents.filter((row) => {
+        const qPass = !filters.q || row.incident_ref.includes(filters.q) || row.institution.toLowerCase().includes(filters.q.toLowerCase());
+        const categoryPass = !filters.category || row.category === filters.category;
+        const cityPass = !filters.city || row.city === filters.city;
+        const severityPass = !filters.severity || row.severity === filters.severity;
+        const statusPass = !filters.status || row.status === filters.status;
+        return qPass && categoryPass && cityPass && severityPass && statusPass;
+      });
+    }
   }
 
   renderIncidents(state.incidents);
@@ -457,9 +514,12 @@ async function saveIncidentRevision(incidentKey) {
 async function loadUsers() {
   try {
     state.users = await fetchJson("/users");
+    persistCache();
   } catch (_error) {
-    state.source = "fallback";
-    state.users = fallbackData.users;
+    if (!STRICT_LIVE_MODE) {
+      state.source = "fallback";
+      state.users = fallbackData.users;
+    }
   }
   renderUsers(state.users);
 }
@@ -467,9 +527,12 @@ async function loadUsers() {
 async function loadSubscriptions() {
   try {
     state.subscriptions = await fetchJson("/subscriptions");
+    persistCache();
   } catch (_error) {
-    state.source = "fallback";
-    state.subscriptions = fallbackData.subscriptions;
+    if (!STRICT_LIVE_MODE) {
+      state.source = "fallback";
+      state.subscriptions = fallbackData.subscriptions;
+    }
   }
   renderSubscriptions(state.subscriptions);
   renderPlanCards(state.subscriptions);
@@ -478,9 +541,12 @@ async function loadSubscriptions() {
 async function loadAnalytics() {
   try {
     state.analytics = await fetchJson("/analytics");
+    persistCache();
   } catch (_error) {
-    state.source = "fallback";
-    state.analytics = fallbackData.analytics;
+    if (!STRICT_LIVE_MODE) {
+      state.source = "fallback";
+      state.analytics = fallbackData.analytics;
+    }
   }
   renderAnalytics(state.analytics);
 }
@@ -489,10 +555,13 @@ async function loadSeoTab() {
   try {
     state.seo = await fetchJson("/seo");
     state.audit = await fetchJson("/audit-trail");
+    persistCache();
   } catch (_error) {
-    state.source = "fallback";
-    state.seo = fallbackData.seo;
-    state.audit = fallbackData.audit;
+    if (!STRICT_LIVE_MODE) {
+      state.source = "fallback";
+      state.seo = fallbackData.seo;
+      state.audit = fallbackData.audit;
+    }
   }
   renderSeo(state.seo, state.audit);
 }
@@ -610,6 +679,7 @@ function switchTab(tab) {
 async function bootstrap() {
   registerEvents();
   renderFeatures();
+  updateDataStatus("offline", "Connexion...");
   await Promise.all([loadIncidents(), loadUsers(), loadSubscriptions(), loadAnalytics()]);
   await logPageAccess("/admin/dashboard");
 }

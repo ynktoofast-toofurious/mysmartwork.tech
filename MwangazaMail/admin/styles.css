@@ -156,6 +156,35 @@ body {
   font-weight: 700;
 }
 
+.data-status {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: #5a6075;
+  background: #fff;
+}
+
+.data-status.live {
+  border-color: #bfe9cc;
+  background: #eaf9ef;
+  color: #238a54;
+}
+
+.data-status.cache {
+  border-color: #ffe6b9;
+  background: #fff7e8;
+  color: #a56a05;
+}
+
+.data-status.offline {
+  border-color: #ffd1d6;
+  background: #fff1f3;
+  color: #a73b48;
+}
+
 .ghost-btn {
   color: #7033f4;
   background: #f8f3ff;
