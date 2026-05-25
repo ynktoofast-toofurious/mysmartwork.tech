@@ -163,18 +163,92 @@ const demoTabs = {
   }
 };
 
+const whyComparisons = [
+  ["✗", "Boite de suggestions physique", "bad"],
+  ["✗", "Email institutionnel (non anonyme)", "bad"],
+  ["✗", "Solutions etrangeres non adaptees", "bad"],
+  ["✓", "MwangazaMail — Concu pour la RDC", "good"]
+];
+
+const whyCards = [
+  ["⚡", "Deploiement en 48h", "Pas de mois d'integration. Votre institution est operationnelle en 48h chrono avec formation incluse."],
+  ["◉", "La ou sont les citoyens", "WhatsApp est utilise par 85% des congolais avec un smartphone. Aucune barriere d'adoption."],
+  ["◈", "Conformite RGPD & protection maximale", "Architecture pensee pour la conformite legale et la protection absolue des donnees personnelles."],
+  ["↻", "Mises a jour automatiques", "La plateforme evolue sans interruption de service. Vous beneficiez toujours des dernieres fonctionnalites."],
+  ["◍", "Support dedie en francais", "Une equipe francophone disponible par WhatsApp, email ou visio. Temps de reponse < 4h en jours ouvres."],
+  ["<>", "API ouverte & integrations", "Connectez MwangazaMail a vos outils existants : SIRH, GRC, systemes d'archivage. API RESTful documentee."]
+];
+
 const pricing = [
-  ["Pilote", "$499/mois", ["1 institution", "Support standard", "Rapports de base"]],
-  ["Standard", "$1,500/mois", ["3 institutions", "Automatisation IA complete", "Dashboard avance"]],
-  ["Premium", "$7,500/mois", ["Illimite", "SLA dedie", "Integrations sur mesure"]]
+  {
+    name: "Pilote",
+    subtitle: "Pour demarrer",
+    price: "150",
+    note: "USD/ mois",
+    hint: "Ideal pour 1 service ou direction",
+    icon: "⚡",
+    bullets: [
+      "Bot WhatsApp dedie",
+      "Dashboard basique",
+      "Jusqu'a 500 signalements/mois",
+      "Support email",
+      "Formation initiale incluse"
+    ],
+    cta: "Demarrer le pilote →"
+  },
+  {
+    name: "Standard",
+    subtitle: "Le plus populaire",
+    price: "500",
+    note: "USD/ mois",
+    hint: "Ideal pour une institution complete",
+    icon: "☆",
+    badge: "★ LE PLUS POPULAIRE",
+    featured: true,
+    bullets: [
+      "Tout le plan Pilote",
+      "IA classification avancee",
+      "Signalements illimites",
+      "Multi-services (1 institution)",
+      "Rapports mensuels PDF",
+      "Support prioritaire < 4h"
+    ],
+    cta: "Choisir Standard →"
+  },
+  {
+    name: "Premium",
+    subtitle: "Pour les grandes structures",
+    price: "2 500",
+    note: "USD/ mois",
+    hint: "Ideal pour ministeres et groupes",
+    icon: "▦",
+    bullets: [
+      "Tout le plan Standard",
+      "Multi-institutions illimite",
+      "Cartographie des risques",
+      "API dediee + integrations",
+      "SLA 99.9% garanti",
+      "Account manager dedie"
+    ],
+    cta: "Contacter l'equipe →"
+  }
 ];
 
 const faqItems = [
-  ["Combien de temps pour le deploiement ?", "Moins de 7 jours pour une institution, avec onboarding et configuration inclus."],
-  ["Faut-il une application mobile ?", "Non. Tout se passe via WhatsApp pour les citoyens et via navigateur pour les gestionnaires."],
-  ["Les donnees sont-elles securisees ?", "Oui, avec chiffrement, anonymisation et controle d'acces strict selon les roles."],
-  ["Peut-on connecter plusieurs institutions ?", "Oui, la plateforme est concue pour des structures multi-services et multi-regions."]
+  ["Est-ce difficile a mettre en place pour mon institution ?", "Non. Le deploiement prend en general 48h avec accompagnement complet et formation incluse."],
+  ["L'anonymat des signalants est-il vraiment garanti ?", "Oui. Les identifiants sensibles sont supprimes, et les dossiers sont traites en mode anonyme chiffre."],
+  ["Combien coute reellement la solution ?", "Les plans sont publics et adaptes au contexte local. Vous pouvez commencer par le plan Pilote sans engagement long."],
+  ["Ca fonctionne meme avec une mauvaise connexion internet ?", "Oui. WhatsApp reste accessible meme en connectivite variable, ce qui permet la remontee d'alertes terrain."],
+  ["Peut-on l'adapter a notre contexte (langues, secteur) ?", "Oui. Les categories, flux de traitement et interfaces peuvent etre ajustes a vos contraintes institutionnelles."],
+  ["Quelles donnees les gestionnaires voient-ils exactement ?", "Uniquement les donnees necessaires au traitement du signalement avec traçabilite des actions de moderation."],
+  ["Y a-t-il un support si nous avons des questions ?", "Oui. Support francophone par email, WhatsApp et visio avec SLA selon le plan choisi."]
 ];
+
+const footerColumns = {
+  PRODUIT: ["Solution", "Fonctionnalites", "Demo", "Tarification"],
+  RESSOURCES: ["Documentation", "Blog", "Cas d'usage", "API"],
+  LEGAL: ["Confidentialite", "CGU", "Securite", "RGPD"]
+};
 
 function LoginPortal({ isOpen, onClose, onSubmit }) {
   const [email, setEmail] = useState("admin@mwangaza.cd");
@@ -561,22 +635,85 @@ function App() {
           </div>
         </section>
 
-        <section className="pricing" id="tarification">
+        <section className="why-section">
+          <div className="why-layout">
+            <div className="why-copy">
+              <p className="eyebrow">Pourquoi MwangazaMail</p>
+              <h2>
+                Concu pour l'Afrique.
+                <span>Performant pour le monde.</span>
+              </h2>
+              <p>
+                Contrairement aux solutions occidentales inadaptees, MwangazaMail est pense pour les realites institutionnelles
+                africaines — langues locales, connectivite variable, contextes administratifs specifiques.
+              </p>
+              <div className="why-compare">
+                ${whyComparisons.map(
+                  ([icon, label, tone]) => html`
+                    <article className=${`why-compare-row is-${tone}`} key=${label}>
+                      <span>${icon}</span>
+                      <p>${label}</p>
+                    </article>
+                  `
+                )}
+              </div>
+            </div>
+            <div className="why-grid">
+              ${whyCards.map(
+                ([icon, title, copy]) => html`
+                  <article className="why-card" key=${title}>
+                    <div className="why-icon">${icon}</div>
+                    <h3>${title}</h3>
+                    <p>${copy}</p>
+                  </article>
+                `
+              )}
+            </div>
+          </div>
+        </section>
+
+        <section className="impact-banner">
+          <p className="impact-eyebrow">Pret a passer a l'action ?</p>
+          <h2>Votre institution merite un outil a la hauteur</h2>
+          <p>Plus de 50 institutions font confiance a MwangazaMail. Rejoignez-les avec une demo gratuite personnalisee.</p>
+          <div className="impact-actions">
+            <a className="btn btn-light btn-large" href="#contact">Reserver ma demo gratuite</a>
+            <a className="btn btn-ghost-light btn-large" href="#tarification">Voir les tarifs →</a>
+          </div>
+          <small>✓ Gratuit · ✓ Sans engagement · ✓ Reponse sous 24h</small>
+        </section>
+
+        <section className="pricing pricing-detailed" id="tarification">
           <div className="section-head section-head-centered">
             <p className="eyebrow">Tarification</p>
-            <h2>Plans simples pour institutions de toutes tailles</h2>
+            <h2>
+              Des prix transparents,
+              <span>sans mauvaises surprises</span>
+            </h2>
+            <p>Tarification adaptee au contexte economique de la RDC. Annulation possible a tout moment.</p>
           </div>
-          <div className="pricing-grid">
-            ${pricing.map(([name, amount, bullets], index) => html`
-              <article className=${index === 1 ? "featured" : ""} key=${name}>
-                <h3>${name}</h3>
-                <p className="price">${amount}</p>
+
+          <div className="pricing-grid pricing-grid-detailed">
+            ${pricing.map((plan) => html`
+              <article className=${plan.featured ? "featured pricing-plan" : "pricing-plan"} key=${plan.name}>
+                ${plan.badge && html`<div className="pricing-badge">${plan.badge}</div>`}
+                <div className="pricing-head">
+                  <div className="pricing-icon">${plan.icon}</div>
+                  <div>
+                    <h3>${plan.name}</h3>
+                    <p className="pricing-subtitle">${plan.subtitle}</p>
+                  </div>
+                </div>
+                <p className="price"><strong>${plan.price}</strong> ${plan.note}</p>
+                <p className="pricing-hint">${plan.hint}</p>
                 <ul>
-                  ${bullets.map((bullet) => html`<li key=${bullet}>${bullet}</li>`)}
+                  ${plan.bullets.map((bullet) => html`<li key=${bullet}>✓ ${bullet}</li>`)}
                 </ul>
+                <a className=${plan.featured ? "btn btn-solid" : "btn btn-outline"} href="#contact">${plan.cta}</a>
               </article>
             `)}
           </div>
+          <p className="pricing-footnote">Besoin d'un deploiement national ou d'un contrat ministeriel ? <a href="#contact">Contactez-nous pour un devis personnalise →</a></p>
         </section>
 
         <section className="faq" id="faq">
@@ -586,22 +723,94 @@ function App() {
           </div>
           <div className="faq-grid">
             ${faqItems.map(([question, answer], index) => html`
-              <details open=${index === 0} key=${question}>
+              <details open=${index === 0 ? true : undefined} key=${question}>
                 <summary>${question}</summary>
                 <p>${answer}</p>
               </details>
             `)}
           </div>
+          <p className="faq-footnote">Une autre question ? <a href="mailto:contact@mwangazamail.cd">Ecrivez-nous directement →</a></p>
         </section>
 
-        <section className="cta" id="contact">
-          <h2>Pret a lancer votre canal de signalement securise ?</h2>
-          <div className="cta-actions">
-            <button className="btn btn-solid btn-large" type="button" onClick=${() => setLoginOpen(true)}>Se connecter et acceder au dashboard</button>
-            <a className="btn btn-outline btn-large" href="mailto:contact@mwangazamail.cd">Parler a l'equipe</a>
+        <section className="start-now" id="contact">
+          <div className="section-head section-head-centered">
+            <p className="eyebrow">Commencer maintenant</p>
+            <h2>
+              Transformez votre institution
+              <span>des aujourd'hui</span>
+            </h2>
+            <p>Demo gratuite · Sans engagement · Reponse sous 24h</p>
+          </div>
+          <div className="contact-layout">
+            <aside className="contact-includes">
+              <h3>La demo comprend</h3>
+              <ul>
+                <li>Presentation complete de la plateforme</li>
+                <li>Bot WhatsApp en conditions reelles</li>
+                <li>Dashboard de moderation en live</li>
+                <li>Q&A avec l'equipe technique</li>
+                <li>Devis personnalise sous 24h</li>
+              </ul>
+              <article className="contact-direct">
+                <h4>Contact direct</h4>
+                <p>contact@mwangazamail.cd</p>
+              </article>
+            </aside>
+
+            <form className="contact-form" onSubmit=${(event) => event.preventDefault()}>
+              <div className="contact-grid">
+                <label>
+                  Nom complet *
+                  <input type="text" placeholder="Dr. Jean Kabila" />
+                </label>
+                <label>
+                  Institution *
+                  <input type="text" placeholder="Ministere des Finances" />
+                </label>
+                <label>
+                  Email *
+                  <input type="email" placeholder="jean@institution.cd" />
+                </label>
+                <label>
+                  WhatsApp
+                  <input type="tel" placeholder="+243 8XX XXX XXX" />
+                </label>
+                <label className="full">
+                  Message (optionnel)
+                  <textarea rows="4" placeholder="Decrivez vos besoins ou votre contexte..."></textarea>
+                </label>
+              </div>
+              <button className="btn btn-solid btn-large" type="submit">Demander ma demo gratuite →</button>
+              <small>✓ Gratuit · ✓ Sans engagement · ✓ Reponse sous 24h</small>
+            </form>
           </div>
         </section>
       </main>
+
+      <footer className="site-footer">
+        <div className="footer-top">
+          <div className="footer-brand-col">
+            <a className="brand" href="#hero">
+              <span className="brand-mark"></span>
+              <span className="brand-text">MwangazaMail</span>
+            </a>
+            <p>La premiere plateforme SaaS de signalement anonyme via WhatsApp, conçue pour les institutions africaines.</p>
+            <span className="footer-status">• Systeme operationnel — RDC 2026</span>
+          </div>
+          ${Object.entries(footerColumns).map(([title, links]) => html`
+            <div className="footer-col" key=${title}>
+              <h4>${title}</h4>
+              <ul>
+                ${links.map((link) => html`<li key=${link}><a href="#">${link}</a></li>`)}
+              </ul>
+            </div>
+          `)}
+        </div>
+        <div className="footer-bottom">
+          <p>© 2026 MwangazaMail. Tous droits reserves.</p>
+          <p>✉ contact@mwangazamail.cd · Propulse pour la transparence en RDC</p>
+        </div>
+      </footer>
 
       <${LoginPortal} isOpen=${loginOpen} onClose=${() => setLoginOpen(false)} onSubmit=${goToAdmin} />
     </div>

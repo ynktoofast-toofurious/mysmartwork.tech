@@ -23,7 +23,7 @@ const checks = [
 
 const softChecks = [
   ["FAQ target count >= 7", (() => {
-    const block = script.match(/const faqItems = \[(.|\n)*?\];/);
+    const block = script.match(/const faqItems = \[[\s\S]*?\];/);
     if (!block) return false;
     const entries = (block[0].match(/\[\s*"/g) || []).length;
     return entries >= 7;
