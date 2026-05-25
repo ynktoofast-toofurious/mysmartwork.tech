@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>YNK-TechUSA Sandbox Gateway</title>
+    <title>YNK-TechUSA Client Access</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -38,6 +38,13 @@
         box-shadow: 0 28px 80px rgba(2, 6, 20, 0.55);
         padding: 34px;
       }
+
+        .brand-title {
+          margin: 16px 0 8px;
+          font-family: "Sora", sans-serif;
+          font-size: clamp(36px, 5vw, 58px);
+          line-height: 1.06;
+        }
 
       .pill {
         display: inline-flex;
@@ -98,6 +105,92 @@
         color: #dce7ff;
       }
 
+        .access-backdrop {
+          position: fixed;
+          inset: 0;
+          background: rgba(2, 6, 18, 0.72);
+          display: none;
+          align-items: center;
+          justify-content: center;
+          padding: 20px;
+          z-index: 100;
+        }
+
+        .access-backdrop.is-open {
+          display: flex;
+        }
+
+        .access-card {
+          width: min(460px, 100%);
+          border-radius: 20px;
+          border: 1px solid rgba(190, 207, 255, 0.3);
+          background: linear-gradient(160deg, rgba(12, 24, 67, 0.95), rgba(7, 13, 34, 0.97));
+          padding: 22px;
+        }
+
+        .access-card h2 {
+          margin: 0;
+          font-size: 30px;
+        }
+
+        .access-card p {
+          margin-top: 10px;
+          font-size: 16px;
+        }
+
+        .access-card label {
+          display: block;
+          margin-top: 14px;
+          color: #c8d4fb;
+          font-weight: 700;
+          font-size: 13px;
+        }
+
+        .access-card input {
+          width: 100%;
+          margin-top: 6px;
+          border-radius: 12px;
+          border: 1px solid rgba(175, 197, 255, 0.36);
+          background: #0d173d;
+          color: #eef2ff;
+          font: inherit;
+          padding: 12px 13px;
+        }
+
+        .access-error {
+          margin-top: 8px;
+          color: #ffb8c2;
+          min-height: 20px;
+          font-size: 13px;
+        }
+
+        .access-actions {
+          margin-top: 8px;
+          display: flex;
+          gap: 10px;
+          flex-wrap: wrap;
+        }
+
+        .access-actions button {
+          cursor: pointer;
+          border-radius: 12px;
+          border: none;
+          padding: 10px 14px;
+          font: inherit;
+          font-weight: 700;
+        }
+
+        .access-confirm {
+          background: linear-gradient(135deg, #4a7cff, #64b8ff);
+          color: #051129;
+        }
+
+        .access-cancel {
+          border: 1px solid rgba(178, 199, 255, 0.34);
+          background: transparent;
+          color: #dce7ff;
+        }
+
       .foot {
         margin-top: 28px;
         display: flex;
@@ -122,26 +215,91 @@
         p {
           font-size: 17px;
         }
+
+          .access-card h2 {
+            font-size: 24px;
+          }
       }
     </style>
   </head>
   <body>
     <main class="shell">
-      <span class="pill">YNK-TechUSA Sandbox Gateway</span>
-      <h1>MwangazaMail Demo Environment</h1>
+        <span class="pill">YNK-TechUSA Client Portal</span>
+        <h1 class="brand-title">YNK-TechUSA Sandbox Access Hub</h1>
       <p>
-        You are entering a sandbox area managed by YNK-TechUSA for client testing and demonstrations.
-        This is not the final production destination.
+          This landing is branded under YNK-TechUSA and is used for client validation sessions,
+          pilot walkthroughs, and pre-production reviews.
       </p>
-      <p class="warning">Use only for validation, demos, and pilot workflows.</p>
+        <p class="warning">This is a sandbox destination and not the final production endpoint.</p>
       <div class="actions">
-        <a class="btn btn-primary" href="/MwangazaMail/">Enter MwangazaMail Sandbox</a>
+          <button class="btn btn-primary" id="openProjectBtn" type="button">My Project</button>
         <a class="btn btn-secondary" href="https://ynk-techusa.com/" target="_blank" rel="noreferrer">Visit YNK-TechUSA</a>
       </div>
       <footer class="foot">
-        <span>Need final production onboarding? Contact YNK-TechUSA.</span>
+          <span>Need final production onboarding? Contact YNK-TechUSA.</span>
         <a href="https://ynk-techusa.com/" target="_blank" rel="noreferrer">https://ynk-techusa.com/</a>
       </footer>
     </main>
+
+      <div class="access-backdrop" id="accessBackdrop" aria-hidden="true">
+        <section class="access-card" role="dialog" aria-modal="true" aria-labelledby="accessTitle">
+          <h2 id="accessTitle">Project Access Code</h2>
+          <p>Enter your provided access code to continue to your client sandbox project.</p>
+          <label for="accessCodeInput">Access code</label>
+          <input id="accessCodeInput" type="password" autocomplete="off" />
+          <div class="access-error" id="accessError"></div>
+          <div class="access-actions">
+            <button class="access-confirm" id="accessConfirmBtn" type="button">Continue</button>
+            <button class="access-cancel" id="accessCancelBtn" type="button">Cancel</button>
+          </div>
+        </section>
+      </div>
+
+      <script>
+        const PROJECT_PATH = "/MwangazaMail/";
+        const PROJECT_ACCESS_CODE = "YNK-ACCESS-2026";
+
+        const openProjectBtn = document.getElementById("openProjectBtn");
+        const accessBackdrop = document.getElementById("accessBackdrop");
+        const accessCodeInput = document.getElementById("accessCodeInput");
+        const accessError = document.getElementById("accessError");
+        const accessConfirmBtn = document.getElementById("accessConfirmBtn");
+        const accessCancelBtn = document.getElementById("accessCancelBtn");
+
+        const openAccessModal = () => {
+          accessBackdrop.classList.add("is-open");
+          accessBackdrop.setAttribute("aria-hidden", "false");
+          accessError.textContent = "";
+          accessCodeInput.value = "";
+          accessCodeInput.focus();
+        };
+
+        const closeAccessModal = () => {
+          accessBackdrop.classList.remove("is-open");
+          accessBackdrop.setAttribute("aria-hidden", "true");
+        };
+
+        const proceedToProject = () => {
+          if (accessCodeInput.value.trim() !== PROJECT_ACCESS_CODE) {
+            accessError.textContent = "Invalid access code. Please try again.";
+            return;
+          }
+          window.location.assign(PROJECT_PATH);
+        };
+
+        openProjectBtn.addEventListener("click", openAccessModal);
+        accessCancelBtn.addEventListener("click", closeAccessModal);
+        accessConfirmBtn.addEventListener("click", proceedToProject);
+        accessBackdrop.addEventListener("click", (event) => {
+          if (event.target === accessBackdrop) {
+            closeAccessModal();
+          }
+        });
+        accessCodeInput.addEventListener("keydown", (event) => {
+          if (event.key === "Enter") {
+            proceedToProject();
+          }
+        });
+      </script>
   </body>
 </html>
