@@ -1,7 +1,12 @@
+param(
+  [string]$ProfileName = 'YannickNkongolo',
+  [string]$Region = 'us-east-1'
+)
+
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
-$Region = 'us-east-1'
+$env:AWS_PROFILE = $ProfileName
 $App = 'mwangaza-api'
 $RepoName = 'mwangaza-api'
 $ClusterName = 'mwangaza-api-cluster'
@@ -10,12 +15,39 @@ $TaskFamily = 'mwangaza-api-task'
 $AlbName = 'mwangaza-api-alb'
 $TgName = 'mwangaza-api-tg'
 $LogGroup = '/ecs/mwangaza-api'
-$VpcId = 'vpc-0d1ad675e75837762'
-$Subnets = @('subnet-0aa41dbfb88b88066', 'subnet-0cbe5b0838f7fcebb')
-$DefaultSg = 'sg-0799c4d7c83fc9121'
 
 Set-Location (Join-Path $PSScriptRoot '..')
 $AccountId = aws sts get-caller-identity --query Account --output text
+
+# Discover default network dynamically in the active account/region.
+$VpcId = aws ec2 describe-vpcs --region $Region --filters Name=isDefault,Values=true --query "Vpcs[0].VpcId" --output text
+if (-not $VpcId -or $VpcId -eq 'None') {
+  throw "No default VPC found in $Region."
+}
+
+$subnetQuery = "Subnets[?VpcId=='$VpcId'] | sort_by(@,&AvailabilityZone)[].{SubnetId:SubnetId,Az:AvailabilityZone}"
+$subnetRows = aws ec2 describe-subnets --region $Region --query $subnetQuery --output json | ConvertFrom-Json
+if (-not $subnetRows -or $subnetRows.Count -lt 2) {
+  throw "At least two subnets are required for ALB/ECS."
+}
+
+$seenAz = @{}
+$Subnets = @()
+foreach ($row in $subnetRows) {
+  if (-not $seenAz.ContainsKey($row.Az)) {
+    $seenAz[$row.Az] = $true
+    $Subnets += $row.SubnetId
+  }
+  if ($Subnets.Count -ge 2) { break }
+}
+if ($Subnets.Count -lt 2) {
+  $Subnets = @($subnetRows[0].SubnetId, $subnetRows[1].SubnetId)
+}
+
+$DefaultSg = aws ec2 describe-security-groups --region $Region --filters Name=vpc-id,Values=$VpcId Name=group-name,Values=default --query "SecurityGroups[0].GroupId" --output text
+if (-not $DefaultSg -or $DefaultSg -eq 'None') {
+  throw "Default security group not found for VPC $VpcId."
+}
 
 # ECR repository
 $repoExists = $false
@@ -28,7 +60,8 @@ try {
 if (-not $repoExists) {
   aws ecr create-repository --repository-name $RepoName --image-scanning-configuration scanOnPush=true --region $Region | Out-Null
 }
-$ImageUri = "$AccountId.dkr.ecr.$Region.amazonaws.com/$RepoName:$((Get-Date).ToString('yyyyMMddHHmmss'))"
+$ImageTag = (Get-Date).ToString('yyyyMMddHHmmss')
+$ImageUri = "${AccountId}.dkr.ecr.${Region}.amazonaws.com/${RepoName}:${ImageTag}"
 
 # Build and push API image
 aws ecr get-login-password --region $Region | docker login --username AWS --password-stdin "$AccountId.dkr.ecr.$Region.amazonaws.com"
@@ -69,7 +102,6 @@ try {
   aws iam create-role --role-name ecsTaskExecutionRole --assume-role-policy-document $trust | Out-Null
   aws iam attach-role-policy --role-name ecsTaskExecutionRole --policy-arn arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy | Out-Null
   aws iam attach-role-policy --role-name ecsTaskExecutionRole --policy-arn arn:aws:iam::aws:policy/SecretsManagerReadWrite | Out-Null
-  Start-Sleep -Seconds 10
   $ExecRoleArn = aws iam get-role --role-name ecsTaskExecutionRole --query Role.Arn --output text
 }
 
@@ -81,7 +113,6 @@ try {
   $trust = '{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"Service":"ecs-tasks.amazonaws.com"},"Action":"sts:AssumeRole"}]}'
   aws iam create-role --role-name $TaskRoleName --assume-role-policy-document $trust | Out-Null
   aws iam attach-role-policy --role-name $TaskRoleName --policy-arn arn:aws:iam::aws:policy/SecretsManagerReadWrite | Out-Null
-  Start-Sleep -Seconds 10
   $TaskRoleArn = aws iam get-role --role-name $TaskRoleName --query Role.Arn --output text
 }
 
@@ -135,6 +166,15 @@ if (-not $CertArn -or $CertArn -eq 'None') {
   $CertArn = aws acm request-certificate --domain-name api.mysmartwork.tech --validation-method DNS --region $Region --query CertificateArn --output text
 }
 $CertValidation = aws acm describe-certificate --certificate-arn $CertArn --region $Region --query "Certificate.DomainValidationOptions[0].ResourceRecord" --output json
+
+# Add HTTPS listener automatically once cert is issued.
+$CertStatus = aws acm describe-certificate --certificate-arn $CertArn --region $Region --query "Certificate.Status" --output text
+if ($CertStatus -eq 'ISSUED') {
+  $HttpsListenerArn = aws elbv2 describe-listeners --load-balancer-arn $AlbArn --region $Region --query "Listeners[?Port==`443`].ListenerArn | [0]" --output text 2>$null
+  if (-not $HttpsListenerArn -or $HttpsListenerArn -eq 'None') {
+    aws elbv2 create-listener --load-balancer-arn $AlbArn --protocol HTTPS --port 443 --certificates CertificateArn=$CertArn --default-actions Type=forward,TargetGroupArn=$TgArn --region $Region | Out-Null
+  }
+}
 
 # Task definition
 $TaskDefPath = Join-Path $env:TEMP 'mwangaza-taskdef.json'
@@ -206,13 +246,14 @@ $TgFullArn = aws elbv2 describe-target-groups --target-group-arns $TgArn --regio
 $LbFullArn = aws elbv2 describe-load-balancers --load-balancer-arns $AlbArn --region $Region --query "LoadBalancers[0].LoadBalancerArn" --output text
 $TgSuffix = $TgFullArn.Split('targetgroup/')[1]
 $LbSuffix = $LbFullArn.Split('loadbalancer/')[1]
-aws cloudwatch put-metric-alarm --alarm-name mwangaza-api-unhealthy-hosts --metric-name UnHealthyHostCount --namespace AWS/ApplicationELB --statistic Average --period 60 --threshold 0 --comparison-operator GreaterThanThreshold --evaluation-periods 2 --alarm-description "Unhealthy targets in API target group" --dimensions Name=TargetGroup,Value=targetgroup/$TgSuffix Name=LoadBalancer,Value=app/$LbSuffix --region $Region | Out-Null
+aws cloudwatch put-metric-alarm --alarm-name mwangaza-api-unhealthy-hosts --metric-name UnHealthyHostCount --namespace AWS/ApplicationELB --statistic Average --period 60 --threshold 0 --comparison-operator GreaterThanThreshold --evaluation-periods 2 --alarm-description "Unhealthy targets in API target group" --dimensions Name=TargetGroup,Value=targetgroup/$TgSuffix Name=LoadBalancer,Value=$LbSuffix --region $Region | Out-Null
 
 # Wait stable
 aws ecs wait services-stable --cluster $ClusterName --services $ServiceName --region $Region
 
 Write-Output "ALB_DNS=$AlbDns"
 Write-Output "CERT_ARN=$CertArn"
+Write-Output "CERT_STATUS=$CertStatus"
 Write-Output "CERT_DNS_VALIDATION=$CertValidation"
 Write-Output "SECRET_ARN=$SecretArn"
 Write-Output "ECS_SERVICE=$ServiceName"
