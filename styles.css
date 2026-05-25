@@ -1512,7 +1512,77 @@ details p {
   cursor: pointer;
   display: grid;
   place-items: center;
-  font-size: 16px;
+  color: #5a6484;
+}
+
+.portal-eye-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.sandbox-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 130;
+  background: rgba(8, 11, 24, 0.84);
+  backdrop-filter: blur(8px);
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+
+.sandbox-card {
+  width: min(760px, 100%);
+  border-radius: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: linear-gradient(165deg, #f7f9ff, #ffffff);
+  box-shadow: 0 36px 80px rgba(7, 10, 24, 0.55);
+  padding: 34px;
+  text-align: center;
+}
+
+.sandbox-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 8px 14px;
+  background: #e9ecff;
+  color: #4e3be1;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 12px;
+}
+
+.sandbox-card h2 {
+  margin: 18px 0 10px;
+  font-size: clamp(32px, 4vw, 48px);
+}
+
+.sandbox-card p {
+  margin: 0;
+  color: #4f5a7a;
+  font-size: 20px;
+  line-height: 1.5;
+}
+
+.sandbox-warning {
+  margin-top: 12px !important;
+  color: #973032 !important;
+  font-weight: 700;
+}
+
+.sandbox-link {
+  margin-top: 14px;
+  display: inline-flex;
+  color: #3f2de0;
+  font-weight: 700;
+}
+
+.sandbox-cta {
+  margin-top: 24px;
+  width: 100%;
 }
 
 .portal-footer {
@@ -1662,7 +1732,12 @@ details p {
   .browser-body,
   .chat-window,
   .demo-copy,
-  .portal-card {
+  .portal-card,
+  .sandbox-card {
     padding: 18px;
+  }
+
+  .sandbox-card p {
+    font-size: 17px;
   }
 }

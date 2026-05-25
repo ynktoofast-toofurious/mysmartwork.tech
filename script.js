@@ -347,7 +347,41 @@ function LoginPortal({ isOpen, onClose, onSubmit }) {
                 aria-label=${showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
                 onClick=${() => setShowPassword((value) => !value)}
               >
-                ${showPassword ? "🙈" : "👁"}
+                ${showPassword
+                  ? html`
+                      <svg className="portal-eye-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <path d="M3 3l18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                        <path
+                          d="M10.7 6.8A10.8 10.8 0 0 1 12 6c5.2 0 9.6 3.5 11 6-0.7 1.2-2 2.9-3.8 4.1M14.1 14.2A3 3 0 0 1 9.8 9.9"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                        <path
+                          d="M6.4 8.6C4.5 9.9 3.3 11.4 3 12c1.4 2.5 5.8 6 11 6 1.2 0 2.3-0.2 3.4-0.6"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    `
+                  : html`
+                      <svg className="portal-eye-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <path
+                          d="M2 12s3.8-6 10-6 10 6 10 6-3.8 6-10 6-10-6-10-6Z"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                        <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" strokeWidth="2" />
+                      </svg>
+                    `}
               </button>
             </div>
             <div className="portal-footer">
@@ -356,6 +390,29 @@ function LoginPortal({ isOpen, onClose, onSubmit }) {
             </div>
           </form>
         </div>
+      </div>
+    `,
+    document.body
+  );
+}
+
+function SandboxNotice({ isOpen, onClose }) {
+  if (!isOpen) return null;
+
+  return createPortal(
+    html`
+      <div className="sandbox-backdrop" role="dialog" aria-modal="true" aria-labelledby="sandbox-title">
+        <section className="sandbox-card">
+          <div className="sandbox-pill">YNK-TechUSA Sandbox</div>
+          <h2 id="sandbox-title">Environnement de test client</h2>
+          <p>
+            Cette plateforme est une zone sandbox de <strong>YNK-TechUSA</strong> pour demonstrations et essais clients.
+            Certaines donnees, integrations et workflows restent en mode test.
+          </p>
+          <p className="sandbox-warning">Ce domaine n'est pas la destination finale de production.</p>
+          <a className="sandbox-link" href="https://ynk-techusa.com/" target="_blank" rel="noreferrer">Destination officielle: ynk-techusa.com</a>
+          <button className="btn btn-solid sandbox-cta" type="button" onClick=${onClose}>Je comprends, continuer</button>
+        </section>
       </div>
     `,
     document.body
@@ -380,6 +437,7 @@ function CookieBanner({ visible, onAccept, onReject }) {
 
 function App() {
   const [loginOpen, setLoginOpen] = useState(false);
+  const [sandboxOpen, setSandboxOpen] = useState(true);
   const [demoTab, setDemoTab] = useState("whatsapp");
   const [cookieVisible, setCookieVisible] = useState(localStorage.getItem(COOKIE_KEY) === null);
 
@@ -916,9 +974,14 @@ function App() {
         </div>
         <div className="footer-bottom">
           <p>© 2026 MwangazaMail. Tous droits reserves.</p>
-          <p>✉ contact@mwangazamail.cd · Propulsé par David B. — Pour la transparence en RDC</p>
+          <p>
+            ✉ contact@mwangazamail.cd · Propulsé par David B. — Pour la transparence en RDC ·
+            <a href="https://ynk-techusa.com/" target="_blank" rel="noreferrer">Site officiel YNK-TechUSA</a>
+          </p>
         </div>
       </footer>
+
+      <${SandboxNotice} isOpen=${sandboxOpen} onClose=${() => setSandboxOpen(false)} />
 
       <${CookieBanner}
         visible=${cookieVisible}
