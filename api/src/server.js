@@ -15,9 +15,9 @@ app.use(morgan("dev"));
 app.get("/health", async (_req, res) => {
   try {
     await query("select 1 as ok");
-    res.json({ status: "ok", warehouse: "reachable" });
+    res.json({ status: "ok", service: "available" });
   } catch (error) {
-    res.status(503).json({ status: "degraded", warehouse: error.message });
+    res.status(503).json({ status: "degraded", service: "unavailable" });
   }
 });
 

@@ -200,7 +200,7 @@ async function resolveApiBase() {
     const healthy = await probeApiBase(base);
     if (healthy) {
       rememberApiBase(base);
-      updateDataStatus("live", "Redshift LIVE");
+      updateDataStatus("live", "Service disponible");
       return base;
     }
   }
@@ -248,7 +248,7 @@ async function fetchJson(path, options) {
         if (response.ok) {
           state.source = "api";
           rememberApiBase(base);
-          updateDataStatus("live", "Redshift LIVE");
+          updateDataStatus("live", "Service disponible");
           return await response.json();
         }
 
@@ -275,7 +275,7 @@ async function fetchJson(path, options) {
       if (response.ok) {
         state.source = "api";
         rememberApiBase(recoveredBase);
-        updateDataStatus("live", "Redshift LIVE");
+        updateDataStatus("live", "Service disponible");
         return await response.json();
       }
     } catch (_error) {
@@ -283,7 +283,7 @@ async function fetchJson(path, options) {
     }
   }
 
-  updateDataStatus(state.users.length || state.incidents.length ? "cache" : "offline", state.users.length || state.incidents.length ? "Cache locale" : "API hors ligne");
+  updateDataStatus(state.users.length || state.incidents.length ? "cache" : "offline", state.users.length || state.incidents.length ? "Donnees temporaires" : "Service indisponible");
   throw lastError;
 }
 
@@ -637,7 +637,7 @@ async function saveIncidentRevision(incidentKey) {
     await loadIncidents();
     await loadSeoTab();
   } catch (_error) {
-    alert("Revision impossible sans API active.");
+    alert("Revision impossible tant que le service est indisponible.");
   }
 }
 

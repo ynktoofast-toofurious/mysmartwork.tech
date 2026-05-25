@@ -241,7 +241,7 @@ async function saveUserDraft() {
     await loadSeoTab();
   } catch (_error) {
     closeConfirmModal();
-    alert("Sauvegarde utilisateur impossible sans API active.");
+    alert("Sauvegarde utilisateur impossible tant que le service est indisponible.");
   } finally {
     state.userDraft = null;
   }
@@ -450,7 +450,7 @@ async function saveIncidentRevision(incidentKey) {
     await loadIncidents();
     await loadSeoTab();
   } catch (_error) {
-    alert("Revision impossible sans API active.");
+    alert("Revision impossible tant que le service est indisponible.");
   }
 }
 

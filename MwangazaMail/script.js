@@ -219,7 +219,7 @@ const whyCards = [
   ["◈", "Conformite RGPD & protection maximale", "Architecture pensee pour la conformite legale et la protection absolue des donnees personnelles."],
   ["↻", "Mises a jour automatiques", "La plateforme evolue sans interruption de service. Vous beneficiez toujours des dernieres fonctionnalites."],
   ["◍", "Support dedie en francais", "Une equipe francophone disponible par WhatsApp, email ou visio. Temps de reponse < 4h en jours ouvres."],
-  ["<>", "API ouverte & integrations", "Connectez MwangazaMail a vos outils existants : SIRH, GRC, systemes d'archivage. API RESTful documentee."]
+  ["<>", "Integrations securisees", "Connectez MwangazaMail a vos outils existants : SIRH, GRC, systemes d'archivage, avec un accompagnement dedie."]
 ];
 
 const pricing = [
@@ -269,7 +269,7 @@ const pricing = [
       "Tout le plan Standard",
       "Multi-institutions illimite",
       "Cartographie des risques",
-      "API dediee + integrations",
+      "Integrations dediees",
       "SLA 99.9% garanti",
       "Account manager dedie"
     ],
@@ -289,7 +289,7 @@ const faqItems = [
 
 const footerColumns = {
   PRODUIT: ["Solution", "Fonctionnalites", "Demo", "Tarification"],
-  RESSOURCES: ["Documentation", "Blog", "Cas d'usage", "API"],
+  RESSOURCES: ["Documentation", "Blog", "Cas d'usage", "Guides"],
   "LÉGAL": ["Confidentialite", "CGU", "Securite", "RGPD"]
 };
 

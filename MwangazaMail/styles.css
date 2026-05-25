@@ -33,11 +33,33 @@ html {
 body {
   color: var(--text);
   font-family: "Plus Jakarta Sans", "Segoe UI", sans-serif;
+  display: flex;
+  flex-direction: column;
   background:
     linear-gradient(rgba(118, 120, 170, 0.08) 1px, transparent 1px),
     linear-gradient(90deg, rgba(118, 120, 170, 0.08) 1px, transparent 1px),
     radial-gradient(circle at 50% 0%, #ffffff 0%, #f6f7ff 48%, #f3f5fd 100%);
   background-size: 60px 60px, 60px 60px, auto;
+}
+
+#root {
+  flex: 1;
+}
+
+.site-powered-by {
+  text-align: center;
+  padding: 14px 16px 20px;
+  color: #646d87;
+  font-weight: 700;
+}
+
+.site-powered-by a {
+  color: #2458d8;
+  text-decoration: none;
+}
+
+.site-powered-by a:hover {
+  text-decoration: underline;
 }
 
 a {

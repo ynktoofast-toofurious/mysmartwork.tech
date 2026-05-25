@@ -645,6 +645,22 @@ th {
   gap: 8px;
 }
 
+.powered-footer {
+  margin-top: 6px;
+  text-align: center;
+  color: #646d87;
+  font-weight: 700;
+}
+
+.powered-footer a {
+  color: #2458d8;
+  text-decoration: none;
+}
+
+.powered-footer a:hover {
+  text-decoration: underline;
+}
+
 .filter-row {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
