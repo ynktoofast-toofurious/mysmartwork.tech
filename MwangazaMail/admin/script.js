@@ -516,7 +516,16 @@ async function saveUserDraft() {
     });
 
     const password = String(payload.password || "").trim();
-    const resolvedKey = userKey || user?.user_key;
+    let resolvedKey = userKey || user?.user_key || null;
+    if (password && !resolvedKey) {
+      const refreshedUsers = await fetchJson("/users").catch(() => []);
+      const targetEmail = String(payload.email || "").trim().toLowerCase();
+      const matched = Array.isArray(refreshedUsers)
+        ? refreshedUsers.find((item) => String(item?.email || "").trim().toLowerCase() === targetEmail)
+        : null;
+      resolvedKey = matched?.user_key || null;
+    }
+
     if (password && resolvedKey) {
       await fetchJson(`/users/${resolvedKey}/set-password`, {
         method: "PUT",
@@ -526,6 +535,8 @@ async function saveUserDraft() {
         },
         body: JSON.stringify({ password })
       });
+    } else if (password && !resolvedKey) {
+      throw new Error("Mot de passe non applique: identifiant utilisateur introuvable. Reessayez apres actualisation.");
     }
 
     closeConfirmModal();
