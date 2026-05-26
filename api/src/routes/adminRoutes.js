@@ -130,11 +130,12 @@ router.post("/login", async (req, res, next) => {
 
 router.put("/users/:userKey/set-password", async (req, res, next) => {
   try {
-    const { password } = req.body || {};
+    const { password, email } = req.body || {};
     const result = await setUserPassword(
       req.params.userKey,
       password,
-      req.header("x-user-email") || "admin@mwangaza.cd"
+      req.header("x-user-email") || "admin@mwangaza.cd",
+      email
     );
     if (!result) return res.status(404).json({ message: "Utilisateur introuvable" });
     res.json({ ok: true });

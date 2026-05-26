@@ -37,7 +37,7 @@ export async function loginUser(email, password) {
   }
 }
 
-export async function setUserPassword(userKey, password, changedBy) {
+export async function setUserPassword(userKey, password, changedBy, fallbackEmail = "") {
   if (!password || String(password).length < 6) {
     throw new Error("Le mot de passe doit contenir au moins 6 caracteres");
   }
@@ -46,23 +46,34 @@ export async function setUserPassword(userKey, password, changedBy) {
 
   const normalizedUserKey = String(userKey).trim();
 
-  const runUpdate = () =>
+  const runUpdateByKey = () =>
     query("update dim_user set password_hash = $1 where user_key = $2", [`${salt}:${hash}`, normalizedUserKey]);
+
+  const normalizedEmail = String(fallbackEmail || "").trim().toLowerCase();
+  const runUpdateByEmail = () =>
+    query("update dim_user set password_hash = $1 where lower(email) = $2", [`${salt}:${hash}`, normalizedEmail]);
 
   let result;
   try {
-    result = await runUpdate();
+    result = await runUpdateByKey();
   } catch (error) {
     const message = String(error?.message || "").toLowerCase();
     if (message.includes("password_hash") || message.includes("column") || message.includes("does not exist")) {
       await ensurePasswordColumn();
-      result = await runUpdate();
+      result = await runUpdateByKey();
     } else {
       throw error;
     }
   }
 
-  const resolvedUser = await query("select user_key from dim_user where user_key = $1", [normalizedUserKey]);
+  if (!result?.rowCount && normalizedEmail) {
+    result = await runUpdateByEmail();
+  }
+
+  const resolvedUser = await query(
+    "select user_key from dim_user where user_key = $1 or lower(email) = $2",
+    [normalizedUserKey, normalizedEmail]
+  );
   if (!resolvedUser.rowCount) return null;
   try {
     await writeAudit({

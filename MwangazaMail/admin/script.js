@@ -533,7 +533,7 @@ async function saveUserDraft() {
           "Content-Type": "application/json",
           "x-user-email": "admin@mwangaza.cd"
         },
-        body: JSON.stringify({ password })
+        body: JSON.stringify({ password, email: payload.email })
       });
     } else if (password && !resolvedKey) {
       throw new Error("Mot de passe non applique: identifiant utilisateur introuvable. Reessayez apres actualisation.");
