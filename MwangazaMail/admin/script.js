@@ -91,6 +91,12 @@ const state = {
   analytics: cachedSnapshot?.analytics || fallbackData.analytics,
   seo: cachedSnapshot?.seo || [],
   audit: cachedSnapshot?.audit || [],
+  aiMessages: [
+    {
+      role: "assistant",
+      content: "Bonjour. Je peux analyser les incidents, abonnements et KPI du tableau."
+    }
+  ],
   source: "api",
   userDraft: null,
   userEditKey: null,
@@ -360,6 +366,7 @@ function openUserDrawer(mode, row = null) {
     form.role.value = row.role || "viewer";
     form.city.value = row.city || "";
     form.dataset.originalEmail = row.email || "";
+    if (form.password) form.password.value = "";
   } else {
     state.userEditKey = null;
     title.textContent = "Ajouter un utilisateur";
@@ -367,6 +374,7 @@ function openUserDrawer(mode, row = null) {
     form.reset();
     form.role.value = "viewer";
     form.dataset.originalEmail = "";
+    if (form.password) form.password.value = "";
   }
 
   backdrop.hidden = false;
@@ -382,6 +390,93 @@ function closeUserDrawer() {
   drawer.classList.remove("is-open");
   drawer.setAttribute("aria-hidden", "true");
   state.userEditKey = null;
+}
+
+function showGreeting() {
+  try {
+    const stored = localStorage.getItem("mwangaza_user");
+    const parsed = stored ? JSON.parse(stored) : {};
+    const rawName = parsed?.name || parsed?.full_name || parsed?.fullName || "";
+    const emailName = String(parsed?.email || "")
+      .split("@")[0]
+      .replace(/[._-]+/g, " ")
+      .trim();
+    const name = rawName || emailName || "Admin";
+    const el = document.getElementById("userGreeting");
+    if (el) el.textContent = `Bonjour, ${name}`;
+  } catch (_err) {
+    const el = document.getElementById("userGreeting");
+    if (el) el.textContent = "Bonjour, Admin";
+  }
+}
+
+function renderAiMessages() {
+  const container = document.getElementById("aiChatMessages");
+  if (!container) return;
+  container.innerHTML = state.aiMessages
+    .map((item) => `<div class="ai-message ${item.role}">${item.content}</div>`)
+    .join("");
+  container.scrollTop = container.scrollHeight;
+}
+
+function pushAiMessage(role, content) {
+  const safeRole = role === "user" ? "user" : "assistant";
+  state.aiMessages.push({ role: safeRole, content: String(content || "") });
+  if (state.aiMessages.length > 40) {
+    state.aiMessages = [state.aiMessages[0], ...state.aiMessages.slice(-39)];
+  }
+  renderAiMessages();
+}
+
+function openAiModal() {
+  document.getElementById("aiBackdrop").hidden = false;
+  const drawer = document.getElementById("aiDrawer");
+  drawer.classList.add("is-open");
+  drawer.setAttribute("aria-hidden", "false");
+  renderAiMessages();
+  document.getElementById("aiQuestion")?.focus();
+}
+
+function closeAiModal() {
+  document.getElementById("aiBackdrop").hidden = true;
+  const drawer = document.getElementById("aiDrawer");
+  drawer.classList.remove("is-open");
+  drawer.setAttribute("aria-hidden", "true");
+}
+
+async function sendAiQuestion() {
+  const questionEl = document.getElementById("aiQuestion");
+  const question = questionEl?.value?.trim();
+  if (!question) return;
+  pushAiMessage("user", question);
+  if (questionEl) questionEl.value = "";
+  const btn = document.getElementById("sendAiBtn");
+  btn.disabled = true;
+  btn.textContent = "Envoi...";
+  const context = {
+    incidents: state.incidents.slice(0, 50),
+    subscriptions: state.subscriptions,
+    analytics: state.analytics
+  };
+  try {
+    const data = await fetchJson("/ai-analyse", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        question,
+        context,
+        messages: state.aiMessages
+          .filter((item) => item.content && (item.role === "user" || item.role === "assistant"))
+          .slice(-12)
+      })
+    });
+    pushAiMessage("assistant", data.answer || "Aucune reponse.");
+  } catch (_err) {
+    pushAiMessage("assistant", "Service IA indisponible. Verifiez que l'API est en ligne.");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Envoyer";
+  }
 }
 
 function openConfirmModal(message, action) {
@@ -411,7 +506,7 @@ async function saveUserDraft() {
   const payload = state.userDraft;
   const userKey = state.userEditKey;
   try {
-    await fetchJson(userKey ? `/users/${userKey}` : "/users", {
+    const user = await fetchJson(userKey ? `/users/${userKey}` : "/users", {
       method: userKey ? "PUT" : "POST",
       headers: {
         "Content-Type": "application/json",
@@ -419,6 +514,20 @@ async function saveUserDraft() {
       },
       body: JSON.stringify(payload)
     });
+
+    const password = String(payload.password || "").trim();
+    const resolvedKey = userKey || user?.user_key;
+    if (password && resolvedKey) {
+      await fetchJson(`/users/${resolvedKey}/set-password`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "x-user-email": "admin@mwangaza.cd"
+        },
+        body: JSON.stringify({ password })
+      });
+    }
+
     closeConfirmModal();
     closeUserDrawer();
     await loadUsers();
@@ -732,7 +841,14 @@ function registerEvents() {
   document.getElementById("addUserBtn")?.addEventListener("click", () => openUserDrawer("add"));
   document.getElementById("openUserDrawerBtn")?.addEventListener("click", () => {
     switchTab("utilisateurs");
-    openUserDrawer("add");
+  });
+
+  document.getElementById("analyseIaBtn")?.addEventListener("click", openAiModal);
+  document.getElementById("closeAiModalBtn")?.addEventListener("click", closeAiModal);
+  document.getElementById("aiBackdrop")?.addEventListener("click", closeAiModal);
+  document.getElementById("aiChatForm")?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    sendAiQuestion();
   });
 
   document.getElementById("usersRows")?.addEventListener("click", (event) => {
@@ -755,6 +871,7 @@ function registerEvents() {
       email: form.email.value.trim(),
       role: form.role.value,
       city: form.city.value.trim(),
+      password: form.password?.value?.trim() || "",
       originalEmail: form.dataset.originalEmail || ""
     };
     if (!payload.fullName || !payload.email || !payload.role || !payload.city) {
@@ -807,7 +924,9 @@ function switchTab(tab) {
 }
 
 async function bootstrap() {
+  showGreeting();
   registerEvents();
+  renderAiMessages();
   renderFeatures();
   updateDataStatus("offline", "Connexion...");
   await resolveApiBase();

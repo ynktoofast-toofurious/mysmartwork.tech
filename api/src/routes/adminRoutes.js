@@ -145,13 +145,23 @@ router.put("/users/:userKey/set-password", async (req, res, next) => {
 
 router.post("/ai-analyse", async (req, res, next) => {
   try {
-    const { question, context } = req.body || {};
+    const { question, context, messages } = req.body || {};
     if (!question?.trim()) return res.status(400).json({ message: "Question requise" });
+    if (!config.openai.apiKey) {
+      return res.status(503).json({ message: "OPENAI_API_KEY manquant sur le serveur" });
+    }
 
     const systemPrompt =
       `Tu es un analyste expert de la plateforme MwangazaMail qui analyse des donnees d'incidents ` +
       `de gouvernance en RDC. Reponds toujours en francais, de facon concise et precise.\n` +
       `Donnees actuelles du dashboard : ${JSON.stringify(context || {})}`;
+
+    const history = Array.isArray(messages)
+      ? messages
+          .filter((item) => item && (item.role === "user" || item.role === "assistant") && String(item.content || "").trim())
+          .slice(-12)
+          .map((item) => ({ role: item.role, content: String(item.content) }))
+      : [];
 
     const openAiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -163,6 +173,7 @@ router.post("/ai-analyse", async (req, res, next) => {
         model: config.openai.model,
         messages: [
           { role: "system", content: systemPrompt },
+          ...history,
           { role: "user", content: question.trim() }
         ],
         max_tokens: 600

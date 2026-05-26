@@ -10,7 +10,7 @@
       href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css?v=20260525-6" />
+    <link rel="stylesheet" href="styles.css?v=20260525-8" />
   </head>
   <body>
     <script>
@@ -46,7 +46,8 @@
             <span class="data-status" id="dataStatus">Connexion...</span>
           </div>
           <div class="topbar-right">
-            <button class="ghost-btn" type="button">Analyse IA</button>
+            <span class="user-greeting" id="userGreeting"></span>
+            <button class="ghost-btn" id="analyseIaBtn" type="button">Analyse IA</button>
             <button class="primary-btn" id="openUserDrawerBtn" type="button">Gerer les utilisateurs →</button>
           </div>
         </header>
@@ -210,9 +211,31 @@
           Ville
           <input id="userFormCity" name="city" required maxlength="80" />
         </label>
+        <label>
+          Mot de passe <span class="label-optional">(optionnel, min 6 caracteres)</span>
+          <input id="userFormPassword" name="password" type="password" minlength="6" maxlength="120" autocomplete="new-password" />
+        </label>
         <div class="drawer-actions">
           <button id="cancelUserFormBtn" class="ghost-btn" type="button">Annuler</button>
           <button id="submitUserFormBtn" class="primary-btn" type="submit">Sauvegarder</button>
+        </div>
+      </form>
+    </aside>
+
+    <div class="ai-backdrop" id="aiBackdrop" hidden></div>
+    <aside class="ai-drawer" id="aiDrawer" aria-hidden="true">
+      <div class="ai-modal-header">
+        <h3 id="aiModalTitle">Analyse IA</h3>
+        <button id="closeAiModalBtn" class="icon-btn" type="button" aria-label="Fermer">✕</button>
+      </div>
+      <p class="ai-modal-hint">Posez une question sur les incidents, tendances et performances.</p>
+      <div id="aiChatMessages" class="ai-chat-messages" aria-live="polite">
+        <div class="ai-message assistant">Bonjour. Je peux analyser les incidents, abonnements et KPI du tableau.</div>
+      </div>
+      <form id="aiChatForm" class="ai-chat-form">
+        <textarea id="aiQuestion" rows="3" placeholder="Ex: Quelles categories explosent ce mois-ci et pourquoi ?"></textarea>
+        <div class="ai-modal-actions">
+          <button id="sendAiBtn" class="primary-btn" type="submit">Envoyer</button>
         </div>
       </form>
     </aside>
@@ -227,6 +250,6 @@
       </div>
     </section>
 
-    <script src="script.js?v=20260525-6"></script>
+    <script src="script.js?v=20260525-8"></script>
   </body>
 </html>
