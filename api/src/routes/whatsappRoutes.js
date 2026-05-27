@@ -24,6 +24,7 @@ router.get("/webhook", (req, res) => {
 router.post("/webhook", async (req, res, next) => {
   try {
     let body = req.body;
+    console.log("[webhook] raw body:", JSON.stringify(body));
 
     // SNS SubscriptionConfirmation — confirm the subscription automatically
     if (body.Type === "SubscriptionConfirmation" && body.SubscribeURL) {
@@ -34,6 +35,14 @@ router.post("/webhook", async (req, res, next) => {
     // SNS Notification — unwrap the Message field to get the actual WhatsApp payload
     if (body.Type === "Notification" && typeof body.Message === "string") {
       try { body = JSON.parse(body.Message); } catch (_) {}
+      console.log("[webhook] unwrapped SNS message:", JSON.stringify(body));
+      // AWS Social Messaging wraps the webhook in whatsAppWebhookEntry (double-encoded)
+      if (typeof body.whatsAppWebhookEntry === "string") {
+        try {
+          const entry = JSON.parse(body.whatsAppWebhookEntry);
+          body = { entry: [entry] };
+        } catch (_) {}
+      }
     }
 
     const messages = getIncomingTextMessages(body);
