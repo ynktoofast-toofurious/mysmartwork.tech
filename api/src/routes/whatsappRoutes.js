@@ -23,7 +23,20 @@ router.get("/webhook", (req, res) => {
 
 router.post("/webhook", async (req, res, next) => {
   try {
-    const messages = getIncomingTextMessages(req.body);
+    let body = req.body;
+
+    // SNS SubscriptionConfirmation — confirm the subscription automatically
+    if (body.Type === "SubscriptionConfirmation" && body.SubscribeURL) {
+      await fetch(body.SubscribeURL);
+      return res.sendStatus(200);
+    }
+
+    // SNS Notification — unwrap the Message field to get the actual WhatsApp payload
+    if (body.Type === "Notification" && typeof body.Message === "string") {
+      try { body = JSON.parse(body.Message); } catch (_) {}
+    }
+
+    const messages = getIncomingTextMessages(body);
     for (const message of messages) {
       const alreadyProcessed = await wasMessageAlreadyProcessed(message.messageId);
       if (alreadyProcessed) {

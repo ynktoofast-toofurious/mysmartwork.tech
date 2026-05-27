@@ -598,33 +598,25 @@ export async function processClaimMessage(message) {
 }
 
 export async function sendWhatsAppText(to, bodyText) {
-  if (!config.whatsapp.accessToken || !config.whatsapp.phoneNumberId) {
-    throw new Error("WhatsApp credentials are missing (WHATSAPP_ACCESS_TOKEN / WHATSAPP_PHONE_NUMBER_ID)");
+  if (!config.whatsapp.phoneNumberId) {
+    throw new Error("WhatsApp phone number ID is not configured (WHATSAPP_PHONE_NUMBER_ID)");
   }
 
-  const url = `https://graph.facebook.com/${config.whatsapp.graphApiVersion}/${config.whatsapp.phoneNumberId}/messages`;
+  const { SocialMessagingClient, SendWhatsAppMessageCommand } = await import("@aws-sdk/client-socialmessaging");
+  const client = new SocialMessagingClient({ region: config.whatsapp.region });
 
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${config.whatsapp.accessToken}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      messaging_product: "whatsapp",
-      to,
-      type: "text",
-      text: {
-        preview_url: false,
-        body: bodyText
-      }
-    })
+  const command = new SendWhatsAppMessageCommand({
+    originationPhoneNumberId: config.whatsapp.phoneNumberId,
+    message: Buffer.from(
+      JSON.stringify({
+        messaging_product: "whatsapp",
+        to,
+        type: "text",
+        text: { preview_url: false, body: bodyText }
+      })
+    ),
+    metaApiVersion: config.whatsapp.graphApiVersion
   });
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`WhatsApp send failed: ${response.status} ${errorText}`);
-  }
-
-  return response.json();
+  return client.send(command);
 }
