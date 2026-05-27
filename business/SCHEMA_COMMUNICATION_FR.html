@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <title>MwangazaMail — Schéma de Communication</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+
+    body {
+      font-family: 'Plus Jakarta Sans', Arial, sans-serif;
+      background: #f5f7fa;
+      margin: 0;
+      padding: 40px;
+      color: #1a1a2e;
+    }
+
+    .page {
+      max-width: 780px;
+      margin: 0 auto;
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 50px 60px;
+      box-shadow: 0 4px 30px rgba(0,0,0,0.08);
+    }
+
+    .header {
+      text-align: center;
+      border-bottom: 3px solid #D32F2F;
+      padding-bottom: 24px;
+      margin-bottom: 36px;
+    }
+
+    .header h1 {
+      font-size: 26px;
+      font-weight: 800;
+      color: #D32F2F;
+      margin: 0 0 6px 0;
+      letter-spacing: 1px;
+    }
+
+    .header h2 {
+      font-size: 15px;
+      font-weight: 600;
+      color: #555;
+      margin: 0;
+    }
+
+    .header .subtitle {
+      font-size: 13px;
+      color: #888;
+      margin-top: 6px;
+    }
+
+    /* Flow container */
+    .flow {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+    }
+
+    /* Step box */
+    .step {
+      width: 520px;
+      border-radius: 10px;
+      padding: 18px 24px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+      position: relative;
+    }
+
+    .step .icon {
+      font-size: 36px;
+      min-width: 50px;
+      text-align: center;
+    }
+
+    .step .content .label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 3px;
+    }
+
+    .step .content .title {
+      font-size: 16px;
+      font-weight: 700;
+      margin: 0 0 3px 0;
+    }
+
+    .step .content .desc {
+      font-size: 13px;
+      font-weight: 400;
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    /* Colour themes per step */
+    .step.citizen      { background: #E3F2FD; border-left: 5px solid #1565C0; }
+    .step.citizen .content .label  { color: #1565C0; }
+    .step.citizen .content .title  { color: #0D47A1; }
+
+    .step.whatsapp     { background: #E8F5E9; border-left: 5px solid #2E7D32; }
+    .step.whatsapp .content .label { color: #2E7D32; }
+    .step.whatsapp .content .title { color: #1B5E20; }
+
+    .step.ai           { background: #FFF8E1; border-left: 5px solid #F57F17; }
+    .step.ai .content .label       { color: #E65100; }
+    .step.ai .content .title       { color: #BF360C; }
+
+    .step.cloud        { background: #EDE7F6; border-left: 5px solid #4527A0; }
+    .step.cloud .content .label    { color: #4527A0; }
+    .step.cloud .content .title    { color: #311B92; }
+
+    .step.dashboard    { background: #FBE9E7; border-left: 5px solid #D32F2F; }
+    .step.dashboard .content .label{ color: #D32F2F; }
+    .step.dashboard .content .title{ color: #B71C1C; }
+
+    .step.confirm      { background: #E8F5E9; border-left: 5px solid #388E3C; }
+    .step.confirm .content .label  { color: #388E3C; }
+    .step.confirm .content .title  { color: #1B5E20; }
+
+    /* Arrow between steps */
+    .arrow {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+      margin: 0;
+    }
+
+    .arrow .line {
+      width: 3px;
+      height: 30px;
+      background: linear-gradient(to bottom, #bbb, #888);
+    }
+
+    .arrow .label-tag {
+      background: #1a1a2e;
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      margin: 2px 0;
+    }
+
+    .arrow .tip {
+      width: 0;
+      height: 0;
+      border-left: 8px solid transparent;
+      border-right: 8px solid transparent;
+      border-top: 10px solid #888;
+      margin-top: -2px;
+    }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      margin-top: 44px;
+      font-size: 12px;
+      color: #aaa;
+      border-top: 1px solid #eee;
+      padding-top: 18px;
+    }
+
+    .footer strong {
+      color: #D32F2F;
+    }
+
+    /* Legend */
+    .legend {
+      margin-top: 36px;
+      background: #f9f9f9;
+      border-radius: 8px;
+      padding: 20px 24px;
+      font-size: 13px;
+    }
+
+    .legend h3 {
+      font-size: 14px;
+      font-weight: 700;
+      margin: 0 0 12px 0;
+      color: #333;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .legend-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .legend-dot {
+      min-width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      margin-top: 2px;
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="header">
+    <h1>MwangazaMail</h1>
+    <h2>Schéma du Parcours de Signalement</h2>
+    <div class="subtitle">Flux de communication entre le citoyen et la plateforme — Mai 2026</div>
+  </div>
+
+  <!-- Flow Diagram -->
+  <div class="flow">
+
+    <!-- Step 1: Citizen -->
+    <div class="step citizen">
+      <div class="icon">📱</div>
+      <div class="content">
+        <div class="label">Étape 1 — Citoyen</div>
+        <div class="title">L'utilisateur envoie un message</div>
+        <div class="desc">Depuis son téléphone, le citoyen envoie un message décrivant un incident (corruption, abus, surfacturation…) au numéro WhatsApp officiel de MwangazaMail.</div>
+      </div>
+    </div>
+
+    <!-- Arrow -->
+    <div class="arrow">
+      <div class="line"></div>
+      <div class="label-tag">Message WhatsApp</div>
+      <div class="line"></div>
+      <div class="tip"></div>
+    </div>
+
+    <!-- Step 2: WhatsApp -->
+    <div class="step whatsapp">
+      <div class="icon">📞</div>
+      <div class="content">
+        <div class="label">Étape 2 — Réception</div>
+        <div class="title">Numéro WhatsApp MwangazaMail</div>
+        <div class="desc">Le message est reçu par le numéro officiel de la plateforme. Le système accuse réception et engage une conversation guidée pour recueillir les détails du signalement.</div>
+      </div>
+    </div>
+
+    <!-- Arrow -->
+    <div class="arrow">
+      <div class="line"></div>
+      <div class="label-tag">Traitement automatique</div>
+      <div class="line"></div>
+      <div class="tip"></div>
+    </div>
+
+    <!-- Step 3: AI -->
+    <div class="step ai">
+      <div class="icon">🤖</div>
+      <div class="content">
+        <div class="label">Étape 3 — Intelligence Artificielle</div>
+        <div class="title">Analyse et capture du signalement</div>
+        <div class="desc">L'intelligence artificielle analyse le message, identifie la catégorie (corruption, abus d'autorité, détournement…), la ville, l'institution concernée et le niveau de gravité.</div>
+      </div>
+    </div>
+
+    <!-- Arrow -->
+    <div class="arrow">
+      <div class="line"></div>
+      <div class="label-tag">Envoi sécurisé vers le cloud</div>
+      <div class="line"></div>
+      <div class="tip"></div>
+    </div>
+
+    <!-- Step 4: Cloud DB -->
+    <div class="step cloud">
+      <div class="icon">☁️</div>
+      <div class="content">
+        <div class="label">Étape 4 — Base de données cloud</div>
+        <div class="title">Enregistrement du signalement</div>
+        <div class="desc">Le signalement structuré est enregistré de manière sécurisée dans la base de données cloud de MwangazaMail. Un numéro de référence unique est généré automatiquement.</div>
+      </div>
+    </div>
+
+    <!-- Arrow -->
+    <div class="arrow">
+      <div class="line"></div>
+      <div class="label-tag">Mise à jour en temps réel</div>
+      <div class="line"></div>
+      <div class="tip"></div>
+    </div>
+
+    <!-- Step 5: Dashboard -->
+    <div class="step dashboard">
+      <div class="icon">🖥️</div>
+      <div class="content">
+        <div class="label">Étape 5 — Tableau de bord</div>
+        <div class="title">Visible sur le site web administrateur</div>
+        <div class="desc">Le signalement apparaît instantanément dans le tableau de bord sécurisé, accessible aux institutions abonnées. Elles peuvent filtrer, réviser et suivre le statut de chaque incident.</div>
+      </div>
+    </div>
+
+    <!-- Arrow -->
+    <div class="arrow">
+      <div class="line"></div>
+      <div class="label-tag">Confirmation WhatsApp</div>
+      <div class="line"></div>
+      <div class="tip"></div>
+    </div>
+
+    <!-- Step 6: Confirmation -->
+    <div class="step confirm">
+      <div class="icon">✅</div>
+      <div class="content">
+        <div class="label">Étape 6 — Confirmation</div>
+        <div class="title">Numéro de référence envoyé au citoyen</div>
+        <div class="desc">Le citoyen reçoit automatiquement sur WhatsApp son numéro de référence unique (ex. #2891). Il peut l'utiliser pour suivre l'évolution de son signalement.</div>
+      </div>
+    </div>
+
+  </div><!-- end .flow -->
+
+  <!-- Legend -->
+  <div class="legend">
+    <h3>Légende</h3>
+    <div class="legend-row">
+      <div class="legend-dot" style="background:#1565C0;"></div>
+      <div><strong>Citoyen :</strong> Toute personne disposant d'un téléphone et de WhatsApp, sans inscription ni application supplémentaire.</div>
+    </div>
+    <div class="legend-row">
+      <div class="legend-dot" style="background:#2E7D32;"></div>
+      <div><strong>WhatsApp :</strong> Canal de communication principal. Fonctionne sur réseau 2G/3G. Disponible en français, lingala, swahili.</div>
+    </div>
+    <div class="legend-row">
+      <div class="legend-dot" style="background:#F57F17;"></div>
+      <div><strong>Intelligence Artificielle :</strong> Traitement automatique du message pour structurer et classifier le signalement sans intervention humaine.</div>
+    </div>
+    <div class="legend-row">
+      <div class="legend-dot" style="background:#4527A0;"></div>
+      <div><strong>Cloud :</strong> Infrastructure sécurisée hébergée aux États-Unis. Haute disponibilité, données chiffrées.</div>
+    </div>
+    <div class="legend-row">
+      <div class="legend-dot" style="background:#D32F2F;"></div>
+      <div><strong>Tableau de bord :</strong> Interface web réservée aux institutions abonnées. Accès sécurisé par identifiant et mot de passe.</div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <strong>MwangazaMail</strong> — Plateforme d'intelligence de gouvernance &nbsp;|&nbsp;
+    Propulsé par <strong>YNK-Tech USA</strong> &nbsp;|&nbsp; Mai 2026<br/>
+    <em>Document confidentiel — Reproduction interdite sans autorisation</em>
+  </div>
+
+</div>
+</body>
+</html>

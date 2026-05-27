@@ -135,7 +135,10 @@ export async function getIncidents(filters = {}) {
       l.city,
       sev.severity_name as severity,
       st.status_name as status,
-      dd.full_date as occurred_on
+      dd.full_date as occurred_on,
+      fi.description,
+      fi.reporter_reference,
+      fi.revision
     from fact_incident fi
     join dim_category c on fi.category_key = c.category_key
     join dim_institution i on fi.institution_key = i.institution_key

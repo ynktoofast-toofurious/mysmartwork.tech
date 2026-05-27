@@ -321,6 +321,7 @@ function renderIncidents(rows) {
           </select>
         </td>
         <td><button class="save-revision" data-key="${row.incident_key}" type="button">Sauver</button></td>
+        <td class="desc-cell" title="${(row.description || "").replace(/"/g, "&quot;")}">${row.description || ""}</td>
       </tr>
     `
       )

@@ -1,4 +1,4 @@
-﻿{
+{
     "executionRoleArn":  "arn:aws:iam::779846821543:role/ecsTaskExecutionRole",
     "networkMode":  "awsvpc",
     "cpu":  "512",
@@ -8,7 +8,7 @@
     "containerDefinitions":  [
                                  {
                                      "name":  "api",
-                                     "image":  "779846821543.dkr.ecr.us-east-1.amazonaws.com/mwangaza-api:20260525214246",
+                                     "image":  "779846821543.dkr.ecr.us-east-1.amazonaws.com/mwangaza-api:20260526223935",
                                      "cpu":  0,
                                      "portMappings":  [
                                                           {

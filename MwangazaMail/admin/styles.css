@@ -406,7 +406,7 @@ body {
 table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 850px;
+  min-width: 950px;
 }
 
 th,
@@ -416,6 +416,16 @@ td {
   padding: 9px 8px;
   font-weight: 600;
   color: #5d647b;
+}
+
+.desc-cell {
+  max-width: 260px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 400;
+  color: #6b7280;
+  cursor: help;
 }
 
 th {

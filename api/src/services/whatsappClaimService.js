@@ -8,7 +8,8 @@ const SESSION_TABLE_NAME = "whatsapp_session";
 const SESSION_ACTION_TYPE = "state";
 const SESSION_VERSION = 1;
 const MAX_OFF_TOPIC_WARNINGS = 2;
-const REQUIRED_FIELDS = ["reporterReference", "institution", "city", "description"];
+const REQUIRED_FIELDS = ["institution", "city", "description"];
+const OPTIONAL_FIELDS_DEFAULTS = { reporterReference: "Non fourni", statut: "nouveau", revision: "0" };
 
 function normalizeText(value, fallback) {
   const clean = String(value || "").trim();
@@ -67,7 +68,9 @@ function buildDefaultSession(from) {
       city: "",
       description: "",
       category: "",
-      severity: "moyen"
+      severity: "moyen",
+      statut: "nouveau",
+      revision: "0"
     },
     history: []
   };
@@ -123,7 +126,9 @@ function mergeDraft(baseDraft, patchDraft) {
     city: normalizeText(merged.city, ""),
     description: normalizeText(merged.description, ""),
     category: normalizeText(merged.category, ""),
-    severity: normalizeSeverity(merged.severity)
+    severity: normalizeSeverity(merged.severity),
+    statut: normalizeText(merged.statut, "nouveau"),
+    revision: normalizeText(merged.revision, "0")
   };
 }
 
@@ -255,7 +260,7 @@ async function extractClaimWithOpenAI(messageText) {
 async function saveClaimToRedshift({ from, messageId, messageText, claim }) {
   const dateKey = await ensureDateKey();
   const categoryKey = await ensureDimension("dim_category", "category_key", "category_name", claim.category);
-  const statusKey = await ensureDimension("dim_status", "status_key", "status_name", DEFAULT_STATUS);
+  const statusKey = await ensureDimension("dim_status", "status_key", "status_name", claim.statut || DEFAULT_STATUS);
   const severityKey = await ensureDimension("dim_severity", "severity_key", "severity_name", claim.severity);
   const institutionKey = await ensureDimension("dim_institution", "institution_key", "institution_name", claim.institution);
   const locationKey = await ensureLocation(claim.city);
@@ -270,12 +275,15 @@ async function saveClaimToRedshift({ from, messageId, messageText, claim }) {
       severity_key,
       institution_key,
       location_key,
+      description,
+      reporter_reference,
+      revision,
       ingestion_source,
       inserted_at,
       updated_at
     )
-    values ($1, $2, $3, $4, $5, $6, $7, $8, current_timestamp, current_timestamp)`,
-    [incidentRef, dateKey, categoryKey, statusKey, severityKey, institutionKey, locationKey, "whatsapp_webhook"]
+    values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, current_timestamp, current_timestamp)`,
+    [incidentRef, dateKey, categoryKey, statusKey, severityKey, institutionKey, locationKey, claim.description || "", claim.reporterReference || "Non fourni", claim.revision || 0, "whatsapp_webhook"]
   );
 
   const inserted = await query("select incident_key from fact_incident where incident_ref = $1", [incidentRef]);
@@ -389,14 +397,17 @@ async function runConversationBrain({ messageText, session }) {
   }
 
   const systemPrompt = [
-    "You are a WhatsApp incident intake assistant for fraud/claim cases.",
+    "You are a WhatsApp incident intake assistant for fraud/claim cases in DRC.",
+    "Conduct a natural conversation in French to collect incident details.",
     "You must stay strictly on incident collection.",
     "If user message is outside incident reporting, set isOnTopic=false and provide warningReason.",
-    "Collect these required fields: reporterReference, institution, city, description.",
-    "Also infer category and severity (faible|moyen|eleve|critique) when possible.",
+    "Required fields: institution, city, description.",
+    "Optional fields (use defaults if not provided): reporterReference (default: Non fourni), statut (default: nouveau, options: nouveau/en cours/resolu), revision (default: 0).",
+    "Also infer category and severity (faible|moyen|eleve|critique) from context when possible.",
+    "Ask for one or two fields at a time in a conversational way. When all required fields are collected, set missingFields to [].",
     "Respond with JSON only and no markdown.",
     "Schema:",
-    '{"isOnTopic":true,"shouldDiscontinue":false,"warningReason":"","assistantMessage":"","extracted":{"reporterReference":"","institution":"","city":"","description":"","category":"","severity":"moyen"},"missingFields":["reporterReference","institution","city","description"]}'
+    '{"isOnTopic":true,"shouldDiscontinue":false,"warningReason":"","assistantMessage":"","extracted":{"reporterReference":"","institution":"","city":"","description":"","category":"","severity":"moyen","statut":"nouveau","revision":"0"},"missingFields":["institution","city","description"]}'
   ].join("\n");
 
   const userPayload = {
@@ -578,8 +589,11 @@ export async function processClaimMessage(message) {
     institution: normalizeText(session.incidentDraft.institution, "WhatsApp Intake"),
     city: normalizeText(session.incidentDraft.city, "Kinshasa"),
     severity: normalizeSeverity(session.incidentDraft.severity),
+    description: normalizeText(session.incidentDraft.description, text),
     summary: normalizeText(session.incidentDraft.description, text),
-    reporterReference: normalizeReference(session.incidentDraft.reporterReference)
+    reporterReference: normalizeReference(session.incidentDraft.reporterReference),
+    statut: normalizeText(session.incidentDraft.statut, "nouveau"),
+    revision: parseInt(session.incidentDraft.revision || "0", 10) || 0
   };
 
   const { incidentRef } = await saveClaimToRedshift({

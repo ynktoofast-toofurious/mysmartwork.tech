@@ -6,6 +6,30 @@ import { query } from "./db.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import whatsappRoutes from "./routes/whatsappRoutes.js";
 
+async function runMigrations() {
+  const columns = [
+    { name: "description", def: "varchar(65535) default ''" },
+    { name: "reporter_reference", def: "varchar(120) default 'Non fourni'" },
+    { name: "revision", def: "int default 0" }
+  ];
+  for (const col of columns) {
+    try {
+      const exists = await query(
+        `select 1 from information_schema.columns
+         where table_name = 'fact_incident' and column_name = $1
+         limit 1`,
+        [col.name]
+      );
+      if (!exists.rowCount) {
+        await query(`alter table fact_incident add column ${col.name} ${col.def}`);
+        console.log(`[migration] added column fact_incident.${col.name}`);
+      }
+    } catch (err) {
+      console.error(`[migration] failed for ${col.name}:`, err.message);
+    }
+  }
+}
+
 const app = express();
 
 app.use(cors());
@@ -31,4 +55,5 @@ app.use((error, _req, res, _next) => {
 
 app.listen(config.port, () => {
   console.log(`API listening on http://localhost:${config.port}`);
+  runMigrations().catch((err) => console.error("[migration] startup error:", err.message));
 });
