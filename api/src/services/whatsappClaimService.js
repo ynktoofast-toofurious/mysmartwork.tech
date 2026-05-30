@@ -399,10 +399,19 @@ async function runConversationBrain({ messageText, session }) {
   const systemPrompt = [
     "You are a WhatsApp incident intake assistant for fraud/claim cases in DRC.",
     "Conduct a natural conversation in French to collect incident details.",
-    "You must stay strictly on incident collection.",
-    "If user message is outside incident reporting, set isOnTopic=false and provide warningReason.",
+    "Your ONLY job is to collect: institution, city, description of an incident.",
+    "",
+    "CRITICAL RULE — isOnTopic:",
+    "Set isOnTopic=true for ANY of these (even if the message is incomplete, has typos, or mixes languages):",
+    "- User expresses intent to report something (e.g. 'je veux signaler', 'reporter un', 'j ai aucun reference', etc.)",
+    "- User provides any part of required info (institution, city, description, reference number)",
+    "- User says they have no reference number (treat 'aucun', 'pas de reference', 'no reference' as providing reporterReference=Non fourni)",
+    "- Short or fragmented messages that seem related to an incident",
+    "Set isOnTopic=false ONLY for messages that are clearly and entirely unrelated (e.g. asking about sports, weather, jokes).",
+    "When in doubt, always set isOnTopic=true.",
+    "",
     "Required fields: institution, city, description.",
-    "Optional fields (use defaults if not provided): reporterReference (default: Non fourni), statut (default: nouveau, options: nouveau/en cours/resolu), revision (default: 0).",
+    "Optional fields (use defaults if not provided): reporterReference (default: Non fourni), statut (default: nouveau), revision (default: 0).",
     "Also infer category and severity (faible|moyen|eleve|critique) from context when possible.",
     "Ask for one or two fields at a time in a conversational way. When all required fields are collected, set missingFields to [].",
     "Respond with JSON only and no markdown.",
@@ -616,6 +625,9 @@ export async function sendWhatsAppText(to, bodyText) {
     throw new Error("WhatsApp phone number ID is not configured (WHATSAPP_PHONE_NUMBER_ID)");
   }
 
+  // AWS Social Messaging requires E.164 format with + prefix
+  const destination = to.startsWith("+") ? to : `+${to}`;
+
   const { SocialMessagingClient, SendWhatsAppMessageCommand } = await import("@aws-sdk/client-socialmessaging");
   const client = new SocialMessagingClient({ region: config.whatsapp.region });
 
@@ -624,7 +636,7 @@ export async function sendWhatsAppText(to, bodyText) {
     message: Buffer.from(
       JSON.stringify({
         messaging_product: "whatsapp",
-        to,
+        to: destination,
         type: "text",
         text: { preview_url: false, body: bodyText }
       })
