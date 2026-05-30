@@ -8,6 +8,7 @@ const SESSION_TABLE_NAME = "whatsapp_session";
 const SESSION_ACTION_TYPE = "state";
 const SESSION_VERSION = 1;
 const MAX_OFF_TOPIC_WARNINGS = 2;
+const MAX_SOFT_REDIRECTS = 2;
 const REQUIRED_FIELDS = ["institution", "city", "description"];
 const OPTIONAL_FIELDS_DEFAULTS = { reporterReference: "Non fourni", statut: "nouveau", revision: "0" };
 
@@ -28,6 +29,7 @@ const I18N = {
     restarted: "Session redemarree. Donnez votre numero de reference (si disponible), l'institution, la ville et la description de l'incident.",
     warnedPrefix: "Avertissement",
     warnedDefault: "Avertissement: restons sur la declaration d'incident uniquement.",
+    softRedirect: "Je suis la pour vous aider. Dites-moi simplement l'institution, la ville et ce qui s'est passe.",
     warnedDetails: "Veuillez fournir les details du cas: reference, institution, ville, description.",
     discontinued: "Avertissement: cette conversation est reservee a la declaration d'incidents. Discussion interrompue. Envoyez RESTART pour recommencer.",
     missingFallback: "Merci. Pouvez-vous completer les informations manquantes ?",
@@ -51,6 +53,7 @@ const I18N = {
     restarted: "Session restarted. Please provide your reference number (if available), institution, city, and incident description.",
     warnedPrefix: "Warning",
     warnedDefault: "Warning: please stay focused on incident reporting only.",
+    softRedirect: "I am here to help. Just tell me the institution, city, and what happened.",
     warnedDetails: "Please provide case details: reference, institution, city, description.",
     discontinued: "Warning: this channel is only for incident reporting. Conversation stopped. Send RESTART to start again.",
     missingFallback: "Thank you. Could you complete the missing information?",
@@ -74,6 +77,7 @@ const I18N = {
     restarted: "Session ebandi lisusu. Pesa reference (soki ezali), institution, engumba, mpe ndimbola ya incident.",
     warnedPrefix: "Likebisi",
     warnedDefault: "Likebisi: tosengeli kaka na makambo ya kosakola incident.",
+    softRedirect: "Nazali awa mpo na kosunga yo. Pesa kaka institution, engumba, mpe nini esalemaki.",
     warnedDetails: "Svp pesa makambo ya cas: reference, institution, engumba, ndimbola.",
     discontinued: "Likebisi: canal oyo ezali kaka mpo na kosakola incident. Lisolo etelemaki. Tinda RESTART mpo na kobanda lisusu.",
     missingFallback: "Matondi. Okoki kotondisa makambo oyo ezangi?",
@@ -97,6 +101,7 @@ const I18N = {
     restarted: "Kikao kimeanza upya. Toa namba ya rejea (ikiwa unayo), taasisi, mji, na maelezo ya tukio.",
     warnedPrefix: "Onyo",
     warnedDefault: "Onyo: tafadhali baki kwenye kuripoti matukio pekee.",
+    softRedirect: "Niko hapa kukusaidia. Tafadhali niambie taasisi, mji, na kilichotokea.",
     warnedDetails: "Tafadhali toa maelezo ya kesi: rejea, taasisi, mji, maelezo.",
     discontinued: "Onyo: njia hii ni kwa kuripoti matukio tu. Mazungumzo yamesitishwa. Tuma RESTART kuanza tena.",
     missingFallback: "Asante. Unaweza kukamilisha taarifa zinazokosekana?",
@@ -221,6 +226,7 @@ function buildDefaultSession(from) {
     status: "active",
     language: "fr",
     warnings: 0,
+    softRedirects: 0,
     completed: false,
     startedAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -261,6 +267,7 @@ function sanitizeSession(session, from) {
     phone: from,
     language: pickLanguage(session.language || "fr"),
     warnings: Number(session.warnings || 0),
+    softRedirects: Number(session.softRedirects || 0),
     completed: Boolean(session.completed)
   };
 
@@ -313,6 +320,12 @@ function isPrivacyConcernMessage(text) {
   }
 
   return /(peur|afraid|identit|anonym|revele|revel|confidenti|secur|safe|protege|danger|risque|kobanga|siri|usalama|hofu|utambulisho)/.test(clean);
+}
+
+function isGreetingOrSmallTalk(text) {
+  const clean = normalizeText(text, "").toLowerCase();
+  if (!clean) return false;
+  return /(\b(bonjour|salut|coucou|hello|hi|hey|habari|jambo|mambo|mbote|sasa|yo)\b|how are you|ca va|comment ca va|za nini|wapi)/.test(clean);
 }
 
 function withPrivacyReassurance(messageText, language) {
@@ -756,6 +769,18 @@ export async function processClaimMessage(message) {
 
   addHistory(session, "user", text);
 
+  // Allow a brief human interaction before strict off-topic warnings.
+  if (isGreetingOrSmallTalk(text) && !normalizeText(session.incidentDraft.description, "")) {
+    const friendly = `${normalizeText(text, "")} 👋\n${t(session.language, "softRedirect")}`;
+    addHistory(session, "assistant", friendly);
+    await saveConversationSession(message.from, session);
+    return {
+      referenceNumber: "SESSION-HUMAN-REDIRECT",
+      responseText: friendly,
+      claim: null
+    };
+  }
+
   const brain = await runConversationBrain({ messageText: text, session });
   session.incidentDraft = mergeDraft(session.incidentDraft, brain.extracted || {});
 
@@ -769,6 +794,18 @@ export async function processClaimMessage(message) {
   }
 
   if (!brain.isOnTopic || brain.shouldDiscontinue) {
+    if (session.softRedirects < MAX_SOFT_REDIRECTS) {
+      session.softRedirects += 1;
+      const softText = t(session.language, "softRedirect");
+      addHistory(session, "assistant", softText);
+      await saveConversationSession(message.from, session);
+      return {
+        referenceNumber: "SESSION-SOFT-REDIRECT",
+        responseText: softText,
+        claim: null
+      };
+    }
+
     session.warnings += 1;
 
     if (session.warnings >= MAX_OFF_TOPIC_WARNINGS) {
