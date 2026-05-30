@@ -8,7 +8,7 @@
     "containerDefinitions":  [
                                  {
                                      "name":  "api",
-                                     "image":  "779846821543.dkr.ecr.us-east-1.amazonaws.com/mwangaza-api:20260530103455",
+                                     "image":  "779846821543.dkr.ecr.us-east-1.amazonaws.com/mwangaza-api:20260530105154",
                                      "cpu":  0,
                                      "portMappings":  [
                                                           {
@@ -102,5 +102,6 @@
     "taskRoleArn":  "arn:aws:iam::779846821543:role/mwangazaApiTaskRole",
     "memory":  "1024"
 }
+
 
 

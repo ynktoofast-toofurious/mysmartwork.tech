@@ -211,6 +211,73 @@ export async function updateIncident(incidentKey, payload, changedBy) {
   return getIncidents({ q: currentRow.incident_ref, limit: 1 }).then((rows) => rows[0]);
 }
 
+export async function deleteIncident(incidentKey, changedBy) {
+  const current = await query(
+    `select incident_key, incident_ref
+     from fact_incident
+     where incident_key = $1`,
+    [incidentKey]
+  );
+
+  if (!current.rowCount) {
+    return false;
+  }
+
+  await query("delete from fact_incident where incident_key = $1", [incidentKey]);
+
+  await writeAudit({
+    tableName: "fact_incident",
+    recordId: incidentKey,
+    actionType: "delete",
+    changedBy,
+    oldValue: JSON.stringify(current.rows[0]),
+    newValue: ""
+  });
+
+  return true;
+}
+
+export async function deleteIncidents(incidentKeys, changedBy) {
+  const keys = Array.isArray(incidentKeys)
+    ? incidentKeys.map((item) => Number(item)).filter((item) => Number.isFinite(item) && item > 0)
+    : [];
+
+  if (!keys.length) {
+    return { deleted: 0 };
+  }
+
+  const placeholders = keys.map((_, idx) => `$${idx + 1}`).join(",");
+  const found = await query(
+    `select incident_key, incident_ref
+     from fact_incident
+     where incident_key in (${placeholders})`,
+    keys
+  );
+
+  if (!found.rowCount) {
+    return { deleted: 0 };
+  }
+
+  await query(
+    `delete from fact_incident
+     where incident_key in (${placeholders})`,
+    keys
+  );
+
+  for (const row of found.rows) {
+    await writeAudit({
+      tableName: "fact_incident",
+      recordId: row.incident_key,
+      actionType: "delete",
+      changedBy,
+      oldValue: JSON.stringify(row),
+      newValue: ""
+    });
+  }
+
+  return { deleted: found.rowCount };
+}
+
 export async function getUsers(filters = {}) {
   const params = [];
   const where = [];

@@ -1,6 +1,8 @@
 import { Router } from "express";
 import {
   createUser,
+  deleteIncident,
+  deleteIncidents,
   ensurePasswordColumn,
   getAnalyticsSummary,
   getIncidents,
@@ -37,6 +39,28 @@ router.put("/incidents/:incidentKey", async (req, res, next) => {
       return res.status(404).json({ message: "Incident not found" });
     }
     res.json(incident);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.delete("/incidents/:incidentKey", async (req, res, next) => {
+  try {
+    const deleted = await deleteIncident(req.params.incidentKey, req.header("x-user-email") || "admin@mwangaza.cd");
+    if (!deleted) {
+      return res.status(404).json({ message: "Incident not found" });
+    }
+    res.json({ ok: true });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/incidents/bulk-delete", async (req, res, next) => {
+  try {
+    const keys = req.body?.incidentKeys;
+    const result = await deleteIncidents(keys, req.header("x-user-email") || "admin@mwangaza.cd");
+    res.json(result);
   } catch (error) {
     next(error);
   }

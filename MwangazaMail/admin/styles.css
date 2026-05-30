@@ -566,6 +566,39 @@ th {
   margin-bottom: 10px;
 }
 
+.claim-toolbar {
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.claim-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.claim-delete {
+  background: linear-gradient(135deg, #d03a52, #b2283f);
+  color: #fff;
+  border-color: transparent;
+}
+
+.claim-delete-btn {
+  background: #ffe8ed;
+  color: #b52f4a;
+  border-color: #f4bfd0;
+}
+
+.claim-row {
+  transition: transform 0.2s ease;
+}
+
+.claim-row.row-swiped {
+  transform: translateX(-56px);
+}
+
 .edit-user {
   border: 1px solid #dfceff;
   background: #f3ecff;
@@ -804,6 +837,12 @@ th {
 
   .main-nav {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .claim-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr;
   }
 
   .topbar {

@@ -28,12 +28,11 @@
 
         <nav class="main-nav">
           <button class="nav-item is-active" data-tab="dashboard" type="button">Dashboard</button>
+          <button class="nav-item" data-tab="claimreports" type="button">Claim Report</button>
           <button class="nav-item" data-tab="utilisateurs" type="button">Utilisateurs</button>
           <button class="nav-item" data-tab="abonnements" type="button">Abonnements</button>
           <button class="nav-item" data-tab="analytics" type="button">Analytics</button>
           <button class="nav-item" data-tab="fonctionnalites" type="button">Fonctionnalites</button>
-          <button class="nav-item" data-tab="seo" type="button">SEO</button>
-          <button class="nav-item" data-tab="whatsapp" type="button">💬 Messages</button>
         </nav>
 
         <button class="logout-btn" id="logoutBtn" type="button">Deconnexion</button>
@@ -85,8 +84,18 @@
             </article>
           </section>
 
+        </section>
+
+        <section id="claimreportsSection" class="tab-section">
           <section class="panel-card table-card">
-            <h2>Derniers signalements (21)</h2>
+            <div class="users-toolbar claim-toolbar">
+              <h2 style="margin:0">Claim Report</h2>
+              <div class="claim-actions">
+                <button id="claimSelectAllBtn" class="ghost-btn" type="button">Tout selectionner</button>
+                <button id="claimClearSelectionBtn" class="ghost-btn" type="button">Effacer selection</button>
+                <button id="claimDeleteSelectedBtn" class="primary-btn claim-delete" type="button">Supprimer selection</button>
+              </div>
+            </div>
             <div class="filter-row" id="incidentFilterRow">
               <select id="filterCategory"><option value="">Categorie</option></select>
               <select id="filterCity"><option value="">Ville</option></select>
@@ -96,7 +105,7 @@
               <button id="applyIncidentFilters" type="button">Filtrer</button>
               <button id="resetIncidentFilters" type="button">Reset</button>
             </div>
-            <div class="table-wrap"><table><thead><tr><th>Ref.</th><th>Categorie</th><th>Institution</th><th>Ville</th><th>Telephone</th><th>Source</th><th>Heure entree</th><th>Severite</th><th>Statut</th><th>Revision</th><th>Description</th></tr></thead><tbody id="reportRows"></tbody></table></div>
+            <div class="table-wrap"><table><thead><tr><th><input id="claimSelectAll" type="checkbox" aria-label="Selectionner tous les claims" /></th><th>Ref.</th><th>Categorie</th><th>Institution</th><th>Ville</th><th>Telephone</th><th>Source</th><th>Heure entree</th><th>Severite</th><th>Statut</th><th>Revision</th><th>Description</th><th>Action</th></tr></thead><tbody id="reportRows"></tbody></table></div>
           </section>
         </section>
 
@@ -142,63 +151,6 @@
           </section>
         </section>
 
-        <section id="seoSection" class="tab-section">
-          <section class="stats-grid">
-            <article class="stat-card"><p class="stat-value" id="seoEventsCount">0</p><p class="stat-label">Acces traces</p></article>
-            <article class="stat-card"><p class="stat-value" id="seoRouteCount">0</p><p class="stat-label">Routes actives</p></article>
-            <article class="stat-card"><p class="stat-value" id="seoUserCount">0</p><p class="stat-label">Utilisateurs uniques</p></article>
-            <article class="stat-card"><p class="stat-value" id="seoLocationCount">0</p><p class="stat-label">Localisations detectees</p></article>
-          </section>
-
-          <section class="panel-card table-card">
-            <h2>Trafic & acces (SEO)</h2>
-            <div class="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Heure</th><th>Route</th><th>Utilisateur</th><th>Localisation</th><th>IP</th><th>Agent</th>
-                  </tr>
-                </thead>
-                <tbody id="seoRows"></tbody>
-              </table>
-            </div>
-          </section>
-
-          <section class="panel-card table-card">
-            <h2>Audit trail</h2>
-            <div class="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Heure</th><th>Table</th><th>Record</th><th>Action</th><th>Par</th><th>Avant</th><th>Apres</th>
-                  </tr>
-                </thead>
-                <tbody id="auditRows"></tbody>
-              </table>
-            </div>
-          </section>
-        </section>
-
-        <section id="whatsappSection" class="tab-section">
-          <section class="stats-grid">
-            <article class="stat-card"><p class="stat-value" id="waMsgCount">—</p><p class="stat-label">Messages recus</p></article>
-            <article class="stat-card"><p class="stat-value" id="waUniqueCount">—</p><p class="stat-label">Expediteurs uniques</p></article>
-            <article class="stat-card"><p class="stat-value" id="waSentCount">—</p><p class="stat-label">Reponses envoyees</p></article>
-            <article class="stat-card"><p class="stat-value" id="waCompletedCount">—</p><p class="stat-label">Signalements crees</p></article>
-          </section>
-          <section class="panel-card table-card">
-            <div class="users-toolbar" style="margin-bottom:12px">
-              <h2 style="margin:0">Conversations WhatsApp</h2>
-              <button id="refreshWaBtn" class="ghost-btn" type="button">↻ Actualiser</button>
-            </div>
-            <div class="table-wrap">
-              <table>
-                <thead><tr><th>Heure</th><th>Expediteur</th><th>Message</th><th>Ref signalement</th><th>Statut</th></tr></thead>
-                <tbody id="waRows"></tbody>
-              </table>
-            </div>
-          </section>
-        </section>
 
         <footer class="powered-footer">
           <a href="https://ynk-techusa.com/" target="_blank" rel="noreferrer">Powered by YNK-Tech USA</a>
@@ -272,6 +224,6 @@
       </div>
     </section>
 
-    <script src="script.js?v=20260526-1"></script>
+    <script src="script.js?v=20260530-claims"></script>
   </body>
 </html>

@@ -58,12 +58,11 @@ const statusClass = {
 
 const sectionMeta = {
   dashboard: ["Dashboard Admin", "Vue d'ensemble de la plateforme", "/admin/dashboard"],
+  claimreports: ["Claim Report", "Vue detaillee et gestion des signalements", "/admin/claim-report"],
   utilisateurs: ["Utilisateurs", "Gestion des comptes et des roles", "/admin/utilisateurs"],
   abonnements: ["Abonnements", "Suivi des plans et renouvellements", "/admin/abonnements"],
   analytics: ["Analytics", "Analyse des performances et tendances", "/admin/analytics"],
-  fonctionnalites: ["Fonctionnalites", "Activation des modules metier", "/admin/fonctionnalites"],
-  seo: ["SEO & Audit", "Trafic, acces, geolocalisation et historique des revisions", "/admin/seo"],
-  whatsapp: ["Messages WhatsApp", "Conversations recues et signalements crees via WhatsApp", "/admin/whatsapp"]
+  fonctionnalites: ["Fonctionnalites", "Activation des modules metier", "/admin/fonctionnalites"]
 };
 
 const severityOptions = ["faible", "moyen", "eleve", "critique"];
@@ -103,6 +102,7 @@ const state = {
   userEditKey: null,
   confirmAction: null
 };
+let selectedClaimKeys = new Set();
 
 const apiCandidates = (() => {
   const params = new URLSearchParams(window.location.search);
@@ -320,7 +320,8 @@ function renderIncidents(rows) {
     rows
       .map(
         (row) => `
-      <tr>
+      <tr class="claim-row" data-key="${row.incident_key}" title="Ref: ${String(row.incident_ref || "-").replace(/"/g, "&quot;")} | Institution: ${String(row.institution || "-").replace(/"/g, "&quot;")} | Ville: ${String(row.city || "-").replace(/"/g, "&quot;")} | Tel: ${String(row.reporter_phone || "-").replace(/"/g, "&quot;")} | Description: ${String(row.description || "-").replace(/"/g, "&quot;")}">
+        <td><input class="claim-select" type="checkbox" data-key="${row.incident_key}" ${selectedClaimKeys.has(Number(row.incident_key)) ? "checked" : ""} /></td>
         <td>${row.incident_ref}</td>
         <td><span class="tag ${tagClass[row.category] || "tag-gray"}">${row.category}</span></td>
         <td>${row.institution}</td>
@@ -340,11 +341,74 @@ function renderIncidents(rows) {
         </td>
         <td><button class="save-revision" data-key="${row.incident_key}" type="button">Sauver</button></td>
         <td class="desc-cell" title="${(row.description || "").replace(/"/g, "&quot;")}">${row.description || ""}</td>
+        <td><button class="save-revision claim-delete-btn" data-key="${row.incident_key}" type="button">Supprimer</button></td>
       </tr>
     `
       )
       .join("")
   );
+
+  const available = new Set(rows.map((row) => Number(row.incident_key)));
+  selectedClaimKeys = new Set([...selectedClaimKeys].filter((key) => available.has(key)));
+  syncClaimSelectionState();
+}
+
+function syncClaimSelectionState() {
+  const checkboxes = Array.from(document.querySelectorAll(".claim-select"));
+  const selectAll = document.getElementById("claimSelectAll");
+  const selectedCount = selectedClaimKeys.size;
+  const deleteBtn = document.getElementById("claimDeleteSelectedBtn");
+
+  checkboxes.forEach((box) => {
+    const key = Number(box.dataset.key);
+    box.checked = selectedClaimKeys.has(key);
+  });
+
+  if (selectAll) {
+    const total = checkboxes.length;
+    selectAll.checked = total > 0 && selectedCount === total;
+    selectAll.indeterminate = selectedCount > 0 && selectedCount < total;
+  }
+
+  if (deleteBtn) {
+    deleteBtn.disabled = selectedCount === 0;
+    deleteBtn.textContent = selectedCount > 0 ? `Supprimer selection (${selectedCount})` : "Supprimer selection";
+  }
+}
+
+async function deleteIncidentClaim(incidentKey) {
+  await fetchJson(`/incidents/${incidentKey}`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      "x-user-email": "admin@mwangaza.cd"
+    }
+  });
+  selectedClaimKeys.delete(Number(incidentKey));
+  await loadIncidents();
+}
+
+async function deleteSelectedClaims() {
+  const incidentKeys = [...selectedClaimKeys];
+  if (!incidentKeys.length) {
+    return;
+  }
+
+  if (!window.confirm(`Supprimer ${incidentKeys.length} claim(s) selectionne(s) ?`)) {
+    return;
+  }
+
+  await fetchJson("/incidents/bulk-delete", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-user-email": "admin@mwangaza.cd"
+    },
+    body: JSON.stringify({ incidentKeys })
+  });
+
+  selectedClaimKeys = new Set();
+  await loadIncidents();
 }
 
 function renderUsers(rows) {
@@ -562,7 +626,6 @@ async function saveUserDraft() {
     closeConfirmModal();
     closeUserDrawer();
     await loadUsers();
-    await loadSeoTab();
   } catch (_error) {
     closeConfirmModal();
     const rawMessage = String(_error?.message || "").trim();
@@ -778,7 +841,6 @@ async function saveIncidentRevision(incidentKey) {
       body: JSON.stringify({ status, severity })
     });
     await loadIncidents();
-    await loadSeoTab();
   } catch (_error) {
     alert("Revision impossible tant que le service est indisponible.");
   }
@@ -824,60 +886,6 @@ async function loadAnalytics() {
   renderAnalytics(state.analytics);
 }
 
-async function loadSeoTab() {
-  try {
-    state.seo = await fetchJson("/seo");
-    state.audit = await fetchJson("/audit-trail");
-    persistCache();
-  } catch (_error) {
-    if (!STRICT_LIVE_MODE) {
-      state.source = "fallback";
-      state.seo = fallbackData.seo;
-      state.audit = fallbackData.audit;
-    }
-  }
-  renderSeo(state.seo, state.audit);
-}
-
-async function loadWhatsappTab() {
-  try {
-    const rows = await fetchJson("/whatsapp-messages");
-    renderWhatsapp(rows);
-  } catch (_error) {
-    fillRows("waRows", `<tr><td colspan="5" style="text-align:center;color:#aaa">Impossible de charger les messages. API hors ligne ou credentials WhatsApp manquants.</td></tr>`);
-  }
-}
-
-function renderWhatsapp(rows) {
-  const received = rows.filter((r) => r.actionType === "received");
-  const sent = rows.filter((r) => r.actionType === "sent");
-  const withRef = received.filter((r) => r.incidentRef);
-  const unique = new Set(received.map((r) => r.from || r.sender)).size;
-
-  document.getElementById("waMsgCount").textContent = String(received.length);
-  document.getElementById("waUniqueCount").textContent = String(unique);
-  document.getElementById("waSentCount").textContent = String(sent.length);
-  document.getElementById("waCompletedCount").textContent = String(withRef.length);
-
-  if (!rows.length) {
-    fillRows("waRows", `<tr><td colspan="5" style="text-align:center;color:#aaa">Aucun message WhatsApp enregistre pour l'instant.</td></tr>`);
-    return;
-  }
-
-  fillRows(
-    "waRows",
-    rows.map((r) => `
-      <tr>
-        <td>${new Date(r.time).toLocaleString()}</td>
-        <td>${r.from || r.sender || "-"}</td>
-        <td title="${(r.rawText || "").replace(/"/g, "&quot;")}">${(r.rawText || "-").slice(0, 80)}</td>
-        <td>${r.incidentRef ? `<code>${r.incidentRef}</code>` : "<span style='color:#aaa'>-</span>"}</td>
-        <td><span class="badge ${r.incidentRef ? 'badge-green' : 'badge-grey'}">${r.incidentRef ? 'Cree' : r.actionType}</span></td>
-      </tr>
-    `).join("")
-  );
-}
-
 async function logPageAccess(route) {
   try {
     await fetchJson("/track-access", {
@@ -906,9 +914,67 @@ function registerEvents() {
   });
 
   document.getElementById("reportRows")?.addEventListener("click", (event) => {
+    const deleteButton = event.target.closest(".claim-delete-btn");
+    if (deleteButton) {
+      const key = Number(deleteButton.dataset.key);
+      if (!Number.isFinite(key)) return;
+      if (!window.confirm("Supprimer ce claim ?")) return;
+      deleteIncidentClaim(key).catch(() => alert("Suppression impossible pour le moment."));
+      return;
+    }
+
     const button = event.target.closest(".save-revision");
     if (!button) return;
     saveIncidentRevision(button.dataset.key);
+  });
+
+  document.getElementById("reportRows")?.addEventListener("change", (event) => {
+    const checkbox = event.target.closest(".claim-select");
+    if (!checkbox) return;
+    const key = Number(checkbox.dataset.key);
+    if (!Number.isFinite(key)) return;
+    if (checkbox.checked) selectedClaimKeys.add(key);
+    else selectedClaimKeys.delete(key);
+    syncClaimSelectionState();
+  });
+
+  const reportRows = document.getElementById("reportRows");
+  reportRows?.addEventListener("touchstart", (event) => {
+    const row = event.target.closest("tr.claim-row");
+    if (!row) return;
+    row.dataset.touchStartX = String(event.changedTouches[0].clientX);
+  }, { passive: true });
+
+  reportRows?.addEventListener("touchend", (event) => {
+    const row = event.target.closest("tr.claim-row");
+    if (!row) return;
+    const start = Number(row.dataset.touchStartX || 0);
+    const end = Number(event.changedTouches[0].clientX || 0);
+    const delta = end - start;
+    if (delta < -40) row.classList.add("row-swiped");
+    if (delta > 20) row.classList.remove("row-swiped");
+  }, { passive: true });
+
+  document.getElementById("claimSelectAll")?.addEventListener("change", (event) => {
+    const checked = Boolean(event.target.checked);
+    const keys = state.incidents.map((row) => Number(row.incident_key)).filter((key) => Number.isFinite(key));
+    selectedClaimKeys = checked ? new Set(keys) : new Set();
+    syncClaimSelectionState();
+  });
+
+  document.getElementById("claimSelectAllBtn")?.addEventListener("click", () => {
+    const keys = state.incidents.map((row) => Number(row.incident_key)).filter((key) => Number.isFinite(key));
+    selectedClaimKeys = new Set(keys);
+    syncClaimSelectionState();
+  });
+
+  document.getElementById("claimClearSelectionBtn")?.addEventListener("click", () => {
+    selectedClaimKeys = new Set();
+    syncClaimSelectionState();
+  });
+
+  document.getElementById("claimDeleteSelectedBtn")?.addEventListener("click", () => {
+    deleteSelectedClaims().catch(() => alert("Suppression multiple impossible pour le moment."));
   });
 
   document.getElementById("addUserBtn")?.addEventListener("click", () => openUserDrawer("add"));
@@ -970,12 +1036,11 @@ function registerEvents() {
 const navItems = Array.from(document.querySelectorAll(".nav-item"));
 const sections = {
   dashboard: document.getElementById("dashboardSection"),
+  claimreports: document.getElementById("claimreportsSection"),
   utilisateurs: document.getElementById("utilisateursSection"),
   abonnements: document.getElementById("abonnementsSection"),
   analytics: document.getElementById("analyticsSection"),
-  fonctionnalites: document.getElementById("fonctionnalitesSection"),
-  seo: document.getElementById("seoSection"),
-  whatsapp: document.getElementById("whatsappSection")
+  fonctionnalites: document.getElementById("fonctionnalitesSection")
 };
 
 const title = document.getElementById("sectionTitle");
@@ -994,8 +1059,6 @@ function switchTab(tab) {
   routePill.textContent = route;
   logPageAccess(route);
 
-  if (tab === "seo") loadSeoTab();
-  if (tab === "whatsapp") loadWhatsappTab();
 }
 
 async function bootstrap() {
@@ -1015,15 +1078,12 @@ document.getElementById("refreshBtn")?.addEventListener("click", () => {
   const active = navItems.find((item) => item.classList.contains("is-active"));
   const tab = active?.dataset.tab || "dashboard";
   if (tab === "dashboard") loadIncidents();
+  if (tab === "claimreports") loadIncidents();
   if (tab === "utilisateurs") loadUsers();
   if (tab === "abonnements") loadSubscriptions();
   if (tab === "analytics") loadAnalytics();
-  if (tab === "seo") loadSeoTab();
-  if (tab === "whatsapp") loadWhatsappTab();
   switchTab(tab);
 });
-
-document.getElementById("refreshWaBtn")?.addEventListener("click", loadWhatsappTab);
 
 document.getElementById("logoutBtn")?.addEventListener("click", () => {
   localStorage.removeItem("mwangaza_auth");
