@@ -593,6 +593,7 @@ th {
 
 .claim-row {
   transition: transform 0.2s ease;
+  cursor: pointer;
 }
 
 .claim-row.row-swiped {
@@ -667,13 +668,19 @@ th {
 }
 
 .drawer-form input,
-.drawer-form select {
+.drawer-form select,
+.drawer-form textarea {
   border: 1px solid var(--line);
   border-radius: 9px;
   padding: 9px 10px;
   font: inherit;
   color: #4f5770;
   background: #fff;
+}
+
+.drawer-form textarea {
+  resize: vertical;
+  min-height: 120px;
 }
 
 .drawer-actions {
@@ -766,8 +773,8 @@ th {
   border-color: #dfceff;
 }
 
-#seoSection .table-wrap table {
-  min-width: 1100px;
+#claimreportsSection .table-wrap table {
+  min-width: 980px;
 }
 
 @media (max-width: 1180px) {

@@ -32,6 +32,31 @@ function normalizeReference(value) {
   return clean.slice(0, 120);
 }
 
+function inferCategoryFromText(text) {
+  const clean = normalizeText(text, "").toLowerCase();
+  if (!clean) {
+    return "Autre";
+  }
+
+  if (/(corrupt|pot[- ]?de[- ]?vin|bakchich|bribe|commission)/.test(clean)) {
+    return "Corruption";
+  }
+  if (/(detourn|vol|embezz|dispar|faux paiement)/.test(clean)) {
+    return "Detournement";
+  }
+  if (/(abus|menace|pression|intimid|autorite)/.test(clean)) {
+    return "Abus d'autorite";
+  }
+  if (/(surfact|facture|majoration|double paiement|tarif)/.test(clean)) {
+    return "Surfacturation";
+  }
+  if (/(fraud|escro|arnaque|falsif|irregularit)/.test(clean)) {
+    return "Fraude";
+  }
+
+  return "Autre";
+}
+
 function dateKeyFromDate(date = new Date()) {
   const yyyy = date.getUTCFullYear();
   const mm = String(date.getUTCMonth() + 1).padStart(2, "0");
@@ -586,6 +611,11 @@ export async function processClaimMessage(message) {
   const brain = await runConversationBrain({ messageText: text, session });
   session.incidentDraft = mergeDraft(session.incidentDraft, brain.extracted || {});
 
+  if (!normalizeText(session.incidentDraft.category, "")) {
+    const guessedCategory = inferCategoryFromText(`${session.incidentDraft.description || ""} ${text}`);
+    session.incidentDraft.category = normalizeText(guessedCategory, "Autre");
+  }
+
   if (isPrivacyConcernMessage(text)) {
     brain.assistantMessage = withPrivacyReassurance(brain.assistantMessage);
   }
@@ -638,7 +668,7 @@ export async function processClaimMessage(message) {
   }
 
   const claim = {
-    category: normalizeText(session.incidentDraft.category, "Autre"),
+    category: normalizeText(session.incidentDraft.category, inferCategoryFromText(session.incidentDraft.description || text)),
     institution: normalizeText(session.incidentDraft.institution, "WhatsApp Intake"),
     city: normalizeText(session.incidentDraft.city, "Kinshasa"),
     severity: normalizeSeverity(session.incidentDraft.severity),

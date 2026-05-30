@@ -10,7 +10,7 @@
       href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css?v=20260526-1" />
+    <link rel="stylesheet" href="styles.css?v=20260530-claims-v2" />
   </head>
   <body>
     <script>
@@ -87,6 +87,17 @@
         </section>
 
         <section id="claimreportsSection" class="tab-section">
+          <section class="panel-card table-card">
+            <h2>Vue Dashboard Claims</h2>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>Indicateur</th><th>Valeur</th><th>Insight</th></tr>
+                </thead>
+                <tbody id="claimInsightRows"></tbody>
+              </table>
+            </div>
+          </section>
           <section class="panel-card table-card">
             <div class="users-toolbar claim-toolbar">
               <h2 style="margin:0">Claim Report</h2>
@@ -196,6 +207,61 @@
       </form>
     </aside>
 
+    <div class="drawer-backdrop" id="claimDrawerBackdrop" hidden></div>
+    <aside class="user-drawer claim-drawer" id="claimDrawer" aria-hidden="true">
+      <div class="drawer-header">
+        <h3 id="claimDrawerTitle">Detail claim</h3>
+        <button id="closeClaimDrawerBtn" class="icon-btn" type="button" aria-label="Fermer">✕</button>
+      </div>
+      <form id="claimForm" class="drawer-form">
+        <label>
+          Reference
+          <input id="claimFormRef" name="incidentRef" readonly />
+        </label>
+        <label>
+          Categorie
+          <input id="claimFormCategory" name="category" required maxlength="120" />
+        </label>
+        <label>
+          Institution
+          <input id="claimFormInstitution" name="institution" required maxlength="200" />
+        </label>
+        <label>
+          Ville
+          <input id="claimFormCity" name="city" required maxlength="80" />
+        </label>
+        <label>
+          Telephone declarant
+          <input id="claimFormPhone" name="reporterPhone" readonly />
+        </label>
+        <label>
+          Description
+          <textarea id="claimFormDescription" name="description" rows="5" maxlength="2000"></textarea>
+        </label>
+        <label>
+          Severite
+          <select id="claimFormSeverity" name="severity" required>
+            <option value="faible">faible</option>
+            <option value="moyen">moyen</option>
+            <option value="eleve">eleve</option>
+            <option value="critique">critique</option>
+          </select>
+        </label>
+        <label>
+          Statut
+          <select id="claimFormStatus" name="status" required>
+            <option value="nouveau">nouveau</option>
+            <option value="en_cours">en cours</option>
+            <option value="resolu">resolu</option>
+          </select>
+        </label>
+        <div class="drawer-actions">
+          <button id="cancelClaimFormBtn" class="ghost-btn" type="button">Annuler</button>
+          <button id="submitClaimFormBtn" class="primary-btn" type="submit">Sauvegarder claim</button>
+        </div>
+      </form>
+    </aside>
+
     <div class="ai-backdrop" id="aiBackdrop" hidden></div>
     <aside class="ai-drawer" id="aiDrawer" aria-hidden="true">
       <div class="ai-modal-header">
@@ -224,6 +290,6 @@
       </div>
     </section>
 
-    <script src="script.js?v=20260530-claims"></script>
+    <script src="script.js?v=20260530-claims-v2"></script>
   </body>
 </html>

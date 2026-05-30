@@ -167,10 +167,15 @@ export async function getIncidents(filters = {}) {
 
 export async function updateIncident(incidentKey, payload, changedBy) {
   const current = await query(
-    `select fi.incident_key, fi.incident_ref, st.status_name as status, sev.severity_name as severity
+    `select fi.incident_key, fi.incident_ref, st.status_name as status, sev.severity_name as severity,
+            c.category_name as category, i.institution_name as institution, l.city,
+            fi.description, fi.reporter_reference
      from fact_incident fi
      join dim_status st on fi.status_key = st.status_key
      join dim_severity sev on fi.severity_key = sev.severity_key
+     join dim_category c on fi.category_key = c.category_key
+     join dim_institution i on fi.institution_key = i.institution_key
+     join dim_location l on fi.location_key = l.location_key
      where fi.incident_key = $1`,
     [incidentKey]
   );
@@ -182,9 +187,17 @@ export async function updateIncident(incidentKey, payload, changedBy) {
   const currentRow = current.rows[0];
   const nextStatus = payload.status || currentRow.status;
   const nextSeverity = payload.severity || currentRow.severity;
+  const nextCategory = String(payload.category || currentRow.category || "Autre").trim() || "Autre";
+  const nextInstitution = String(payload.institution || currentRow.institution || "WhatsApp Intake").trim() || "WhatsApp Intake";
+  const nextCity = String(payload.city || currentRow.city || "Kinshasa").trim() || "Kinshasa";
+  const nextDescription = String(payload.description || currentRow.description || "").trim();
+  const nextReporterReference = String(payload.reporterReference || currentRow.reporter_reference || "Non fourni").trim() || "Non fourni";
 
   const statusKeyRes = await query("select status_key from dim_status where status_name = $1", [nextStatus]);
   const severityKeyRes = await query("select severity_key from dim_severity where severity_name = $1", [nextSeverity]);
+  const categoryKey = await ensureCategoryKey(nextCategory);
+  const institutionKey = await ensureInstitutionKey(nextInstitution);
+  const locationKey = await ensureLocationKey(nextCity);
 
   if (!statusKeyRes.rowCount || !severityKeyRes.rowCount) {
     throw new Error("Invalid status or severity");
@@ -194,9 +207,23 @@ export async function updateIncident(incidentKey, payload, changedBy) {
     `update fact_incident
       set status_key = $1,
           severity_key = $2,
+          category_key = $3,
+          institution_key = $4,
+          location_key = $5,
+          description = $6,
+          reporter_reference = $7,
           updated_at = current_timestamp
-      where incident_key = $3`,
-    [statusKeyRes.rows[0].status_key, severityKeyRes.rows[0].severity_key, incidentKey]
+      where incident_key = $8`,
+    [
+      statusKeyRes.rows[0].status_key,
+      severityKeyRes.rows[0].severity_key,
+      categoryKey,
+      institutionKey,
+      locationKey,
+      nextDescription,
+      nextReporterReference,
+      incidentKey
+    ]
   );
 
   await writeAudit({
@@ -204,8 +231,24 @@ export async function updateIncident(incidentKey, payload, changedBy) {
     recordId: incidentKey,
     actionType: "update",
     changedBy,
-    oldValue: JSON.stringify({ status: currentRow.status, severity: currentRow.severity }),
-    newValue: JSON.stringify({ status: nextStatus, severity: nextSeverity })
+    oldValue: JSON.stringify({
+      status: currentRow.status,
+      severity: currentRow.severity,
+      category: currentRow.category,
+      institution: currentRow.institution,
+      city: currentRow.city,
+      description: currentRow.description,
+      reporterReference: currentRow.reporter_reference
+    }),
+    newValue: JSON.stringify({
+      status: nextStatus,
+      severity: nextSeverity,
+      category: nextCategory,
+      institution: nextInstitution,
+      city: nextCity,
+      description: nextDescription,
+      reporterReference: nextReporterReference
+    })
   });
 
   return getIncidents({ q: currentRow.incident_ref, limit: 1 }).then((rows) => rows[0]);
@@ -314,6 +357,22 @@ async function ensureLocationKey(city) {
   await query("insert into dim_location (city) values ($1)", [city]);
   const created = await query("select location_key from dim_location where city = $1", [city]);
   return created.rows[0].location_key;
+}
+
+async function ensureCategoryKey(categoryName) {
+  const existing = await query("select category_key from dim_category where category_name = $1", [categoryName]);
+  if (existing.rowCount) return existing.rows[0].category_key;
+  await query("insert into dim_category (category_name) values ($1)", [categoryName]);
+  const created = await query("select category_key from dim_category where category_name = $1", [categoryName]);
+  return created.rows[0].category_key;
+}
+
+async function ensureInstitutionKey(institutionName) {
+  const existing = await query("select institution_key from dim_institution where institution_name = $1", [institutionName]);
+  if (existing.rowCount) return existing.rows[0].institution_key;
+  await query("insert into dim_institution (institution_name) values ($1)", [institutionName]);
+  const created = await query("select institution_key from dim_institution where institution_name = $1", [institutionName]);
+  return created.rows[0].institution_key;
 }
 
 async function getUserByKey(userKey) {

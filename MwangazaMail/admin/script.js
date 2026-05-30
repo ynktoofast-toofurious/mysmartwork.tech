@@ -100,6 +100,7 @@ const state = {
   source: "api",
   userDraft: null,
   userEditKey: null,
+  claimEditKey: null,
   confirmAction: null
 };
 let selectedClaimKeys = new Set();
@@ -374,6 +375,110 @@ function syncClaimSelectionState() {
     deleteBtn.disabled = selectedCount === 0;
     deleteBtn.textContent = selectedCount > 0 ? `Supprimer selection (${selectedCount})` : "Supprimer selection";
   }
+}
+
+function renderClaimInsights(rows) {
+  const total = rows.length;
+  const byCategory = rows.reduce((acc, row) => {
+    const key = row.category || "Autre";
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {});
+  const byCity = rows.reduce((acc, row) => {
+    const key = row.city || "-";
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {});
+  const bySource = rows.reduce((acc, row) => {
+    const key = row.ingestion_source || "-";
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {});
+
+  const topCategory = Object.entries(byCategory).sort((a, b) => b[1] - a[1])[0];
+  const topCity = Object.entries(byCity).sort((a, b) => b[1] - a[1])[0];
+
+  const insightRows = [
+    ["Total claims", String(total), total ? "Flux actif" : "Aucun claim recu"],
+    ["Categorie dominante", topCategory ? `${topCategory[0]} (${topCategory[1]})` : "-", "Prioriser les actions sur cette categorie"],
+    ["Ville la plus touchee", topCity ? `${topCity[0]} (${topCity[1]})` : "-", "Verifier les institutions de cette zone"],
+    [
+      "Sources d'ingestion",
+      Object.entries(bySource).map(([name, count]) => `${name}: ${count}`).join(" | ") || "-",
+      "Suivre la part demo UI vs WhatsApp number"
+    ]
+  ];
+
+  fillRows(
+    "claimInsightRows",
+    insightRows
+      .map(([metric, value, insight]) => `
+      <tr>
+        <td>${metric}</td>
+        <td>${value}</td>
+        <td>${insight}</td>
+      </tr>
+    `)
+      .join("")
+  );
+}
+
+function openClaimDrawer(row) {
+  const drawer = document.getElementById("claimDrawer");
+  const backdrop = document.getElementById("claimDrawerBackdrop");
+  const form = document.getElementById("claimForm");
+  if (!drawer || !backdrop || !form || !row) return;
+
+  state.claimEditKey = Number(row.incident_key);
+  form.incidentRef.value = row.incident_ref || "";
+  form.category.value = row.category || "Autre";
+  form.institution.value = row.institution || "";
+  form.city.value = row.city || "";
+  form.reporterPhone.value = row.reporter_phone || "-";
+  form.description.value = row.description || "";
+  form.severity.value = row.severity || "moyen";
+  form.status.value = row.status || "nouveau";
+
+  backdrop.hidden = false;
+  drawer.classList.add("is-open");
+  drawer.setAttribute("aria-hidden", "false");
+}
+
+function closeClaimDrawer() {
+  const drawer = document.getElementById("claimDrawer");
+  const backdrop = document.getElementById("claimDrawerBackdrop");
+  if (!drawer || !backdrop) return;
+  backdrop.hidden = true;
+  drawer.classList.remove("is-open");
+  drawer.setAttribute("aria-hidden", "true");
+  state.claimEditKey = null;
+}
+
+async function saveClaimDetails() {
+  const form = document.getElementById("claimForm");
+  const incidentKey = Number(state.claimEditKey);
+  if (!form || !Number.isFinite(incidentKey)) return;
+
+  const payload = {
+    category: form.category.value.trim(),
+    institution: form.institution.value.trim(),
+    city: form.city.value.trim(),
+    description: form.description.value.trim(),
+    severity: form.severity.value,
+    status: form.status.value
+  };
+
+  await fetchJson(`/incidents/${incidentKey}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      "x-user-email": "admin@mwangaza.cd"
+    },
+    body: JSON.stringify(payload)
+  });
+
+  closeClaimDrawer();
+  await loadIncidents();
 }
 
 async function deleteIncidentClaim(incidentKey) {
@@ -823,6 +928,7 @@ async function loadIncidents() {
   }
 
   renderIncidents(state.incidents);
+  renderClaimInsights(state.incidents);
   hydrateFilters(state.incidents.length ? state.incidents : fallbackData.incidents);
 }
 
@@ -924,8 +1030,18 @@ function registerEvents() {
     }
 
     const button = event.target.closest(".save-revision");
-    if (!button) return;
-    saveIncidentRevision(button.dataset.key);
+    if (button) {
+      saveIncidentRevision(button.dataset.key);
+      return;
+    }
+
+    const isInteractive = event.target.closest("select, input, button, textarea, a");
+    if (isInteractive) return;
+    const rowRoot = event.target.closest("tr.claim-row");
+    if (!rowRoot) return;
+    const claim = state.incidents.find((item) => Number(item.incident_key) === Number(rowRoot.dataset.key));
+    if (!claim) return;
+    openClaimDrawer(claim);
   });
 
   document.getElementById("reportRows")?.addEventListener("change", (event) => {
@@ -975,6 +1091,14 @@ function registerEvents() {
 
   document.getElementById("claimDeleteSelectedBtn")?.addEventListener("click", () => {
     deleteSelectedClaims().catch(() => alert("Suppression multiple impossible pour le moment."));
+  });
+
+  document.getElementById("closeClaimDrawerBtn")?.addEventListener("click", closeClaimDrawer);
+  document.getElementById("cancelClaimFormBtn")?.addEventListener("click", closeClaimDrawer);
+  document.getElementById("claimDrawerBackdrop")?.addEventListener("click", closeClaimDrawer);
+  document.getElementById("claimForm")?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    saveClaimDetails().catch(() => alert("Mise a jour du claim impossible pour le moment."));
   });
 
   document.getElementById("addUserBtn")?.addEventListener("click", () => openUserDrawer("add"));
