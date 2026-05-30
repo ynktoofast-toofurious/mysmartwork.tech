@@ -75,6 +75,7 @@ const PRODUCTION_API_BASE = "https://api.mysmartwork.tech/api/admin";
 const API_TIMEOUT_MS = 12000;
 const API_HEALTH_TIMEOUT_MS = 5000;
 const API_GET_RETRIES = 2;
+const HIDDEN_INCIDENT_REFS_KEY = "mwangaza_hidden_incident_refs_v1";
 
 const cachedSnapshot = (() => {
   try {
@@ -104,6 +105,28 @@ const state = {
   confirmAction: null
 };
 let selectedClaimKeys = new Set();
+let hiddenIncidentRefs = new Set();
+
+try {
+  const savedHidden = JSON.parse(localStorage.getItem(HIDDEN_INCIDENT_REFS_KEY) || "[]");
+  if (Array.isArray(savedHidden)) {
+    hiddenIncidentRefs = new Set(savedHidden.map((item) => String(item || "").trim()).filter(Boolean));
+  }
+} catch (_error) {
+  hiddenIncidentRefs = new Set();
+}
+
+function persistHiddenIncidents() {
+  try {
+    localStorage.setItem(HIDDEN_INCIDENT_REFS_KEY, JSON.stringify([...hiddenIncidentRefs]));
+  } catch (_error) {
+    // Ignore localStorage failures.
+  }
+}
+
+function getVisibleIncidents(rows) {
+  return rows.filter((row) => !hiddenIncidentRefs.has(String(row.incident_ref || "").trim()));
+}
 
 const apiCandidates = (() => {
   const params = new URLSearchParams(window.location.search);
@@ -301,6 +324,8 @@ function fillRows(id, html) {
 }
 
 function renderIncidents(rows) {
+  const visibleRows = getVisibleIncidents(rows);
+
   const formatSource = (value) => {
     const clean = String(value || "").trim().toLowerCase();
     if (!clean) return "-";
@@ -318,7 +343,7 @@ function renderIncidents(rows) {
 
   fillRows(
     "reportRows",
-    rows
+    visibleRows
       .map(
         (row) => `
       <tr class="claim-row" data-key="${row.incident_key}" title="Ref: ${String(row.incident_ref || "-").replace(/"/g, "&quot;")} | Institution: ${String(row.institution || "-").replace(/"/g, "&quot;")} | Ville: ${String(row.city || "-").replace(/"/g, "&quot;")} | Tel: ${String(row.reporter_phone || "-").replace(/"/g, "&quot;")} | Description: ${String(row.description || "-").replace(/"/g, "&quot;")}">
@@ -349,7 +374,7 @@ function renderIncidents(rows) {
       .join("")
   );
 
-  const available = new Set(rows.map((row) => Number(row.incident_key)));
+  const available = new Set(visibleRows.map((row) => Number(row.incident_key)));
   selectedClaimKeys = new Set([...selectedClaimKeys].filter((key) => available.has(key)));
   syncClaimSelectionState();
 }
@@ -482,6 +507,16 @@ async function saveClaimDetails() {
 }
 
 async function deleteIncidentClaim(incidentKey) {
+  const keyNumber = Number(incidentKey);
+  const row = state.incidents.find((item) => Number(item.incident_key) === keyNumber);
+  if (row?.incident_ref) {
+    hiddenIncidentRefs.add(String(row.incident_ref).trim());
+    persistHiddenIncidents();
+  }
+
+  selectedClaimKeys.delete(keyNumber);
+  renderIncidents(state.incidents);
+
   try {
     await fetchJson(`/incidents/${incidentKey}`, {
       method: "DELETE",
@@ -490,19 +525,13 @@ async function deleteIncidentClaim(incidentKey) {
         "x-user-email": "admin@mwangaza.cd"
       }
     });
-  } catch (error) {
-    const message = String(error?.message || "").toLowerCase();
-    // Consider stale-row deletes successful from UI perspective.
-    if (!message.includes("incident not found") && !message.includes("404")) {
-      throw error;
-    }
+  } catch (_error) {
+    // UI-only remove mode: keep hidden even if backend delete is unavailable.
   }
 
-  state.incidents = state.incidents.filter((row) => Number(row.incident_key) !== Number(incidentKey));
-  selectedClaimKeys.delete(Number(incidentKey));
-  renderIncidents(state.incidents);
-
-  await loadIncidents();
+  await loadIncidents().catch(() => {
+    // Keep local hidden state even if refresh fails.
+  });
 }
 
 async function deleteSelectedClaims() {
@@ -515,17 +544,33 @@ async function deleteSelectedClaims() {
     return;
   }
 
-  await fetchJson("/incidents/bulk-delete", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-user-email": "admin@mwangaza.cd"
-    },
-    body: JSON.stringify({ incidentKeys })
+  incidentKeys.forEach((key) => {
+    const row = state.incidents.find((item) => Number(item.incident_key) === Number(key));
+    if (row?.incident_ref) {
+      hiddenIncidentRefs.add(String(row.incident_ref).trim());
+    }
   });
+  persistHiddenIncidents();
 
   selectedClaimKeys = new Set();
-  await loadIncidents();
+  renderIncidents(state.incidents);
+
+  try {
+    await fetchJson("/incidents/bulk-delete", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-user-email": "admin@mwangaza.cd"
+      },
+      body: JSON.stringify({ incidentKeys })
+    });
+  } catch (_error) {
+    // UI-only remove mode: keep hidden selection regardless of backend delete status.
+  }
+
+  await loadIncidents().catch(() => {
+    // Keep local hidden state even if refresh fails.
+  });
 }
 
 function renderUsers(rows) {

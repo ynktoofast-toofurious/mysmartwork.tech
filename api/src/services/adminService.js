@@ -124,10 +124,11 @@ function buildWhere(filters, params) {
 export async function getIncidents(filters = {}) {
   const params = [];
   const where = buildWhere(filters, params);
+  const visibilityWhere = where ? `${where} and st.status_name <> 'supprime'` : "where st.status_name <> 'supprime'";
   params.push(Number(filters.limit || 200));
 
   const sql = `
-    select
+    select distinct
       fi.incident_key,
       fi.incident_ref,
       c.category_name as category,
@@ -157,7 +158,7 @@ export async function getIncidents(filters = {}) {
     join dim_severity sev on fi.severity_key = sev.severity_key
     join dim_status st on fi.status_key = st.status_key
     join dim_date dd on fi.date_key = dd.date_key
-    ${where}
+    ${visibilityWhere}
     order by fi.inserted_at desc
     limit $${params.length}
   `;
@@ -166,6 +167,12 @@ export async function getIncidents(filters = {}) {
 }
 
 export async function updateIncident(incidentKey, payload, changedBy) {
+  const normalizedIncidentKey = Number(incidentKey);
+  const incidentKeyText = String(incidentKey || "").trim();
+  if (!Number.isFinite(normalizedIncidentKey) || normalizedIncidentKey <= 0) {
+    return null;
+  }
+
   const current = await query(
     `select fi.incident_key, fi.incident_ref, st.status_name as status, sev.severity_name as severity,
             c.category_name as category, i.institution_name as institution, l.city,
@@ -176,8 +183,9 @@ export async function updateIncident(incidentKey, payload, changedBy) {
      join dim_category c on fi.category_key = c.category_key
      join dim_institution i on fi.institution_key = i.institution_key
      join dim_location l on fi.location_key = l.location_key
-     where fi.incident_key = $1`,
-    [incidentKey]
+     where fi.incident_key = $1
+        or cast(fi.incident_key as varchar(64)) = $2`,
+    [normalizedIncidentKey, incidentKeyText]
   );
 
   if (!current.rowCount) {
@@ -213,7 +221,8 @@ export async function updateIncident(incidentKey, payload, changedBy) {
           description = $6,
           reporter_reference = $7,
           updated_at = current_timestamp
-      where incident_key = $8`,
+      where incident_key = $8
+         or cast(incident_key as varchar(64)) = $9`,
     [
       statusKeyRes.rows[0].status_key,
       severityKeyRes.rows[0].severity_key,
@@ -222,13 +231,14 @@ export async function updateIncident(incidentKey, payload, changedBy) {
       locationKey,
       nextDescription,
       nextReporterReference,
-      incidentKey
+      normalizedIncidentKey,
+      incidentKeyText
     ]
   );
 
   await writeAudit({
     tableName: "fact_incident",
-    recordId: incidentKey,
+    recordId: normalizedIncidentKey,
     actionType: "update",
     changedBy,
     oldValue: JSON.stringify({
@@ -255,26 +265,42 @@ export async function updateIncident(incidentKey, payload, changedBy) {
 }
 
 export async function deleteIncident(incidentKey, changedBy) {
+  const normalizedIncidentKey = Number(incidentKey);
+  const incidentKeyText = String(incidentKey || "").trim();
+  if (!Number.isFinite(normalizedIncidentKey) || normalizedIncidentKey <= 0) {
+    return false;
+  }
+
   const current = await query(
     `select incident_key, incident_ref
      from fact_incident
-     where incident_key = $1`,
-    [incidentKey]
+     where incident_key = $1
+        or cast(incident_key as varchar(64)) = $2`,
+    [normalizedIncidentKey, incidentKeyText]
   );
 
   if (!current.rowCount) {
     return false;
   }
 
-  await query("delete from fact_incident where incident_key = $1", [incidentKey]);
+  const deletedStatusKey = await ensureStatusKey("supprime");
+
+  await query(
+    `update fact_incident
+     set status_key = $1,
+         updated_at = current_timestamp
+     where incident_key = $2
+      or cast(incident_key as varchar(64)) = $3`,
+    [deletedStatusKey, normalizedIncidentKey, incidentKeyText]
+  );
 
   await writeAudit({
     tableName: "fact_incident",
-    recordId: incidentKey,
-    actionType: "delete",
+    recordId: normalizedIncidentKey,
+    actionType: "soft_delete",
     changedBy,
     oldValue: JSON.stringify(current.rows[0]),
-    newValue: ""
+    newValue: JSON.stringify({ status: "supprime" })
   });
 
   return true;
@@ -301,20 +327,26 @@ export async function deleteIncidents(incidentKeys, changedBy) {
     return { deleted: 0 };
   }
 
+  const deletedStatusKey = await ensureStatusKey("supprime");
+  const updateParams = [deletedStatusKey, ...keys];
+  const updatePlaceholders = keys.map((_, idx) => `$${idx + 2}`).join(",");
+
   await query(
-    `delete from fact_incident
-     where incident_key in (${placeholders})`,
-    keys
+    `update fact_incident
+     set status_key = $1,
+         updated_at = current_timestamp
+     where incident_key in (${updatePlaceholders})`,
+    updateParams
   );
 
   for (const row of found.rows) {
     await writeAudit({
       tableName: "fact_incident",
       recordId: row.incident_key,
-      actionType: "delete",
+      actionType: "soft_delete",
       changedBy,
       oldValue: JSON.stringify(row),
-      newValue: ""
+      newValue: JSON.stringify({ status: "supprime" })
     });
   }
 
@@ -365,6 +397,14 @@ async function ensureCategoryKey(categoryName) {
   await query("insert into dim_category (category_name) values ($1)", [categoryName]);
   const created = await query("select category_key from dim_category where category_name = $1", [categoryName]);
   return created.rows[0].category_key;
+}
+
+async function ensureStatusKey(statusName) {
+  const existing = await query("select status_key from dim_status where status_name = $1", [statusName]);
+  if (existing.rowCount) return existing.rows[0].status_key;
+  await query("insert into dim_status (status_name) values ($1)", [statusName]);
+  const created = await query("select status_key from dim_status where status_name = $1", [statusName]);
+  return created.rows[0].status_key;
 }
 
 async function ensureInstitutionKey(institutionName) {
