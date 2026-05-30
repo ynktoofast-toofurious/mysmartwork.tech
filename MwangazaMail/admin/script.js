@@ -58,7 +58,7 @@ const statusClass = {
 
 const sectionMeta = {
   dashboard: ["Dashboard Admin", "Vue d'ensemble de la plateforme", "/admin/dashboard"],
-  claimreports: ["Claim Report", "Vue detaillee et gestion des signalements", "/admin/claim-report"],
+  claimreports: ["Rapport d'incidents", "Vue detaillee et gestion des incidents", "/admin/incidents"],
   utilisateurs: ["Utilisateurs", "Gestion des comptes et des roles", "/admin/utilisateurs"],
   abonnements: ["Abonnements", "Suivi des plans et renouvellements", "/admin/abonnements"],
   analytics: ["Analytics", "Analyse des performances et tendances", "/admin/analytics"],
@@ -373,7 +373,7 @@ function syncClaimSelectionState() {
 
   if (deleteBtn) {
     deleteBtn.disabled = selectedCount === 0;
-    deleteBtn.textContent = selectedCount > 0 ? `Supprimer selection (${selectedCount})` : "Supprimer selection";
+    deleteBtn.textContent = selectedCount > 0 ? `Supprimer la selection (${selectedCount})` : "Supprimer la selection";
   }
 }
 
@@ -399,7 +399,7 @@ function renderClaimInsights(rows) {
   const topCity = Object.entries(byCity).sort((a, b) => b[1] - a[1])[0];
 
   const insightRows = [
-    ["Total claims", String(total), total ? "Flux actif" : "Aucun claim recu"],
+    ["Total incidents", String(total), total ? "Flux actif" : "Aucun incident recu"],
     ["Categorie dominante", topCategory ? `${topCategory[0]} (${topCategory[1]})` : "-", "Prioriser les actions sur cette categorie"],
     ["Ville la plus touchee", topCity ? `${topCity[0]} (${topCity[1]})` : "-", "Verifier les institutions de cette zone"],
     [
@@ -482,14 +482,26 @@ async function saveClaimDetails() {
 }
 
 async function deleteIncidentClaim(incidentKey) {
-  await fetchJson(`/incidents/${incidentKey}`, {
-    method: "DELETE",
-    headers: {
-      "Content-Type": "application/json",
-      "x-user-email": "admin@mwangaza.cd"
+  try {
+    await fetchJson(`/incidents/${incidentKey}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        "x-user-email": "admin@mwangaza.cd"
+      }
+    });
+  } catch (error) {
+    const message = String(error?.message || "").toLowerCase();
+    // Consider stale-row deletes successful from UI perspective.
+    if (!message.includes("incident not found") && !message.includes("404")) {
+      throw error;
     }
-  });
+  }
+
+  state.incidents = state.incidents.filter((row) => Number(row.incident_key) !== Number(incidentKey));
   selectedClaimKeys.delete(Number(incidentKey));
+  renderIncidents(state.incidents);
+
   await loadIncidents();
 }
 
@@ -499,7 +511,7 @@ async function deleteSelectedClaims() {
     return;
   }
 
-  if (!window.confirm(`Supprimer ${incidentKeys.length} claim(s) selectionne(s) ?`)) {
+  if (!window.confirm(`Supprimer ${incidentKeys.length} incident(s) selectionne(s) ?`)) {
     return;
   }
 
@@ -1024,8 +1036,8 @@ function registerEvents() {
     if (deleteButton) {
       const key = Number(deleteButton.dataset.key);
       if (!Number.isFinite(key)) return;
-      if (!window.confirm("Supprimer ce claim ?")) return;
-      deleteIncidentClaim(key).catch(() => alert("Suppression impossible pour le moment."));
+      if (!window.confirm("Supprimer cet incident ?")) return;
+      deleteIncidentClaim(key).catch(() => alert("Impossible de supprimer cet incident pour le moment."));
       return;
     }
 
@@ -1090,7 +1102,7 @@ function registerEvents() {
   });
 
   document.getElementById("claimDeleteSelectedBtn")?.addEventListener("click", () => {
-    deleteSelectedClaims().catch(() => alert("Suppression multiple impossible pour le moment."));
+    deleteSelectedClaims().catch(() => alert("Impossible de supprimer la selection d'incidents pour le moment."));
   });
 
   document.getElementById("closeClaimDrawerBtn")?.addEventListener("click", closeClaimDrawer);
