@@ -11,9 +11,145 @@ const MAX_OFF_TOPIC_WARNINGS = 2;
 const REQUIRED_FIELDS = ["institution", "city", "description"];
 const OPTIONAL_FIELDS_DEFAULTS = { reporterReference: "Non fourni", statut: "nouveau", revision: "0" };
 
+const SUPPORTED_LANGUAGES = new Set(["fr", "en", "ln", "sw"]);
+
+const I18N = {
+  fr: {
+    thanksDetails: "Merci pour les details.",
+    privacyReassurance: "Rassurez-vous: votre signalement est traite de facon anonyme, chiffre, et votre identite n'est pas revelee.",
+    finalizing: "Merci. Je finalise votre signalement.",
+    askReference: "Quel est votre numero de reference (si disponible) ?",
+    askInstitution: "Quelle institution est concernee ?",
+    askCity: "Dans quelle ville l'incident a eu lieu ?",
+    askDescription: "Merci de decrire precisement l'incident.",
+    askMore: "Merci, pouvez-vous donner plus de details sur l'incident ?",
+    continueDetails: "Merci. Continuez avec les details de l'incident.",
+    blocked: "Cette conversation a ete interrompue pour hors-sujet. Envoyez RESTART pour declarer un incident.",
+    restarted: "Session redemarree. Donnez votre numero de reference (si disponible), l'institution, la ville et la description de l'incident.",
+    warnedPrefix: "Avertissement",
+    warnedDefault: "Avertissement: restons sur la declaration d'incident uniquement.",
+    warnedDetails: "Veuillez fournir les details du cas: reference, institution, ville, description.",
+    discontinued: "Avertissement: cette conversation est reservee a la declaration d'incidents. Discussion interrompue. Envoyez RESTART pour recommencer.",
+    missingFallback: "Merci. Pouvez-vous completer les informations manquantes ?",
+    completed1: "Merci. Votre signalement est enregistre.",
+    completed2: "Reference Mwangaza: {{incidentRef}}",
+    completed3: "Rassurez-vous: les informations sont chiffrees et votre identite n'est pas revelee.",
+    completed4: "Conservez cette reference pour le suivi.",
+    completed5: "Pour un nouveau cas, envoyez RESTART."
+  },
+  en: {
+    thanksDetails: "Thank you for the details.",
+    privacyReassurance: "Please be assured: your report is handled anonymously, encrypted, and your identity is not disclosed.",
+    finalizing: "Thank you. I am finalizing your report.",
+    askReference: "What is your reference number (if available)?",
+    askInstitution: "Which institution is involved?",
+    askCity: "In which city did the incident happen?",
+    askDescription: "Please describe the incident clearly.",
+    askMore: "Thanks, can you share more details about the incident?",
+    continueDetails: "Thank you. Please continue with incident details.",
+    blocked: "This conversation was stopped for off-topic content. Send RESTART to report an incident.",
+    restarted: "Session restarted. Please provide your reference number (if available), institution, city, and incident description.",
+    warnedPrefix: "Warning",
+    warnedDefault: "Warning: please stay focused on incident reporting only.",
+    warnedDetails: "Please provide case details: reference, institution, city, description.",
+    discontinued: "Warning: this channel is only for incident reporting. Conversation stopped. Send RESTART to start again.",
+    missingFallback: "Thank you. Could you complete the missing information?",
+    completed1: "Thank you. Your report has been recorded.",
+    completed2: "Mwangaza reference: {{incidentRef}}",
+    completed3: "Please be assured: information is encrypted and your identity is not disclosed.",
+    completed4: "Keep this reference for follow-up.",
+    completed5: "For a new case, send RESTART."
+  },
+  ln: {
+    thanksDetails: "Matondi mpo na makambo opesi.",
+    privacyReassurance: "Tika motema: likambo na yo ezali kosalema na ndenge ya kobomba nkombo, ebatelami, mpe bomoto na yo ekobimisama te.",
+    finalizing: "Matondi. Nazali kosukisa rapport na yo.",
+    askReference: "Ozali na nimero ya reference? Soki ezali, pesa yango.",
+    askInstitution: "Institution nini etali likambo oyo?",
+    askCity: "Likambo esalemaki na engumba nini?",
+    askDescription: "Svp limbola likambo yango malamu.",
+    askMore: "Matondi, okoki kobakisa makambo mosusu na likambo oyo?",
+    continueDetails: "Matondi. Boba na makambo ya likambo oyo.",
+    blocked: "Lisolo oyo etelemaki mpo ezalaki libanda ya sujet. Tinda RESTART mpo na kosakola incident.",
+    restarted: "Session ebandi lisusu. Pesa reference (soki ezali), institution, engumba, mpe ndimbola ya incident.",
+    warnedPrefix: "Likebisi",
+    warnedDefault: "Likebisi: tosengeli kaka na makambo ya kosakola incident.",
+    warnedDetails: "Svp pesa makambo ya cas: reference, institution, engumba, ndimbola.",
+    discontinued: "Likebisi: canal oyo ezali kaka mpo na kosakola incident. Lisolo etelemaki. Tinda RESTART mpo na kobanda lisusu.",
+    missingFallback: "Matondi. Okoki kotondisa makambo oyo ezangi?",
+    completed1: "Matondi. Rapport na yo ekomami.",
+    completed2: "Reference ya Mwangaza: {{incidentRef}}",
+    completed3: "Tika motema: makambo nyonso ebatelami mpe bomoto na yo ekobimisama te.",
+    completed4: "Bomba reference oyo mpo na suivi.",
+    completed5: "Mpo na cas ya sika, tinda RESTART."
+  },
+  sw: {
+    thanksDetails: "Asante kwa maelezo.",
+    privacyReassurance: "Usijali: taarifa yako inashughulikiwa kwa siri, imefichwa, na utambulisho wako hautafichuliwa.",
+    finalizing: "Asante. Ninakamilisha taarifa yako.",
+    askReference: "Namba yako ya rejea ni ipi (ikiwa unayo)?",
+    askInstitution: "Ni taasisi gani inahusika?",
+    askCity: "Tukio lilitokea mji gani?",
+    askDescription: "Tafadhali eleza tukio kwa uwazi.",
+    askMore: "Asante, unaweza kutoa maelezo zaidi kuhusu tukio?",
+    continueDetails: "Asante. Tafadhali endelea na maelezo ya tukio.",
+    blocked: "Mazungumzo yamesitishwa kwa kuwa nje ya mada. Tuma RESTART kuripoti tukio.",
+    restarted: "Kikao kimeanza upya. Toa namba ya rejea (ikiwa unayo), taasisi, mji, na maelezo ya tukio.",
+    warnedPrefix: "Onyo",
+    warnedDefault: "Onyo: tafadhali baki kwenye kuripoti matukio pekee.",
+    warnedDetails: "Tafadhali toa maelezo ya kesi: rejea, taasisi, mji, maelezo.",
+    discontinued: "Onyo: njia hii ni kwa kuripoti matukio tu. Mazungumzo yamesitishwa. Tuma RESTART kuanza tena.",
+    missingFallback: "Asante. Unaweza kukamilisha taarifa zinazokosekana?",
+    completed1: "Asante. Taarifa yako imesajiliwa.",
+    completed2: "Namba ya Mwangaza: {{incidentRef}}",
+    completed3: "Usijali: taarifa zimefichwa na utambulisho wako hautafichuliwa.",
+    completed4: "Hifadhi rejea hii kwa ufuatiliaji.",
+    completed5: "Kwa kesi mpya, tuma RESTART."
+  }
+};
+
 function normalizeText(value, fallback) {
   const clean = String(value || "").trim();
   return clean || fallback;
+}
+
+function pickLanguage(code) {
+  const clean = normalizeText(code, "fr").toLowerCase();
+  return SUPPORTED_LANGUAGES.has(clean) ? clean : "fr";
+}
+
+function t(language, key, vars = {}) {
+  const lang = pickLanguage(language);
+  const dict = I18N[lang] || I18N.fr;
+  let value = dict[key] || I18N.fr[key] || "";
+  for (const [name, content] of Object.entries(vars)) {
+    value = value.replaceAll(`{{${name}}}`, String(content));
+  }
+  return value;
+}
+
+function detectLanguage(text, fallback = "fr") {
+  const clean = normalizeText(text, "").toLowerCase();
+  if (!clean) {
+    return pickLanguage(fallback);
+  }
+
+  const score = { fr: 0, en: 0, ln: 0, sw: 0 };
+
+  const apply = (lang, regex) => {
+    if (regex.test(clean)) score[lang] += 1;
+  };
+
+  apply("fr", /\b(bonjour|merci|ville|institution|incident|reference|signaler|decrire|s'il|svp)\b/);
+  apply("en", /\b(hello|please|thanks|incident|report|city|institution|reference|describe|help)\b/);
+  apply("ln", /\b(mbote|matondi|nalingi|likambo|engumba|institution|nazali|pesa|sango)\b/);
+  apply("sw", /\b(habari|asante|tafadhali|tukio|taasisi|mji|rejea|eleza|namba)\b/);
+
+  const best = Object.entries(score).sort((a, b) => b[1] - a[1])[0];
+  if (!best || best[1] === 0) {
+    return pickLanguage(fallback);
+  }
+  return pickLanguage(best[0]);
 }
 
 function normalizeSeverity(value) {
@@ -83,6 +219,7 @@ function buildDefaultSession(from) {
     version: SESSION_VERSION,
     phone: from,
     status: "active",
+    language: "fr",
     warnings: 0,
     completed: false,
     startedAt: new Date().toISOString(),
@@ -122,6 +259,7 @@ function sanitizeSession(session, from) {
     ...buildDefaultSession(from),
     ...session,
     phone: from,
+    language: pickLanguage(session.language || "fr"),
     warnings: Number(session.warnings || 0),
     completed: Boolean(session.completed)
   };
@@ -165,7 +303,7 @@ function mergeDraft(baseDraft, patchDraft) {
 
 function isRestartMessage(text) {
   const clean = normalizeText(text, "").toLowerCase();
-  return ["restart", "reprendre", "nouveau", "start"].includes(clean);
+  return ["restart", "reprendre", "nouveau", "start", "new", "anzisha", "mpya", "banda lisusu"].includes(clean);
 }
 
 function isPrivacyConcernMessage(text) {
@@ -174,14 +312,14 @@ function isPrivacyConcernMessage(text) {
     return false;
   }
 
-  return /(peur|afraid|identit|anonym|revele|revel|confidenti|secur|safe|protege|danger|risque)/.test(clean);
+  return /(peur|afraid|identit|anonym|revele|revel|confidenti|secur|safe|protege|danger|risque|kobanga|siri|usalama|hofu|utambulisho)/.test(clean);
 }
 
-function withPrivacyReassurance(messageText) {
-  const base = normalizeText(messageText, "Merci pour les details.");
-  const reassurance = "Rassurez-vous: votre signalement est traite de facon anonyme, chiffre, et votre identite n'est pas revelee.";
+function withPrivacyReassurance(messageText, language) {
+  const base = normalizeText(messageText, t(language, "thanksDetails"));
+  const reassurance = t(language, "privacyReassurance");
 
-  if (base.toLowerCase().includes("rassurez-vous") || base.toLowerCase().includes("anonyme")) {
+  if (base.toLowerCase().includes(reassurance.toLowerCase().slice(0, 24))) {
     return base;
   }
 
@@ -418,6 +556,7 @@ async function saveConversationSession(from, session) {
 }
 
 function fallbackBrainResponse({ messageText, session }) {
+  const language = pickLanguage(session.language || "fr");
   const draft = mergeDraft(session.incidentDraft, {
     description: session.incidentDraft.description || messageText,
     category: session.incidentDraft.category || "Autre",
@@ -430,7 +569,7 @@ function fallbackBrainResponse({ messageText, session }) {
       isOnTopic: true,
       shouldDiscontinue: false,
       warningReason: "",
-      assistantMessage: "Merci. Je finalise votre signalement.",
+      assistantMessage: t(language, "finalizing"),
       extracted: draft,
       missingFields: []
     };
@@ -438,17 +577,17 @@ function fallbackBrainResponse({ messageText, session }) {
 
   const nextField = missing[0];
   const prompts = {
-    reporterReference: "Quel est votre numero de reference (si disponible) ?",
-    institution: "Quelle institution est concernee ?",
-    city: "Dans quelle ville l'incident a eu lieu ?",
-    description: "Merci de decrire precisement l'incident."
+    reporterReference: t(language, "askReference"),
+    institution: t(language, "askInstitution"),
+    city: t(language, "askCity"),
+    description: t(language, "askDescription")
   };
 
   return {
     isOnTopic: true,
     shouldDiscontinue: false,
     warningReason: "",
-    assistantMessage: prompts[nextField] || "Merci, pouvez-vous donner plus de details sur l'incident ?",
+    assistantMessage: prompts[nextField] || t(language, "askMore"),
     extracted: draft,
     missingFields: missing
   };
@@ -461,7 +600,9 @@ async function runConversationBrain({ messageText, session }) {
 
   const systemPrompt = [
     "You are a WhatsApp incident intake assistant for fraud/claim cases in DRC.",
-    "Conduct a natural conversation in French to collect incident details.",
+    "Supported user languages: French (fr), English (en), Lingala (ln), Swahili (sw).",
+    "Always reply in the same language as the latest user message, unless user asks to switch.",
+    "Use short, clear, culturally natural wording.",
     "Your ONLY job is to collect: institution, city, description of an incident.",
     "",
     "CRITICAL RULE — isOnTopic:",
@@ -484,6 +625,7 @@ async function runConversationBrain({ messageText, session }) {
   ].join("\n");
 
   const userPayload = {
+    preferredLanguage: pickLanguage(session.language || "fr"),
     currentDraft: session.incidentDraft,
     warningCount: session.warnings,
     recentHistory: session.history.slice(-8),
@@ -523,19 +665,19 @@ async function runConversationBrain({ messageText, session }) {
     isOnTopic: Boolean(parsed.isOnTopic),
     shouldDiscontinue: Boolean(parsed.shouldDiscontinue),
     warningReason: normalizeText(parsed.warningReason, ""),
-    assistantMessage: normalizeText(parsed.assistantMessage, "Merci. Continuez avec les details de l'incident."),
+    assistantMessage: normalizeText(parsed.assistantMessage, t(pickLanguage(session.language || "fr"), "continueDetails")),
     extracted: mergeDraft(session.incidentDraft, parsed.extracted || {}),
     missingFields: Array.isArray(parsed.missingFields) ? parsed.missingFields : []
   };
 }
 
-function buildCaseCompletedMessage(incidentRef) {
+function buildCaseCompletedMessage(incidentRef, language) {
   return [
-    "Merci. Votre signalement est enregistre.",
-    `Reference Mwangaza: ${incidentRef}`,
-    "Rassurez-vous: les informations sont chiffrees et votre identite n'est pas revelee.",
-    "Conservez cette reference pour le suivi.",
-    "Pour un nouveau cas, envoyez RESTART."
+    t(language, "completed1"),
+    t(language, "completed2", { incidentRef }),
+    t(language, "completed3"),
+    t(language, "completed4"),
+    t(language, "completed5")
   ].join("\n");
 }
 
@@ -585,6 +727,7 @@ export async function wasMessageAlreadyProcessed(messageId) {
 export async function processClaimMessage(message) {
   const text = normalizeText(message.text, "");
   let session = await loadConversationSession(message.from);
+  session.language = detectLanguage(text, session.language || "fr");
 
   // After a completed claim, treat any new incoming text as a new claim session.
   if (session.completed && !isRestartMessage(text)) {
@@ -594,7 +737,7 @@ export async function processClaimMessage(message) {
   if (session.status === "blocked" && !isRestartMessage(text)) {
     return {
       referenceNumber: "SESSION-BLOCKED",
-      responseText: "Cette conversation a ete interrompue pour hors-sujet. Envoyez RESTART pour declarer un incident.",
+      responseText: t(session.language, "blocked"),
       claim: null
     };
   }
@@ -606,7 +749,7 @@ export async function processClaimMessage(message) {
 
     return {
       referenceNumber: "SESSION-RESTARTED",
-      responseText: "Session redemarree. Donnez votre numero de reference (si disponible), l'institution, la ville et la description de l'incident.",
+      responseText: t(session.language, "restarted"),
       claim: null
     };
   }
@@ -622,7 +765,7 @@ export async function processClaimMessage(message) {
   }
 
   if (isPrivacyConcernMessage(text)) {
-    brain.assistantMessage = withPrivacyReassurance(brain.assistantMessage);
+    brain.assistantMessage = withPrivacyReassurance(brain.assistantMessage, session.language);
   }
 
   if (!brain.isOnTopic || brain.shouldDiscontinue) {
@@ -635,16 +778,16 @@ export async function processClaimMessage(message) {
 
       return {
         referenceNumber: "SESSION-DISCONTINUED",
-        responseText: "Avertissement: cette conversation est reservee a la declaration d'incidents. Discussion interrompue. Envoyez RESTART pour recommencer.",
+        responseText: t(session.language, "discontinued"),
         claim: null
       };
     }
 
     const warningText = brain.warningReason
-      ? `Avertissement: ${brain.warningReason}`
-      : "Avertissement: restons sur la declaration d'incident uniquement.";
+      ? `${t(session.language, "warnedPrefix")}: ${brain.warningReason}`
+      : t(session.language, "warnedDefault");
 
-    const responseText = `${warningText}\nVeuillez fournir les details du cas: reference, institution, ville, description.`;
+    const responseText = `${warningText}\n${t(session.language, "warnedDetails")}`;
     addHistory(session, "assistant", responseText);
     await saveConversationSession(message.from, session);
 
@@ -659,7 +802,7 @@ export async function processClaimMessage(message) {
   if (missing.length) {
     const followUp = normalizeText(
       brain.assistantMessage,
-      "Merci. Pouvez-vous completer les informations manquantes ?"
+      t(session.language, "missingFallback")
     );
 
     addHistory(session, "assistant", followUp);
@@ -697,7 +840,7 @@ export async function processClaimMessage(message) {
   addHistory(session, "assistant", `Cas enregistre sous ${incidentRef}`);
   await saveConversationSession(message.from, session);
 
-  return { referenceNumber: incidentRef, responseText: buildCaseCompletedMessage(incidentRef), claim };
+  return { referenceNumber: incidentRef, responseText: buildCaseCompletedMessage(incidentRef, session.language), claim };
 }
 
 export async function sendWhatsAppText(to, bodyText) {
