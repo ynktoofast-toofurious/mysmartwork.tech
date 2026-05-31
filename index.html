@@ -235,6 +235,7 @@
         { code: "YNK19912026", allowSeo: true, path: SEO_PROJECT_PATH }
       ];
       const SEO_ACCESS_KEY = "mwangaza_seo_access_granted";
+      const AUTH_KEY = "mwangaza_auth";
 
       const openProjectBtn   = document.getElementById("openProjectBtn");
       const accessBackdrop   = document.getElementById("accessBackdrop");
@@ -270,6 +271,18 @@
         }
       };
 
+      const setAdminAuth = (allowSeo) => {
+        try {
+          if (allowSeo) {
+            localStorage.setItem(AUTH_KEY, "true");
+          } else {
+            localStorage.removeItem(AUTH_KEY);
+          }
+        } catch (_error) {
+          // Ignore storage errors; URL token still supports SEO flow.
+        }
+      };
+
       const proceedToProject = () => {
         const entered = normalizeCode(accessCodeInput.value);
         const accessRule = PROJECT_ACCESS_CODES.find((item) => normalizeCode(item.code) === entered);
@@ -279,6 +292,7 @@
         }
 
         setSeoAccess(accessRule.allowSeo);
+        setAdminAuth(accessRule.allowSeo);
 
         window.location.assign(accessRule.path);
       };

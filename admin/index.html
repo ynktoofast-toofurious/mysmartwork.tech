@@ -14,7 +14,22 @@
   </head>
   <body>
     <script>
-      if (localStorage.getItem("mwangaza_auth") !== "true") {
+      const hasSeoToken = (() => {
+        try {
+          return new URLSearchParams(window.location.search).get("seoAccess") === "1";
+        } catch (_error) {
+          return false;
+        }
+      })();
+
+      let isAuthed = false;
+      try {
+        isAuthed = localStorage.getItem("mwangaza_auth") === "true";
+      } catch (_error) {
+        isAuthed = false;
+      }
+
+      if (!isAuthed && !hasSeoToken) {
         window.location.replace("../");
       }
     </script>
