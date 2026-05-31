@@ -229,7 +229,7 @@
 
     <script>
       const PROJECT_PATH = "/MwangazaMail/";
-      const PROJECT_ACCESS_CODE = "MwangazaMail-2026";
+      const PROJECT_ACCESS_CODES = ["YNK19912026", "MwangazaMail-2026"];
 
       const openProjectBtn   = document.getElementById("openProjectBtn");
       const accessBackdrop   = document.getElementById("accessBackdrop");
@@ -251,8 +251,12 @@
         accessBackdrop.setAttribute("aria-hidden", "true");
       };
 
+      const normalizeCode = (value) => String(value || "").trim().toUpperCase();
+
       const proceedToProject = () => {
-        if (accessCodeInput.value.trim() !== PROJECT_ACCESS_CODE) {
+        const entered = normalizeCode(accessCodeInput.value);
+        const valid = PROJECT_ACCESS_CODES.some((code) => normalizeCode(code) === entered);
+        if (!valid) {
           accessError.textContent = "Invalid access code. Please try again.";
           return;
         }
