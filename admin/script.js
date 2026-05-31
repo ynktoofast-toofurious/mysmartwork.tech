@@ -65,6 +65,9 @@ const sectionMeta = {
   seo: ["SEO & Audit", "Trafic, acces, geolocalisation et historique des revisions", "/admin/seo"]
 };
 
+const SEO_ACCESS_CODE = "YNK19912026";
+const SEO_ACCESS_KEY = "mwangaza_seo_access_granted";
+
 const severityOptions = ["faible", "moyen", "eleve", "critique"];
 const statusOptions = ["nouveau", "en_cours", "resolu"];
 
@@ -664,7 +667,27 @@ const title = document.getElementById("sectionTitle");
 const subtitle = document.getElementById("sectionSubtitle");
 const routePill = document.getElementById("routePill");
 
+function isSeoAccessGranted() {
+  return sessionStorage.getItem(SEO_ACCESS_KEY) === "true";
+}
+
+function requestSeoAccess() {
+  if (isSeoAccessGranted()) return true;
+  const enteredCode = window.prompt("Code d'acces SEO requis :");
+  if (!enteredCode) return false;
+  if (enteredCode.trim() !== SEO_ACCESS_CODE) {
+    alert("Code invalide. Acces SEO refuse.");
+    return false;
+  }
+  sessionStorage.setItem(SEO_ACCESS_KEY, "true");
+  return true;
+}
+
 function switchTab(tab) {
+  if (tab === "seo" && !requestSeoAccess()) {
+    return;
+  }
+
   navItems.forEach((item) => item.classList.toggle("is-active", item.dataset.tab === tab));
   Object.entries(sections).forEach(([name, section]) => {
     if (section) section.classList.toggle("is-visible", name === tab);
