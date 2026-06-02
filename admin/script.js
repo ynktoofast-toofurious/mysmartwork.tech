@@ -65,8 +65,6 @@ const sectionMeta = {
   seo: ["SEO & Audit", "Trafic, acces, geolocalisation et historique des revisions", "/admin/seo"]
 };
 
-const SEO_ACCESS_CODE = "YNK19912026";
-const SEO_ACCESS_KEY = "mwangaza_seo_access_granted";
 const PRODUCTION_API_BASE = "https://api.mysmartwork.tech/api/admin";
 
 const severityOptions = ["faible", "moyen", "eleve", "critique"];
@@ -673,66 +671,7 @@ function resolveTabFromHash() {
   return Object.prototype.hasOwnProperty.call(sections, tab) ? tab : "dashboard";
 }
 
-function hasSeoAccessTokenInUrl() {
-  try {
-    return new URLSearchParams(window.location.search).get("seoAccess") === "1";
-  } catch (_error) {
-    return false;
-  }
-}
-
-function clearSeoAccessTokenInUrl() {
-  try {
-    const params = new URLSearchParams(window.location.search);
-    if (!params.has("seoAccess")) return;
-    params.delete("seoAccess");
-    const query = params.toString();
-    const nextUrl = `${window.location.pathname}${query ? `?${query}` : ""}${window.location.hash || ""}`;
-    window.history.replaceState(null, "", nextUrl);
-  } catch (_error) {
-    // Ignore URL rewriting errors.
-  }
-}
-
-function setSeoAccessGranted(value) {
-  try {
-    if (value) sessionStorage.setItem(SEO_ACCESS_KEY, "true");
-    else sessionStorage.removeItem(SEO_ACCESS_KEY);
-  } catch (_error) {
-    // Ignore storage failures; URL token can still grant one-time access.
-  }
-}
-
-function isSeoAccessGranted() {
-  try {
-    return sessionStorage.getItem(SEO_ACCESS_KEY) === "true";
-  } catch (_error) {
-    return false;
-  }
-}
-
-function requestSeoAccess() {
-  if (isSeoAccessGranted()) return true;
-  if (hasSeoAccessTokenInUrl()) {
-    setSeoAccessGranted(true);
-    clearSeoAccessTokenInUrl();
-    return true;
-  }
-  const enteredCode = window.prompt("Code d'acces SEO requis :");
-  if (!enteredCode) return false;
-  if (enteredCode.trim() !== SEO_ACCESS_CODE) {
-    alert("Code invalide. Acces SEO refuse.");
-    return false;
-  }
-  setSeoAccessGranted(true);
-  return true;
-}
-
 function switchTab(tab) {
-  if (tab === "seo" && !requestSeoAccess()) {
-    return;
-  }
-
   navItems.forEach((item) => item.classList.toggle("is-active", item.dataset.tab === tab));
   Object.entries(sections).forEach(([name, section]) => {
     if (section) section.classList.toggle("is-visible", name === tab);

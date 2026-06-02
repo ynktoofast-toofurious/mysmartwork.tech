@@ -213,98 +213,12 @@
       </footer>
     </main>
 
-    <div class="access-backdrop" id="accessBackdrop" aria-hidden="true">
-      <section class="access-card" role="dialog" aria-modal="true" aria-labelledby="accessTitle">
-        <h2 id="accessTitle">Project Access Code</h2>
-        <p>Enter your provided access code to continue to your client sandbox project.</p>
-        <label for="accessCodeInput">Access code</label>
-        <input id="accessCodeInput" type="password" autocomplete="off" />
-        <div class="access-error" id="accessError"></div>
-        <div class="access-actions">
-          <button class="access-confirm" id="accessConfirmBtn" type="button">Continue</button>
-          <button class="access-cancel" id="accessCancelBtn" type="button">Cancel</button>
-        </div>
-      </section>
-    </div>
-
     <script>
       const PROJECT_PATH = "/MwangazaMail/";
-      const SEO_PROJECT_PATH = "/admin/?seoAccess=1#seo";
-      const PROJECT_ACCESS_CODES = [
-        { code: "MwangazaMail-2026", allowSeo: false, path: PROJECT_PATH },
-        { code: "YNK19912026", allowSeo: true, path: SEO_PROJECT_PATH }
-      ];
-      const SEO_ACCESS_KEY = "mwangaza_seo_access_granted";
-      const AUTH_KEY = "mwangaza_auth";
+      const openProjectBtn = document.getElementById("openProjectBtn");
 
-      const openProjectBtn   = document.getElementById("openProjectBtn");
-      const accessBackdrop   = document.getElementById("accessBackdrop");
-      const accessCodeInput  = document.getElementById("accessCodeInput");
-      const accessError      = document.getElementById("accessError");
-      const accessConfirmBtn = document.getElementById("accessConfirmBtn");
-      const accessCancelBtn  = document.getElementById("accessCancelBtn");
-
-      const openAccessModal = () => {
-        accessBackdrop.classList.add("is-open");
-        accessBackdrop.setAttribute("aria-hidden", "false");
-        accessError.textContent = "";
-        accessCodeInput.value = "";
-        accessCodeInput.focus();
-      };
-
-      const closeAccessModal = () => {
-        accessBackdrop.classList.remove("is-open");
-        accessBackdrop.setAttribute("aria-hidden", "true");
-      };
-
-      const normalizeCode = (value) => String(value || "").trim().toUpperCase();
-
-      const setSeoAccess = (allowSeo) => {
-        try {
-          if (allowSeo) {
-            sessionStorage.setItem(SEO_ACCESS_KEY, "true");
-          } else {
-            sessionStorage.removeItem(SEO_ACCESS_KEY);
-          }
-        } catch (_error) {
-          // Continue with URL-token fallback if storage is blocked.
-        }
-      };
-
-      const setAdminAuth = (allowSeo) => {
-        try {
-          if (allowSeo) {
-            localStorage.setItem(AUTH_KEY, "true");
-          } else {
-            localStorage.removeItem(AUTH_KEY);
-          }
-        } catch (_error) {
-          // Ignore storage errors; URL token still supports SEO flow.
-        }
-      };
-
-      const proceedToProject = () => {
-        const entered = normalizeCode(accessCodeInput.value);
-        const accessRule = PROJECT_ACCESS_CODES.find((item) => normalizeCode(item.code) === entered);
-        if (!accessRule) {
-          accessError.textContent = "Invalid access code. Please try again.";
-          return;
-        }
-
-        setSeoAccess(accessRule.allowSeo);
-        setAdminAuth(accessRule.allowSeo);
-
-        window.location.assign(accessRule.path);
-      };
-
-      openProjectBtn.addEventListener("click", openAccessModal);
-      accessCancelBtn.addEventListener("click", closeAccessModal);
-      accessConfirmBtn.addEventListener("click", proceedToProject);
-      accessBackdrop.addEventListener("click", (e) => {
-        if (e.target === accessBackdrop) closeAccessModal();
-      });
-      accessCodeInput.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") proceedToProject();
+      openProjectBtn.addEventListener("click", () => {
+        window.location.assign(PROJECT_PATH);
       });
     </script>
   </body>
