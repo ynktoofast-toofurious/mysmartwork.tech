@@ -11,11 +11,17 @@ const COOKIE_KEY = "mwangaza_cookie_consent";
 const PROD_API_ORIGINS = ["https://api.mysmartwork.tech"];
 const ALB_API_ORIGIN = "http://mwangaza-api-alb-942251842.us-east-1.elb.amazonaws.com";
 const isLocalBrowser = ["localhost", "127.0.0.1"].includes(window.location.hostname);
+const isHTTPS = window.location.protocol === "https:";
 
 const apiCandidates = isLocalBrowser
   ? [
       "http://localhost:4000/api/admin",
       `${ALB_API_ORIGIN}/api/admin`
+    ]
+  : isHTTPS
+  ? [
+      ...PROD_API_ORIGINS.map((origin) => `${origin}/api/admin`),
+      "/api/admin"
     ]
   : [
       `${ALB_API_ORIGIN}/api/admin`,
