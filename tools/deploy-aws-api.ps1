@@ -1,6 +1,11 @@
 param(
   [string]$ProfileName = 'rnbevents716',
-  [string]$Region = 'us-east-1'
+  [string]$Region = 'us-east-1',
+  [int]$DesiredCount = 1,
+  [int]$MinCapacity = 1,
+  [int]$MaxCapacity = 1,
+  [switch]$EnableAutoScaling,
+  [int]$LogRetentionDays = 7
 )
 
 $ErrorActionPreference = 'Stop'
@@ -120,6 +125,7 @@ try {
 }
 
 try { aws logs create-log-group --log-group-name $LogGroup --region $Region | Out-Null } catch {}
+try { aws logs put-retention-policy --log-group-name $LogGroup --retention-in-days $LogRetentionDays --region $Region | Out-Null } catch {}
 
 # Security groups
 $AlbSgId = ''
@@ -231,15 +237,17 @@ $TaskDefArn = aws ecs register-task-definition --cli-input-json file://$TaskDefP
 $SvcArn = aws ecs describe-services --cluster $ClusterName --services $ServiceName --region $Region --query "services[0].serviceArn" --output text 2>$null
 $SubnetsList = ($Subnets -join ',')
 if (-not $SvcArn -or $SvcArn -eq 'None') {
-  aws ecs create-service --cluster $ClusterName --service-name $ServiceName --task-definition $TaskDefArn --desired-count 2 --launch-type FARGATE --platform-version LATEST --network-configuration "awsvpcConfiguration={subnets=[$SubnetsList],securityGroups=[$EcsSgId],assignPublicIp=ENABLED}" --load-balancers "targetGroupArn=$TgArn,containerName=api,containerPort=4000" --health-check-grace-period-seconds 60 --region $Region | Out-Null
+  aws ecs create-service --cluster $ClusterName --service-name $ServiceName --task-definition $TaskDefArn --desired-count $DesiredCount --launch-type FARGATE --platform-version LATEST --network-configuration "awsvpcConfiguration={subnets=[$SubnetsList],securityGroups=[$EcsSgId],assignPublicIp=ENABLED}" --load-balancers "targetGroupArn=$TgArn,containerName=api,containerPort=4000" --health-check-grace-period-seconds 60 --region $Region | Out-Null
 } else {
-  aws ecs update-service --cluster $ClusterName --service $ServiceName --task-definition $TaskDefArn --desired-count 2 --region $Region | Out-Null
+  aws ecs update-service --cluster $ClusterName --service $ServiceName --task-definition $TaskDefArn --desired-count $DesiredCount --region $Region | Out-Null
 }
 
-# Auto scaling
+# Auto scaling (disabled by default for lower cost)
 $ResourceId = "service/$ClusterName/$ServiceName"
-aws application-autoscaling register-scalable-target --service-namespace ecs --resource-id $ResourceId --scalable-dimension ecs:service:DesiredCount --min-capacity 2 --max-capacity 6 --region $Region | Out-Null
-aws application-autoscaling put-scaling-policy --service-namespace ecs --resource-id $ResourceId --scalable-dimension ecs:service:DesiredCount --policy-name mwangaza-cpu-target --policy-type TargetTrackingScaling --target-tracking-scaling-policy-configuration '{"TargetValue":55.0,"PredefinedMetricSpecification":{"PredefinedMetricType":"ECSServiceAverageCPUUtilization"},"ScaleInCooldown":120,"ScaleOutCooldown":60}' --region $Region | Out-Null
+if ($EnableAutoScaling) {
+  aws application-autoscaling register-scalable-target --service-namespace ecs --resource-id $ResourceId --scalable-dimension ecs:service:DesiredCount --min-capacity $MinCapacity --max-capacity $MaxCapacity --region $Region | Out-Null
+  aws application-autoscaling put-scaling-policy --service-namespace ecs --resource-id $ResourceId --scalable-dimension ecs:service:DesiredCount --policy-name mwangaza-cpu-target --policy-type TargetTrackingScaling --target-tracking-scaling-policy-configuration '{"TargetValue":55.0,"PredefinedMetricSpecification":{"PredefinedMetricType":"ECSServiceAverageCPUUtilization"},"ScaleInCooldown":120,"ScaleOutCooldown":60}' --region $Region | Out-Null
+}
 
 # CloudWatch alarms
 aws cloudwatch put-metric-alarm --alarm-name mwangaza-api-ecs-cpu-high --metric-name CPUUtilization --namespace AWS/ECS --statistic Average --period 60 --threshold 80 --comparison-operator GreaterThanThreshold --evaluation-periods 5 --alarm-description "High CPU on ECS service" --dimensions Name=ClusterName,Value=$ClusterName Name=ServiceName,Value=$ServiceName --region $Region | Out-Null

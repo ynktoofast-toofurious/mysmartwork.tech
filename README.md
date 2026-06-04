@@ -68,6 +68,28 @@ Admin API base:
 
 API deployment uses AWS account `rnbevents716` (`8904-3938-9718`) only for runtime/API activity.
 
+### Low-Cost Deployment Mode
+
+The deploy script supports a low-cost baseline by default:
+
+- `DesiredCount=1`
+- Auto scaling disabled unless explicitly enabled
+- CloudWatch log retention set to 7 days
+
+Run:
+
+```powershell
+.\tools\deploy-aws-api.ps1 -ProfileName rnbevents716 -Region us-east-1
+```
+
+Optional (only if you want scaling):
+
+```powershell
+.\tools\deploy-aws-api.ps1 -ProfileName rnbevents716 -Region us-east-1 -EnableAutoScaling -MinCapacity 1 -MaxCapacity 2
+```
+
+Note: there is no fully free always-on ECS/ALB option on AWS.
+
 ## 5) Run Frontend Locally
 
 Serve project root with any static server. Example:
