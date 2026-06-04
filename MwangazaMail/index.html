@@ -168,8 +168,13 @@
         localStorage.setItem(ACCESS_KEY, "true");
         document.body.dataset.accessGranted = "true";
         root.hidden = false;
+        if (document.activeElement instanceof HTMLElement) {
+          document.activeElement.blur();
+        }
         accessBackdrop.classList.remove("is-open");
         accessBackdrop.setAttribute("aria-hidden", "true");
+        root.setAttribute("tabindex", "-1");
+        root.focus();
       };
 
       const showGate = () => {
