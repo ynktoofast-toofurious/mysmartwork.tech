@@ -8,9 +8,9 @@ import whatsappRoutes from "./routes/whatsappRoutes.js";
 
 async function runMigrations() {
   const columns = [
-    { name: "description", def: "varchar(65535) default ''" },
-    { name: "reporter_reference", def: "varchar(120) default 'Non fourni'" },
-    { name: "revision", def: "int default 0" }
+    { name: "description", def: "text default ''" },
+    { name: "reporter_reference", def: "text default 'Non fourni'" },
+    { name: "revision", def: "integer default 0" }
   ];
   for (const col of columns) {
     try {

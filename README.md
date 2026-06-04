@@ -1,30 +1,33 @@
-# MwangazaMail (Landing + Admin + Redshift API)
+# MwangazaMail (Landing + Admin + Neon PostgreSQL API)
 
 This repository contains:
 
 - A public landing page (`index.html`, `script.js`, `styles.css`)
 - A protected admin front-end (`admin/`)
-- A Node.js API (`api/`) designed for AWS Redshift-backed analytics and governance
+- A Node.js API (`api/`) designed for Neon PostgreSQL-backed analytics and governance
 - Docker setup for running web + API together
 
 ## 1) Configure API Environment
 
-Copy `api/.env.example` to `api/.env` and provide your Redshift credentials.
+Copy `api/.env.example` to `api/.env` and provide your Neon PostgreSQL connection details.
+
+The API supports either a Neon connection string or individual PostgreSQL fields.
 
 Required variables are defined in `api/src/config.js` and include:
 
 - `PORT`
-- `REDSHIFT_HOST`
-- `REDSHIFT_PORT`
-- `REDSHIFT_DB`
-- `REDSHIFT_USER`
-- `REDSHIFT_PASSWORD`
-- `REDSHIFT_SCHEMA`
-- `REDSHIFT_SSL`
+- `DATABASE_URL` or `NEON_DATABASE_URL`
+- `NEON_HOST`
+- `NEON_PORT`
+- `NEON_DB`
+- `NEON_USER`
+- `NEON_PASSWORD`
+- `NEON_SSL`
+- `DB_POOL_MAX`
 
-## 2) Create Star Schema in Redshift
+## 2) Create Star Schema in Neon PostgreSQL
 
-Run the SQL in `api/sql/star_schema.sql` against your Redshift database.
+Run the SQL in `api/sql/star_schema.sql` against your Neon database.
 
 This creates the data warehouse objects, including:
 
@@ -60,6 +63,10 @@ Health check:
 Admin API base:
 
 - `http://localhost:4000/api/admin`
+
+### AWS Deployment Target
+
+API deployment uses AWS account `rnbevents716` (`8904-3938-9718`) only for runtime/API activity.
 
 ## 5) Run Frontend Locally
 
@@ -111,7 +118,7 @@ docker compose up --build
 Admin access remains local-storage based (`mwangaza_auth`) for lightweight demo use.
 For production, replace with server-side auth and signed session/JWT controls.
 
-## 10) WhatsApp Claim Intake (Webhook + OpenAI + Redshift)
+## 10) WhatsApp Claim Intake (Webhook + OpenAI + Neon PostgreSQL)
 
 The API now supports WhatsApp Business incoming chat intake:
 
@@ -125,7 +132,7 @@ Processing flow:
 3. OpenAI drives follow-up questions until required fields are complete: reporter reference, institution, city, description
 4. OpenAI classifies/category + severity suggestion for the completed incident
 5. Generate a unique reference number (`WM-YYYYMMDD-XXXXXX`)
-6. Save claim into Redshift `fact_incident`
+6. Save claim into PostgreSQL `fact_incident`
 7. Log governance records in `audit_trail`
 8. Reply to WhatsApp with the generated reference number
 

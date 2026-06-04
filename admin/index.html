@@ -13,28 +13,11 @@
     <link rel="stylesheet" href="styles.css?v=20260525-5" />
   </head>
   <body>
-    <style>
-      body > :not(.lockdown-access-denied) { display: none !important; }
-      .lockdown-access-denied {
-        min-height: 100vh;
-        margin: 0;
-        display: grid;
-        place-items: center;
-        padding: 24px;
-        background: #0b1220;
-        color: #e5e7eb;
-        font-family: Arial, sans-serif;
-        text-align: center;
+    <script>
+      if (localStorage.getItem("mwangaza_auth") !== "true") {
+        window.location.replace("../");
       }
-      .lockdown-access-denied h1 { margin: 0 0 12px; font-size: 36px; }
-      .lockdown-access-denied p { margin: 0; font-size: 18px; line-height: 1.5; }
-    </style>
-    <main class="lockdown-access-denied" aria-live="polite">
-      <section>
-        <h1>Access Denied</h1>
-        <p>All access is currently disabled by the site owner.</p>
-      </section>
-    </main>
+    </script>
     <div class="app-shell">
       <aside class="sidebar">
         <div class="brand-block">

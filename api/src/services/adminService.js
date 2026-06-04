@@ -140,11 +140,11 @@ export async function getIncidents(filters = {}) {
       fi.inserted_at as reported_at,
       fi.ingestion_source,
       (
-        select json_extract_path_text(at.new_value, 'from')
+        select NULLIF(at.new_value, '')::jsonb ->> 'from'
         from audit_trail at
         where at.table_name = 'fact_incident'
           and at.action_type = 'create'
-          and json_extract_path_text(at.new_value, 'incidentRef') = fi.incident_ref
+          and NULLIF(at.new_value, '')::jsonb ->> 'incidentRef' = fi.incident_ref
         order by at.changed_at desc
         limit 1
       ) as reporter_phone,

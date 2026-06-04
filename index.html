@@ -196,28 +196,6 @@
     </style>
   </head>
   <body>
-    <style>
-      body > :not(.lockdown-access-denied) { display: none !important; }
-      .lockdown-access-denied {
-        min-height: 100vh;
-        margin: 0;
-        display: grid;
-        place-items: center;
-        padding: 24px;
-        background: #0b1220;
-        color: #e5e7eb;
-        font-family: Arial, sans-serif;
-        text-align: center;
-      }
-      .lockdown-access-denied h1 { margin: 0 0 12px; font-size: 36px; }
-      .lockdown-access-denied p { margin: 0; font-size: 18px; line-height: 1.5; }
-    </style>
-    <main class="lockdown-access-denied" aria-live="polite">
-      <section>
-        <h1>Access Denied</h1>
-        <p>All access is currently disabled by the site owner.</p>
-      </section>
-    </main>
     <main class="shell">
       <span class="pill">YNK-TechUSA Client Portal</span>
       <h1>YNK-TechUSA Sandbox Access Hub</h1>
@@ -235,12 +213,78 @@
       </footer>
     </main>
 
+    <div class="access-backdrop" id="accessBackdrop" aria-hidden="true">
+      <section class="access-card" role="dialog" aria-modal="true" aria-labelledby="accessTitle">
+        <h2 id="accessTitle">Project Access Code</h2>
+        <p>Enter your provided access code to continue to your client sandbox project.</p>
+        <label for="accessCodeInput">Access code</label>
+        <input id="accessCodeInput" type="password" autocomplete="off" />
+        <div class="access-error" id="accessError"></div>
+        <div class="access-actions">
+          <button class="access-confirm" id="accessConfirmBtn" type="button">Continue</button>
+          <button class="access-cancel" id="accessCancelBtn" type="button">Cancel</button>
+        </div>
+      </section>
+    </div>
+
     <script>
       const PROJECT_PATH = "/MwangazaMail/";
-      const openProjectBtn = document.getElementById("openProjectBtn");
+      const PROJECT_ACCESS_CODE = "YNK-ACCESS-2026";
+      const ACCESS_KEY = "mwangaza_access_code_unlocked";
 
-      openProjectBtn.addEventListener("click", () => {
+      const openProjectBtn = document.getElementById("openProjectBtn");
+      const accessBackdrop = document.getElementById("accessBackdrop");
+      const accessCodeInput = document.getElementById("accessCodeInput");
+      const accessError = document.getElementById("accessError");
+      const accessConfirmBtn = document.getElementById("accessConfirmBtn");
+      const accessCancelBtn = document.getElementById("accessCancelBtn");
+
+      const openAccessModal = () => {
+        accessBackdrop.classList.add("is-open");
+        accessBackdrop.setAttribute("aria-hidden", "false");
+        accessError.textContent = "";
+        accessCodeInput.value = "";
+        accessCodeInput.focus();
+      };
+
+      const closeAccessModal = () => {
+        accessBackdrop.classList.remove("is-open");
+        accessBackdrop.setAttribute("aria-hidden", "true");
+      };
+
+      const proceedToProject = () => {
+        if (accessCodeInput.value.trim() !== PROJECT_ACCESS_CODE) {
+          accessError.textContent = "Invalid access code. Please try again.";
+          return;
+        }
+        localStorage.setItem(ACCESS_KEY, "true");
         window.location.assign(PROJECT_PATH);
+      };
+
+      const goToProject = () => {
+        if (localStorage.getItem(ACCESS_KEY) === "true") {
+          window.location.assign(PROJECT_PATH);
+          return;
+        }
+        openAccessModal();
+      };
+
+      if (localStorage.getItem(ACCESS_KEY) === "true") {
+        accessBackdrop.remove();
+      }
+
+      openProjectBtn.addEventListener("click", goToProject);
+      accessCancelBtn.addEventListener("click", closeAccessModal);
+      accessConfirmBtn.addEventListener("click", proceedToProject);
+      accessBackdrop.addEventListener("click", (event) => {
+        if (event.target === accessBackdrop) {
+          closeAccessModal();
+        }
+      });
+      accessCodeInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          proceedToProject();
+        }
       });
     </script>
   </body>

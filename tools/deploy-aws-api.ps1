@@ -1,5 +1,5 @@
 param(
-  [string]$ProfileName = 'YannickNkongolo',
+  [string]$ProfileName = 'rnbevents716',
   [string]$Region = 'us-east-1'
 )
 
@@ -71,6 +71,13 @@ Get-Content .\api\.env | ForEach-Object {
   if ($parts.Count -eq 2) { $envMap[$parts[0].Trim()] = $parts[1].Trim() }
 }
 if (-not $envMap.ContainsKey('PUBLIC_BASE_URL')) { $envMap['PUBLIC_BASE_URL'] = 'https://api.mysmartwork.tech' }
+if (-not $envMap.ContainsKey('DATABASE_URL') -and -not $envMap.ContainsKey('NEON_DATABASE_URL')) {
+  if ($envMap.ContainsKey('NEON_HOST') -and $envMap.ContainsKey('NEON_DB') -and $envMap.ContainsKey('NEON_USER') -and $envMap.ContainsKey('NEON_PASSWORD')) {
+    $dbPort = if ($envMap.ContainsKey('NEON_PORT')) { $envMap['NEON_PORT'] } else { '5432' }
+    $sslMode = if ($envMap.ContainsKey('NEON_SSL')) { $envMap['NEON_SSL'] } else { 'true' }
+    $envMap['DATABASE_URL'] = "postgresql://$($envMap['NEON_USER']):$($envMap['NEON_PASSWORD'])@$($envMap['NEON_HOST']):$dbPort/$($envMap['NEON_DB'])?sslmode=$sslMode"
+  }
+}
 if (-not $envMap.ContainsKey('WHATSAPP_VERIFY_TOKEN')) { $envMap['WHATSAPP_VERIFY_TOKEN'] = '' }
 if (-not $envMap.ContainsKey('WHATSAPP_ACCESS_TOKEN')) { $envMap['WHATSAPP_ACCESS_TOKEN'] = '' }
 if (-not $envMap.ContainsKey('WHATSAPP_PHONE_NUMBER_ID')) { $envMap['WHATSAPP_PHONE_NUMBER_ID'] = '' }
@@ -134,8 +141,6 @@ if ($ecsExisting -and $ecsExisting -ne 'None') {
 try { aws ec2 authorize-security-group-ingress --group-id $AlbSgId --protocol tcp --port 80 --cidr 0.0.0.0/0 --region $Region | Out-Null } catch {}
 try { aws ec2 authorize-security-group-ingress --group-id $AlbSgId --protocol tcp --port 443 --cidr 0.0.0.0/0 --region $Region | Out-Null } catch {}
 try { aws ec2 authorize-security-group-ingress --group-id $EcsSgId --protocol tcp --port 4000 --source-group $AlbSgId --region $Region | Out-Null } catch {}
-try { aws ec2 authorize-security-group-ingress --group-id $DefaultSg --protocol tcp --port 5439 --source-group $EcsSgId --region $Region | Out-Null } catch {}
-
 # ECS cluster
 try { aws ecs create-cluster --cluster-name $ClusterName --region $Region | Out-Null } catch {}
 
@@ -192,13 +197,13 @@ $taskDef = @"
         { "containerPort": 4000, "hostPort": 4000, "protocol": "tcp" }
       ],
       "secrets": [
-        {"name":"REDSHIFT_HOST","valueFrom":"$SecretArn:REDSHIFT_HOST::"},
-        {"name":"REDSHIFT_PORT","valueFrom":"$SecretArn:REDSHIFT_PORT::"},
-        {"name":"REDSHIFT_DB","valueFrom":"$SecretArn:REDSHIFT_DB::"},
-        {"name":"REDSHIFT_USER","valueFrom":"$SecretArn:REDSHIFT_USER::"},
-        {"name":"REDSHIFT_PASSWORD","valueFrom":"$SecretArn:REDSHIFT_PASSWORD::"},
-        {"name":"REDSHIFT_SCHEMA","valueFrom":"$SecretArn:REDSHIFT_SCHEMA::"},
-        {"name":"REDSHIFT_SSL","valueFrom":"$SecretArn:REDSHIFT_SSL::"},
+        {"name":"DATABASE_URL","valueFrom":"$SecretArn:DATABASE_URL::"},
+        {"name":"NEON_HOST","valueFrom":"$SecretArn:NEON_HOST::"},
+        {"name":"NEON_PORT","valueFrom":"$SecretArn:NEON_PORT::"},
+        {"name":"NEON_DB","valueFrom":"$SecretArn:NEON_DB::"},
+        {"name":"NEON_USER","valueFrom":"$SecretArn:NEON_USER::"},
+        {"name":"NEON_PASSWORD","valueFrom":"$SecretArn:NEON_PASSWORD::"},
+        {"name":"NEON_SSL","valueFrom":"$SecretArn:NEON_SSL::"},
         {"name":"PUBLIC_BASE_URL","valueFrom":"$SecretArn:PUBLIC_BASE_URL::"},
         {"name":"WHATSAPP_VERIFY_TOKEN","valueFrom":"$SecretArn:WHATSAPP_VERIFY_TOKEN::"},
         {"name":"WHATSAPP_ACCESS_TOKEN","valueFrom":"$SecretArn:WHATSAPP_ACCESS_TOKEN::"},

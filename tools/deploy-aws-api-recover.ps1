@@ -1,5 +1,5 @@
 param(
-  [string]$ProfileName = 'YannickNkongolo',
+  [string]$ProfileName = 'rnbevents716',
   [string]$Region = 'us-east-1'
 )
 
@@ -152,13 +152,13 @@ $taskObj = @{
         @{ containerPort = 4000; hostPort = 4000; protocol = 'tcp' }
       )
       secrets = @(
-        @{name='REDSHIFT_HOST';valueFrom="$secretArn`:REDSHIFT_HOST::"},
-        @{name='REDSHIFT_PORT';valueFrom="$secretArn`:REDSHIFT_PORT::"},
-        @{name='REDSHIFT_DB';valueFrom="$secretArn`:REDSHIFT_DB::"},
-        @{name='REDSHIFT_USER';valueFrom="$secretArn`:REDSHIFT_USER::"},
-        @{name='REDSHIFT_PASSWORD';valueFrom="$secretArn`:REDSHIFT_PASSWORD::"},
-        @{name='REDSHIFT_SCHEMA';valueFrom="$secretArn`:REDSHIFT_SCHEMA::"},
-        @{name='REDSHIFT_SSL';valueFrom="$secretArn`:REDSHIFT_SSL::"},
+        @{name='DATABASE_URL';valueFrom="$secretArn`:DATABASE_URL::"},
+        @{name='NEON_HOST';valueFrom="$secretArn`:NEON_HOST::"},
+        @{name='NEON_PORT';valueFrom="$secretArn`:NEON_PORT::"},
+        @{name='NEON_DB';valueFrom="$secretArn`:NEON_DB::"},
+        @{name='NEON_USER';valueFrom="$secretArn`:NEON_USER::"},
+        @{name='NEON_PASSWORD';valueFrom="$secretArn`:NEON_PASSWORD::"},
+        @{name='NEON_SSL';valueFrom="$secretArn`:NEON_SSL::"},
         @{name='PUBLIC_BASE_URL';valueFrom="$secretArn`:PUBLIC_BASE_URL::"},
         @{name='WHATSAPP_VERIFY_TOKEN';valueFrom="$secretArn`:WHATSAPP_VERIFY_TOKEN::"},
         @{name='WHATSAPP_ACCESS_TOKEN';valueFrom="$secretArn`:WHATSAPP_ACCESS_TOKEN::"},

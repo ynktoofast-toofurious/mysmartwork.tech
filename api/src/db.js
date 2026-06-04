@@ -1,15 +1,23 @@
 import { Pool } from "pg";
 import { config } from "./config.js";
 
-const pool = new Pool({
-  host: config.redshift.host,
-  port: config.redshift.port,
-  database: config.redshift.database,
-  user: config.redshift.user,
-  password: config.redshift.password,
-  ssl: config.redshift.ssl ? { rejectUnauthorized: false } : false,
-  max: 10
-});
+const poolConfig = config.database.connectionString
+  ? {
+      connectionString: config.database.connectionString,
+      ssl: config.database.ssl ? { rejectUnauthorized: false } : false,
+      max: config.database.poolMax
+    }
+  : {
+      host: config.database.host,
+      port: config.database.port,
+      database: config.database.database,
+      user: config.database.user,
+      password: config.database.password,
+      ssl: config.database.ssl ? { rejectUnauthorized: false } : false,
+      max: config.database.poolMax
+    };
+
+const pool = new Pool(poolConfig);
 
 export const query = (text, params = []) => pool.query(text, params);
 

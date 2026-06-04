@@ -18,31 +18,192 @@
   </head>
   <body>
     <style>
-      body > :not(.lockdown-access-denied) { display: none !important; }
-      .lockdown-access-denied {
-        min-height: 100vh;
+      body {
         margin: 0;
-        display: grid;
-        place-items: center;
-        padding: 24px;
-        background: #0b1220;
-        color: #e5e7eb;
-        font-family: Arial, sans-serif;
-        text-align: center;
+        min-height: 100vh;
+        background: #08101f;
       }
-      .lockdown-access-denied h1 { margin: 0 0 12px; font-size: 36px; }
-      .lockdown-access-denied p { margin: 0; font-size: 18px; line-height: 1.5; }
+
+      body[data-access-granted="true"] #root {
+        display: block;
+      }
+
+      #root[hidden] {
+        display: none !important;
+      }
+
+      .access-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        background: radial-gradient(circle at top, rgba(28, 54, 110, 0.78), rgba(2, 7, 20, 0.92));
+      }
+
+      .access-backdrop.is-open {
+        display: flex;
+      }
+
+      .access-card {
+        width: min(520px, 100%);
+        border-radius: 28px;
+        border: 1px solid rgba(186, 204, 255, 0.22);
+        background: linear-gradient(180deg, rgba(15, 24, 53, 0.96), rgba(8, 14, 31, 0.98));
+        box-shadow: 0 28px 90px rgba(0, 0, 0, 0.45);
+        padding: 28px;
+        color: #eef2ff;
+        font-family: "Plus Jakarta Sans", sans-serif;
+      }
+
+      .access-pill {
+        display: inline-flex;
+        border-radius: 999px;
+        border: 1px solid rgba(175, 197, 255, 0.24);
+        padding: 8px 14px;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #b8cbff;
+      }
+
+      .access-card h1 {
+        margin: 14px 0 10px;
+        font-family: "Outfit", sans-serif;
+        font-size: clamp(28px, 4vw, 40px);
+        line-height: 1.08;
+      }
+
+      .access-card p {
+        margin: 0;
+        color: #c8d4fb;
+        line-height: 1.6;
+      }
+
+      .access-card label {
+        display: block;
+        margin-top: 18px;
+        font-weight: 700;
+        font-size: 13px;
+        color: #dce7ff;
+      }
+
+      .access-card input {
+        width: 100%;
+        margin-top: 8px;
+        border-radius: 14px;
+        border: 1px solid rgba(175, 197, 255, 0.28);
+        background: #0a1430;
+        color: #eef2ff;
+        font: inherit;
+        padding: 13px 14px;
+      }
+
+      .access-error {
+        min-height: 20px;
+        margin-top: 10px;
+        color: #ffb8c2;
+        font-size: 13px;
+      }
+
+      .access-actions {
+        margin-top: 16px;
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .access-actions button {
+        cursor: pointer;
+        border: none;
+        border-radius: 14px;
+        padding: 12px 16px;
+        font: inherit;
+        font-weight: 700;
+      }
+
+      .access-confirm {
+        background: linear-gradient(135deg, #6e9bff, #8ce0ff);
+        color: #051129;
+      }
+
+      .access-back {
+        background: transparent;
+        border: 1px solid rgba(175, 197, 255, 0.28) !important;
+        color: #dce7ff;
+      }
     </style>
-    <main class="lockdown-access-denied" aria-live="polite">
-      <section>
-        <h1>Access Denied</h1>
-        <p>All access is currently disabled by the site owner.</p>
+    <div class="access-backdrop" id="accessBackdrop" aria-hidden="true">
+      <section class="access-card" role="dialog" aria-modal="true" aria-labelledby="accessTitle">
+        <span class="access-pill">Local access gate</span>
+        <h1 id="accessTitle">Enter the project access code</h1>
+        <p>This sandbox stays locked until the approved local access code is entered.</p>
+        <label for="accessCodeInput">Access code</label>
+        <input id="accessCodeInput" type="password" autocomplete="off" />
+        <div class="access-error" id="accessError"></div>
+        <div class="access-actions">
+          <button class="access-confirm" id="accessConfirmBtn" type="button">Unlock project</button>
+          <button class="access-back" id="accessBackBtn" type="button">Back to portal</button>
+        </div>
       </section>
-    </main>
-    <div id="root"></div>
+    </div>
+    <div id="root" hidden></div>
     <footer class="site-powered-by">
       <a href="https://ynk-techusa.com/" target="_blank" rel="noreferrer">Powered by YNK-Tech USA</a>
     </footer>
+    <script>
+      const ACCESS_KEY = "mwangaza_access_code_unlocked";
+      const PROJECT_ACCESS_CODE = "YNK-ACCESS-2026";
+      const accessBackdrop = document.getElementById("accessBackdrop");
+      const accessCodeInput = document.getElementById("accessCodeInput");
+      const accessError = document.getElementById("accessError");
+      const accessConfirmBtn = document.getElementById("accessConfirmBtn");
+      const accessBackBtn = document.getElementById("accessBackBtn");
+      const root = document.getElementById("root");
+
+      const unlockPage = () => {
+        localStorage.setItem(ACCESS_KEY, "true");
+        document.body.dataset.accessGranted = "true";
+        root.hidden = false;
+        accessBackdrop.classList.remove("is-open");
+        accessBackdrop.setAttribute("aria-hidden", "true");
+      };
+
+      const showGate = () => {
+        accessBackdrop.classList.add("is-open");
+        accessBackdrop.setAttribute("aria-hidden", "false");
+        accessError.textContent = "";
+        accessCodeInput.value = "";
+        accessCodeInput.focus();
+      };
+
+      if (localStorage.getItem(ACCESS_KEY) === "true") {
+        unlockPage();
+      } else {
+        showGate();
+      }
+
+      accessConfirmBtn.addEventListener("click", () => {
+        if (accessCodeInput.value.trim() !== PROJECT_ACCESS_CODE) {
+          accessError.textContent = "Invalid access code. Please try again.";
+          return;
+        }
+        unlockPage();
+      });
+
+      accessBackBtn.addEventListener("click", () => {
+        window.location.assign("/");
+      });
+
+      accessCodeInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          accessConfirmBtn.click();
+        }
+      });
+    </script>
     <script type="module" src="./script.js?v=20260530-wa2"></script>
   </body>
 </html>

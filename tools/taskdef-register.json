@@ -1,5 +1,5 @@
 {
-    "executionRoleArn":  "arn:aws:iam::779846821543:role/ecsTaskExecutionRole",
+    "executionRoleArn":  "arn:aws:iam::890439389718:role/ecsTaskExecutionRole",
     "networkMode":  "awsvpc",
     "cpu":  "512",
     "requiresCompatibilities":  [
@@ -8,7 +8,7 @@
     "containerDefinitions":  [
                                  {
                                      "name":  "api",
-                                     "image":  "779846821543.dkr.ecr.us-east-1.amazonaws.com/mwangaza-api:20260530163111",
+                                     "image":  "890439389718.dkr.ecr.us-east-1.amazonaws.com/mwangaza-api:20260530163111",
                                      "cpu":  0,
                                      "portMappings":  [
                                                           {
@@ -29,60 +29,60 @@
                                                      ],
                                      "secrets":  [
                                                      {
-                                                         "name":  "REDSHIFT_HOST",
-                                                         "valueFrom":  "arn:aws:secretsmanager:us-east-1:779846821543:secret:mwangaza/api/prod-9JnPuE:REDSHIFT_HOST::"
+                                                         "name":  "DATABASE_URL",
+                                                         "valueFrom":  "arn:aws:secretsmanager:us-east-1:890439389718:secret:mwangaza/api/prod-9JnPuE:DATABASE_URL::"
                                                      },
                                                      {
-                                                         "name":  "REDSHIFT_PORT",
-                                                         "valueFrom":  "arn:aws:secretsmanager:us-east-1:779846821543:secret:mwangaza/api/prod-9JnPuE:REDSHIFT_PORT::"
+                                                         "name":  "NEON_HOST",
+                                                         "valueFrom":  "arn:aws:secretsmanager:us-east-1:890439389718:secret:mwangaza/api/prod-9JnPuE:NEON_HOST::"
                                                      },
                                                      {
-                                                         "name":  "REDSHIFT_DB",
-                                                         "valueFrom":  "arn:aws:secretsmanager:us-east-1:779846821543:secret:mwangaza/api/prod-9JnPuE:REDSHIFT_DB::"
+                                                         "name":  "NEON_PORT",
+                                                         "valueFrom":  "arn:aws:secretsmanager:us-east-1:890439389718:secret:mwangaza/api/prod-9JnPuE:NEON_PORT::"
                                                      },
                                                      {
-                                                         "name":  "REDSHIFT_USER",
-                                                         "valueFrom":  "arn:aws:secretsmanager:us-east-1:779846821543:secret:mwangaza/api/prod-9JnPuE:REDSHIFT_USER::"
+                                                         "name":  "NEON_DB",
+                                                         "valueFrom":  "arn:aws:secretsmanager:us-east-1:890439389718:secret:mwangaza/api/prod-9JnPuE:NEON_DB::"
                                                      },
                                                      {
-                                                         "name":  "REDSHIFT_PASSWORD",
-                                                         "valueFrom":  "arn:aws:secretsmanager:us-east-1:779846821543:secret:mwangaza/api/prod-9JnPuE:REDSHIFT_PASSWORD::"
+                                                         "name":  "NEON_USER",
+                                                         "valueFrom":  "arn:aws:secretsmanager:us-east-1:890439389718:secret:mwangaza/api/prod-9JnPuE:NEON_USER::"
                                                      },
                                                      {
-                                                         "name":  "REDSHIFT_SCHEMA",
-                                                         "valueFrom":  "arn:aws:secretsmanager:us-east-1:779846821543:secret:mwangaza/api/prod-9JnPuE:REDSHIFT_SCHEMA::"
+                                                         "name":  "NEON_PASSWORD",
+                                                         "valueFrom":  "arn:aws:secretsmanager:us-east-1:890439389718:secret:mwangaza/api/prod-9JnPuE:NEON_PASSWORD::"
                                                      },
                                                      {
-                                                         "name":  "REDSHIFT_SSL",
-                                                         "valueFrom":  "arn:aws:secretsmanager:us-east-1:779846821543:secret:mwangaza/api/prod-9JnPuE:REDSHIFT_SSL::"
+                                                         "name":  "NEON_SSL",
+                                                         "valueFrom":  "arn:aws:secretsmanager:us-east-1:890439389718:secret:mwangaza/api/prod-9JnPuE:NEON_SSL::"
                                                      },
                                                      {
                                                          "name":  "PUBLIC_BASE_URL",
-                                                         "valueFrom":  "arn:aws:secretsmanager:us-east-1:779846821543:secret:mwangaza/api/prod-9JnPuE:PUBLIC_BASE_URL::"
+                                                         "valueFrom":  "arn:aws:secretsmanager:us-east-1:890439389718:secret:mwangaza/api/prod-9JnPuE:PUBLIC_BASE_URL::"
                                                      },
                                                      {
                                                          "name":  "WHATSAPP_VERIFY_TOKEN",
-                                                         "valueFrom":  "arn:aws:secretsmanager:us-east-1:779846821543:secret:mwangaza/api/prod-9JnPuE:WHATSAPP_VERIFY_TOKEN::"
+                                                         "valueFrom":  "arn:aws:secretsmanager:us-east-1:890439389718:secret:mwangaza/api/prod-9JnPuE:WHATSAPP_VERIFY_TOKEN::"
                                                      },
                                                      {
                                                          "name":  "WHATSAPP_ACCESS_TOKEN",
-                                                         "valueFrom":  "arn:aws:secretsmanager:us-east-1:779846821543:secret:mwangaza/api/prod-9JnPuE:WHATSAPP_ACCESS_TOKEN::"
+                                                         "valueFrom":  "arn:aws:secretsmanager:us-east-1:890439389718:secret:mwangaza/api/prod-9JnPuE:WHATSAPP_ACCESS_TOKEN::"
                                                      },
                                                      {
                                                          "name":  "WHATSAPP_PHONE_NUMBER_ID",
-                                                         "valueFrom":  "arn:aws:secretsmanager:us-east-1:779846821543:secret:mwangaza/api/prod-9JnPuE:WHATSAPP_PHONE_NUMBER_ID::"
+                                                         "valueFrom":  "arn:aws:secretsmanager:us-east-1:890439389718:secret:mwangaza/api/prod-9JnPuE:WHATSAPP_PHONE_NUMBER_ID::"
                                                      },
                                                      {
                                                          "name":  "WHATSAPP_GRAPH_VERSION",
-                                                         "valueFrom":  "arn:aws:secretsmanager:us-east-1:779846821543:secret:mwangaza/api/prod-9JnPuE:WHATSAPP_GRAPH_VERSION::"
+                                                         "valueFrom":  "arn:aws:secretsmanager:us-east-1:890439389718:secret:mwangaza/api/prod-9JnPuE:WHATSAPP_GRAPH_VERSION::"
                                                      },
                                                      {
                                                          "name":  "OPENAI_API_KEY",
-                                                         "valueFrom":  "arn:aws:secretsmanager:us-east-1:779846821543:secret:mwangaza/api/prod-9JnPuE:OPENAI_API_KEY::"
+                                                         "valueFrom":  "arn:aws:secretsmanager:us-east-1:890439389718:secret:mwangaza/api/prod-9JnPuE:OPENAI_API_KEY::"
                                                      },
                                                      {
                                                          "name":  "OPENAI_MODEL",
-                                                         "valueFrom":  "arn:aws:secretsmanager:us-east-1:779846821543:secret:mwangaza/api/prod-9JnPuE:OPENAI_MODEL::"
+                                                         "valueFrom":  "arn:aws:secretsmanager:us-east-1:890439389718:secret:mwangaza/api/prod-9JnPuE:OPENAI_MODEL::"
                                                      }
                                                  ],
                                      "logConfiguration":  {
@@ -99,6 +99,6 @@
                                  }
                              ],
     "family":  "mwangaza-api-task",
-    "taskRoleArn":  "arn:aws:iam::779846821543:role/mwangazaApiTaskRole",
+    "taskRoleArn":  "arn:aws:iam::890439389718:role/mwangazaApiTaskRole",
     "memory":  "1024"
 }
