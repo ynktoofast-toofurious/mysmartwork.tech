@@ -230,7 +230,8 @@ $taskDef = @"
   ]
 }
 "@
-Set-Content -Path $TaskDefPath -Value $taskDef -Encoding utf8NoBOM
+$utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+[System.IO.File]::WriteAllText($TaskDefPath, $taskDef, $utf8NoBom)
 $TaskDefArn = aws ecs register-task-definition --cli-input-json file://$TaskDefPath --region $Region --query "taskDefinition.taskDefinitionArn" --output text
 
 # Service create/update
