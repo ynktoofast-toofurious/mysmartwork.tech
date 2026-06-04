@@ -162,7 +162,7 @@ if (-not $TgArn -or $TgArn -eq 'None') {
   $TgArn = aws elbv2 create-target-group --name $TgName --protocol HTTP --port 4000 --vpc-id $VpcId --target-type ip --health-check-path /health --health-check-protocol HTTP --health-check-interval-seconds 30 --health-check-timeout-seconds 5 --healthy-threshold-count 2 --unhealthy-threshold-count 3 --matcher HttpCode=200 --region $Region --query "TargetGroups[0].TargetGroupArn" --output text
 }
 
-$ListenerArn = aws elbv2 describe-listeners --load-balancer-arn $AlbArn --region $Region --query "Listeners[?Port==`80`].ListenerArn | [0]" --output text
+$ListenerArn = aws elbv2 describe-listeners --load-balancer-arn $AlbArn --region $Region --query 'Listeners[?Port==`80`].ListenerArn | [0]' --output text
 if (-not $ListenerArn -or $ListenerArn -eq 'None') {
   aws elbv2 create-listener --load-balancer-arn $AlbArn --protocol HTTP --port 80 --default-actions Type=forward,TargetGroupArn=$TgArn --region $Region | Out-Null
 }
@@ -177,7 +177,7 @@ $CertValidation = aws acm describe-certificate --certificate-arn $CertArn --regi
 # Add HTTPS listener automatically once cert is issued.
 $CertStatus = aws acm describe-certificate --certificate-arn $CertArn --region $Region --query "Certificate.Status" --output text
 if ($CertStatus -eq 'ISSUED') {
-  $HttpsListenerArn = aws elbv2 describe-listeners --load-balancer-arn $AlbArn --region $Region --query "Listeners[?Port==`443`].ListenerArn | [0]" --output text
+  $HttpsListenerArn = aws elbv2 describe-listeners --load-balancer-arn $AlbArn --region $Region --query 'Listeners[?Port==`443`].ListenerArn | [0]' --output text
   if (-not $HttpsListenerArn -or $HttpsListenerArn -eq 'None') {
     aws elbv2 create-listener --load-balancer-arn $AlbArn --protocol HTTPS --port 443 --certificates CertificateArn=$CertArn --default-actions Type=forward,TargetGroupArn=$TgArn --region $Region | Out-Null
   }
@@ -230,7 +230,7 @@ $taskDef = @"
   ]
 }
 "@
-Set-Content -Path $TaskDefPath -Value $taskDef -Encoding UTF8
+Set-Content -Path $TaskDefPath -Value $taskDef -Encoding utf8NoBOM
 $TaskDefArn = aws ecs register-task-definition --cli-input-json file://$TaskDefPath --region $Region --query "taskDefinition.taskDefinitionArn" --output text
 
 # Service create/update
