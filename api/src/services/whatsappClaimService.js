@@ -37,7 +37,8 @@ const I18N = {
     completed2: "Reference Mwangaza: {{incidentRef}}",
     completed3: "Rassurez-vous: les informations sont chiffrees et votre identite n'est pas revelee.",
     completed4: "Conservez cette reference pour le suivi.",
-    completed5: "Pour un nouveau cas, envoyez RESTART."
+    completed5: "Pour un nouveau cas, envoyez RESTART.",
+    capReached: "Le volume maximal de messages sur 24h est atteint. Merci de reessayer plus tard."
   },
   en: {
     thanksDetails: "Thank you for the details.",
@@ -61,7 +62,8 @@ const I18N = {
     completed2: "Mwangaza reference: {{incidentRef}}",
     completed3: "Please be assured: information is encrypted and your identity is not disclosed.",
     completed4: "Keep this reference for follow-up.",
-    completed5: "For a new case, send RESTART."
+    completed5: "For a new case, send RESTART.",
+    capReached: "The 24-hour message capacity has been reached. Please try again later."
   },
   ln: {
     thanksDetails: "Matondi mpo na makambo opesi.",
@@ -85,7 +87,8 @@ const I18N = {
     completed2: "Reference ya Mwangaza: {{incidentRef}}",
     completed3: "Tika motema: makambo nyonso ebatelami mpe bomoto na yo ekobimisama te.",
     completed4: "Bomba reference oyo mpo na suivi.",
-    completed5: "Mpo na cas ya sika, tinda RESTART."
+    completed5: "Mpo na cas ya sika, tinda RESTART.",
+    capReached: "Motuya ya ba message na kati ya ngonga 24 ekoki. Meka lisusu sima."
   },
   sw: {
     thanksDetails: "Asante kwa maelezo.",
@@ -109,7 +112,8 @@ const I18N = {
     completed2: "Namba ya Mwangaza: {{incidentRef}}",
     completed3: "Usijali: taarifa zimefichwa na utambulisho wako hautafichuliwa.",
     completed4: "Hifadhi rejea hii kwa ufuatiliaji.",
-    completed5: "Kwa kesi mpya, tuma RESTART."
+    completed5: "Kwa kesi mpya, tuma RESTART.",
+    capReached: "Kikomo cha ujumbe wa saa 24 kimefikiwa. Tafadhali jaribu tena baadaye."
   }
 };
 
@@ -568,6 +572,19 @@ async function saveConversationSession(from, session) {
   return safeSession;
 }
 
+async function getRolling24hSessionCount() {
+  const result = await query(
+    `select count(*)::int as total
+     from audit_trail
+     where table_name = $1
+       and action_type = $2
+       and changed_at >= current_timestamp - interval '24 hours'`,
+    [SESSION_TABLE_NAME, SESSION_ACTION_TYPE]
+  );
+
+  return Number(result.rows?.[0]?.total || 0);
+}
+
 function fallbackBrainResponse({ messageText, session }) {
   const language = pickLanguage(session.language || "fr");
   const draft = mergeDraft(session.incidentDraft, {
@@ -742,6 +759,22 @@ export async function processClaimMessage(message) {
   let session = await loadConversationSession(message.from);
   session.language = detectLanguage(text, session.language || "fr");
 
+  const dailyLimit = Number(config.whatsapp.dailyMessageLimit || 0);
+  const alertThreshold = Number(config.whatsapp.dailyMessageAlertThreshold || 0);
+  const rolling24hCount = await getRolling24hSessionCount();
+
+  if (alertThreshold > 0 && rolling24hCount >= alertThreshold) {
+    console.warn(`[whatsapp-cap-warning] rolling24h=${rolling24hCount} threshold=${alertThreshold}`);
+  }
+
+  if (dailyLimit > 0 && rolling24hCount >= dailyLimit) {
+    return {
+      referenceNumber: "SESSION-CAP-REACHED",
+      responseText: t(session.language, "capReached"),
+      claim: null
+    };
+  }
+
   // After a completed claim, treat any new incoming text as a new claim session.
   if (session.completed && !isRestartMessage(text)) {
     session = buildDefaultSession(message.from);
@@ -885,24 +918,57 @@ export async function sendWhatsAppText(to, bodyText) {
     throw new Error("WhatsApp phone number ID is not configured (WHATSAPP_PHONE_NUMBER_ID)");
   }
 
-  // AWS Social Messaging requires E.164 format with + prefix
+  // Normalize destination to E.164 (required by both AWS and Meta send APIs).
   const destination = to.startsWith("+") ? to : `+${to}`;
+  const originId = String(config.whatsapp.phoneNumberId || "").trim();
+  const isAwsPhoneNumberId = originId.startsWith("phone-number-id-") || originId.startsWith("arn:");
 
-  const { SocialMessagingClient, SendWhatsAppMessageCommand } = await import("@aws-sdk/client-socialmessaging");
-  const client = new SocialMessagingClient({ region: config.whatsapp.region });
+  if (isAwsPhoneNumberId) {
+    const { SocialMessagingClient, SendWhatsAppMessageCommand } = await import("@aws-sdk/client-socialmessaging");
+    const client = new SocialMessagingClient({ region: config.whatsapp.region });
 
-  const command = new SendWhatsAppMessageCommand({
-    originationPhoneNumberId: config.whatsapp.phoneNumberId,
-    message: Buffer.from(
-      JSON.stringify({
-        messaging_product: "whatsapp",
-        to: destination,
-        type: "text",
-        text: { preview_url: false, body: bodyText }
-      })
-    ),
-    metaApiVersion: config.whatsapp.graphApiVersion
+    const command = new SendWhatsAppMessageCommand({
+      originationPhoneNumberId: originId,
+      message: Buffer.from(
+        JSON.stringify({
+          messaging_product: "whatsapp",
+          to: destination,
+          type: "text",
+          text: { preview_url: false, body: bodyText }
+        })
+      ),
+      metaApiVersion: config.whatsapp.graphApiVersion
+    });
+
+    return client.send(command);
+  }
+
+  if (!config.whatsapp.accessToken) {
+    throw new Error("WhatsApp access token is not configured (WHATSAPP_ACCESS_TOKEN)");
+  }
+
+  const graphVersion = config.whatsapp.graphApiVersion || "v20.0";
+  const url = `https://graph.facebook.com/${graphVersion}/${originId}/messages`;
+  const metaDestination = destination.replace(/^\+/, "");
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${config.whatsapp.accessToken}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      messaging_product: "whatsapp",
+      to: metaDestination,
+      type: "text",
+      text: { preview_url: false, body: bodyText }
+    })
   });
 
-  return client.send(command);
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Meta send failed: ${response.status} ${errorText}`);
+  }
+
+  return response.json();
 }

@@ -228,6 +228,8 @@ Required environment variables in `api/.env`:
 - `WHATSAPP_ACCESS_TOKEN`
 - `WHATSAPP_PHONE_NUMBER_ID`
 - `WHATSAPP_GRAPH_VERSION` (default `v20.0`)
+- `WHATSAPP_DAILY_MESSAGE_LIMIT` (optional, rolling 24h safety cap, default `300`)
+- `WHATSAPP_DAILY_MESSAGE_ALERT_THRESHOLD` (optional early warning level, default `240`)
 - `OPENAI_API_KEY`
 - `OPENAI_MODEL` (default `gpt-4o-mini`)
 

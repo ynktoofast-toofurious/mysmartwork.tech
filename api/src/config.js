@@ -21,7 +21,9 @@ export const config = {
     accessToken: process.env.WHATSAPP_ACCESS_TOKEN || "",
     phoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID || "",
     graphApiVersion: process.env.WHATSAPP_GRAPH_VERSION || "v20.0",
-    region: process.env.WHATSAPP_REGION || "us-west-2"
+    region: process.env.WHATSAPP_REGION || "us-west-2",
+    dailyMessageLimit: Number(process.env.WHATSAPP_DAILY_MESSAGE_LIMIT || 300),
+    dailyMessageAlertThreshold: Number(process.env.WHATSAPP_DAILY_MESSAGE_ALERT_THRESHOLD || 240)
   },
   openai: {
     apiKey: process.env.OPENAI_API_KEY || "",
