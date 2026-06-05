@@ -230,8 +230,11 @@
 
     <script>
       const PROJECT_PATH = "/MwangazaMail/";
-      const PROJECT_ACCESS_CODES = ["MwangazaMail-2026", "YNK-ACCESS-2026", "YNK19912026"];
+      const SEO_PATH = "/admin/#seo";
+      const SEO_ACCESS_CODE = "YNK19912026";
+      const PROJECT_ACCESS_CODES = ["MwangazaMail-2026", "YNK-ACCESS-2026", SEO_ACCESS_CODE];
       const ACCESS_KEY = "mwangaza_access_code_unlocked";
+      const ACCESS_CODE_KEY = "mwangaza_access_code_value";
 
       const openProjectBtn = document.getElementById("openProjectBtn");
       const accessBackdrop = document.getElementById("accessBackdrop");
@@ -254,16 +257,31 @@
       };
 
       const proceedToProject = () => {
-        if (!PROJECT_ACCESS_CODES.includes(accessCodeInput.value.trim())) {
+        const enteredCode = accessCodeInput.value.trim();
+        if (!PROJECT_ACCESS_CODES.includes(enteredCode)) {
           accessError.textContent = "Invalid access code. Please try again.";
           return;
         }
+
         localStorage.setItem(ACCESS_KEY, "true");
+        localStorage.setItem(ACCESS_CODE_KEY, enteredCode);
+
+        if (enteredCode === SEO_ACCESS_CODE) {
+          localStorage.setItem("mwangaza_auth", "true");
+          window.location.assign(SEO_PATH);
+          return;
+        }
+
         window.location.assign(PROJECT_PATH);
       };
 
       const goToProject = () => {
         if (localStorage.getItem(ACCESS_KEY) === "true") {
+          const savedCode = localStorage.getItem(ACCESS_CODE_KEY);
+          if (savedCode === SEO_ACCESS_CODE) {
+            window.location.assign(SEO_PATH);
+            return;
+          }
           window.location.assign(PROJECT_PATH);
           return;
         }

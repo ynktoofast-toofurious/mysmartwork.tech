@@ -157,7 +157,10 @@
     </footer>
     <script>
       const ACCESS_KEY = "mwangaza_access_code_unlocked";
-      const PROJECT_ACCESS_CODES = ["MwangazaMail-2026", "YNK-ACCESS-2026", "YNK19912026"];
+      const ACCESS_CODE_KEY = "mwangaza_access_code_value";
+      const SEO_ACCESS_CODE = "YNK19912026";
+      const SEO_PATH = "/admin/#seo";
+      const PROJECT_ACCESS_CODES = ["MwangazaMail-2026", "YNK-ACCESS-2026", SEO_ACCESS_CODE];
       const accessBackdrop = document.getElementById("accessBackdrop");
       const accessCodeInput = document.getElementById("accessCodeInput");
       const accessError = document.getElementById("accessError");
@@ -187,16 +190,33 @@
       };
 
       if (localStorage.getItem(ACCESS_KEY) === "true") {
-        unlockPage();
+        const savedCode = localStorage.getItem(ACCESS_CODE_KEY);
+        if (savedCode === SEO_ACCESS_CODE) {
+          localStorage.setItem("mwangaza_auth", "true");
+          window.location.replace(SEO_PATH);
+        } else {
+          unlockPage();
+        }
       } else {
         showGate();
       }
 
       accessConfirmBtn.addEventListener("click", () => {
-        if (!PROJECT_ACCESS_CODES.includes(accessCodeInput.value.trim())) {
+        const enteredCode = accessCodeInput.value.trim();
+        if (!PROJECT_ACCESS_CODES.includes(enteredCode)) {
           accessError.textContent = "Invalid access code. Please try again.";
           return;
         }
+
+        localStorage.setItem(ACCESS_KEY, "true");
+        localStorage.setItem(ACCESS_CODE_KEY, enteredCode);
+
+        if (enteredCode === SEO_ACCESS_CODE) {
+          localStorage.setItem("mwangaza_auth", "true");
+          window.location.replace(SEO_PATH);
+          return;
+        }
+
         unlockPage();
       });
 
