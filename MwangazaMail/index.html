@@ -160,13 +160,24 @@
       const ACCESS_CODE_KEY = "mwangaza_access_code_value";
       const SEO_ACCESS_CODE = "YNK19912026";
       const SEO_PATH = "/admin/#seo";
-      const PROJECT_ACCESS_CODES = ["MwangazaMail-2026", "YNK-ACCESS-2026", SEO_ACCESS_CODE];
+      const PROJECT_ACCESS_CODES = ["YNK-ACCESS-2026", SEO_ACCESS_CODE];
+      const ROOT_URL = "https://www.mysmartwork.tech/";
       const accessBackdrop = document.getElementById("accessBackdrop");
       const accessCodeInput = document.getElementById("accessCodeInput");
       const accessError = document.getElementById("accessError");
       const accessConfirmBtn = document.getElementById("accessConfirmBtn");
       const accessBackBtn = document.getElementById("accessBackBtn");
       const root = document.getElementById("root");
+
+      const savedAccessCode = localStorage.getItem(ACCESS_CODE_KEY);
+      const hasValidAccess = localStorage.getItem(ACCESS_KEY) === "true" && PROJECT_ACCESS_CODES.includes(savedAccessCode || "");
+
+      if (!hasValidAccess) {
+        localStorage.removeItem(ACCESS_KEY);
+        localStorage.removeItem(ACCESS_CODE_KEY);
+        localStorage.removeItem("mwangaza_auth");
+        window.location.replace(ROOT_URL);
+      }
 
       const unlockPage = () => {
         localStorage.setItem(ACCESS_KEY, "true");
@@ -191,7 +202,12 @@
 
       if (localStorage.getItem(ACCESS_KEY) === "true") {
         const savedCode = localStorage.getItem(ACCESS_CODE_KEY);
-        if (savedCode === SEO_ACCESS_CODE) {
+        if (!PROJECT_ACCESS_CODES.includes(savedCode || "")) {
+          localStorage.removeItem(ACCESS_KEY);
+          localStorage.removeItem(ACCESS_CODE_KEY);
+          localStorage.removeItem("mwangaza_auth");
+          showGate();
+        } else if (savedCode === SEO_ACCESS_CODE) {
           localStorage.setItem("mwangaza_auth", "true");
           window.location.replace(SEO_PATH);
         } else {
@@ -221,7 +237,7 @@
       });
 
       accessBackBtn.addEventListener("click", () => {
-        window.location.assign("/");
+        window.location.assign(ROOT_URL);
       });
 
       accessCodeInput.addEventListener("keydown", (event) => {
