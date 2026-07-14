@@ -239,3 +239,16 @@ Meta webhook setup values:
 - Verify Token: `${WHATSAPP_VERIFY_TOKEN}`
 
 When Meta sends the verification challenge, API responds with the challenge only when token matches.
+
+## 12) Shared-Domain Path Routing
+
+This domain can serve both projects under `www.mysmartwork.tech` with path-based routing:
+
+- `https://www.mysmartwork.tech/MwangazaMail/` -> Joel app path
+- `https://www.mysmartwork.tech/ALKASH-TRANS/` -> ALKASH-TRANS app path
+
+Nginx config `deploy/nodocker/nginx-mwangaza.conf` includes both location blocks.
+
+Expected ALKASH-TRANS static path on server:
+
+- `/var/www/alkash-trans-site`
