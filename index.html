@@ -205,8 +205,7 @@
       </p>
       <p class="warning">This is a sandbox destination and not the final production endpoint.</p>
       <div class="actions">
-        <button class="btn btn-primary" id="openMwangazaBtn" type="button">Enter Your Project Code</button>
-        <button class="btn btn-primary" id="openAlkashBtn" type="button">Enter Your Project Code</button>
+        <button class="btn btn-primary" id="openProjectBtn" type="button">Enter Your Project Code</button>
         <a class="btn btn-secondary" href="https://ynk-techusa.com/" target="_blank" rel="noreferrer">Visit YNK-TechUSA</a>
       </div>
       <footer class="foot">
@@ -236,21 +235,31 @@
       };
       const SEO_PATH = "/admin/#seo";
       const SEO_ACCESS_CODE = "YNK19912026";
-      const PROJECT_ACCESS_CODES = ["YNK-ACCESS-2026", SEO_ACCESS_CODE];
+      const PROJECT_CODE_ROUTES = {
+        "YNK-MW-2026": "/MwangazaMail/",
+        "YNK-ALK-2026": "/ALKASH-TRANS/",
+        "YNK-ACCESS-2026": "/MwangazaMail/"
+      };
+      const PROJECT_ACCESS_CODES = [...Object.keys(PROJECT_CODE_ROUTES), SEO_ACCESS_CODE];
       const ACCESS_KEY = "mwangaza_access_code_unlocked";
       const ACCESS_CODE_KEY = "mwangaza_access_code_value";
       const ROOT_URL = "https://www.mysmartwork.tech/";
       const routeToken = new URLSearchParams(window.location.search).get("r");
       const requestedRoute = routeToken ? TOKEN_ROUTES[routeToken] || null : null;
-      let pendingRoute = null;
 
-      const openMwangazaBtn = document.getElementById("openMwangazaBtn");
-      const openAlkashBtn = document.getElementById("openAlkashBtn");
+      const openProjectBtn = document.getElementById("openProjectBtn");
       const accessBackdrop = document.getElementById("accessBackdrop");
       const accessCodeInput = document.getElementById("accessCodeInput");
       const accessError = document.getElementById("accessError");
       const accessConfirmBtn = document.getElementById("accessConfirmBtn");
       const accessCancelBtn = document.getElementById("accessCancelBtn");
+
+      const resolveDestinationForCode = (code) => {
+        if (code === SEO_ACCESS_CODE) {
+          return SEO_PATH;
+        }
+        return PROJECT_CODE_ROUTES[code] || null;
+      };
 
       const isAccessGranted = () => {
         if (localStorage.getItem(ACCESS_KEY) !== "true") {
@@ -289,7 +298,8 @@
 
       const proceedToProject = () => {
         const enteredCode = accessCodeInput.value.trim();
-        if (!PROJECT_ACCESS_CODES.includes(enteredCode)) {
+        const destinationRoute = resolveDestinationForCode(enteredCode);
+        if (!destinationRoute) {
           accessError.textContent = "Invalid access code. Please try again.";
           return;
         }
@@ -297,27 +307,13 @@
         localStorage.setItem(ACCESS_KEY, "true");
         localStorage.setItem(ACCESS_CODE_KEY, enteredCode);
 
-        if (enteredCode === SEO_ACCESS_CODE) {
+        if (destinationRoute === SEO_PATH) {
           localStorage.setItem("mwangaza_auth", "true");
           window.location.assign(SEO_PATH);
           return;
         }
 
-        redirectToRoute(pendingRoute || TOKEN_ROUTES["y7m4q2x9"]);
-      };
-
-      const goToRoute = (targetRoute) => {
-        pendingRoute = targetRoute;
-        if (isAccessGranted()) {
-          const savedCode = localStorage.getItem(ACCESS_CODE_KEY);
-          if (savedCode === SEO_ACCESS_CODE) {
-            window.location.assign(SEO_PATH);
-            return;
-          }
-          redirectToRoute(targetRoute);
-          return;
-        }
-        openAccessModal();
+        redirectToRoute(destinationRoute);
       };
 
       if (isAccessGranted()) {
@@ -325,11 +321,15 @@
       }
 
       if (requestedRoute) {
-        goToRoute(requestedRoute);
+        if (isAccessGranted()) {
+          const savedCode = localStorage.getItem(ACCESS_CODE_KEY);
+          redirectToRoute(resolveDestinationForCode(savedCode || ""));
+        } else {
+          openAccessModal();
+        }
       }
 
-      openMwangazaBtn.addEventListener("click", () => goToRoute(TOKEN_ROUTES["y7m4q2x9"]));
-      openAlkashBtn.addEventListener("click", () => goToRoute(TOKEN_ROUTES["a3k8t5r1"]));
+      openProjectBtn.addEventListener("click", openAccessModal);
       accessCancelBtn.addEventListener("click", closeAccessModal);
       accessConfirmBtn.addEventListener("click", proceedToProject);
       accessBackdrop.addEventListener("click", (event) => {
