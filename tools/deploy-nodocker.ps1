@@ -28,6 +28,9 @@ if ($KeyPath) {
 } else {
   & scp -P $SshPort -o StrictHostKeyChecking=accept-new $archivePath "${ServerUser}@${ServerHost}:/tmp/mwangaza-$releaseId.tgz"
 }
+if ($LASTEXITCODE -ne 0) {
+  throw 'Failed to upload release archive via scp. Check ServerHost and KeyPath.'
+}
 
 $remoteScript = @"
 set -euo pipefail
@@ -81,6 +84,9 @@ if ($KeyPath) {
 } else {
   & scp -P $SshPort -o StrictHostKeyChecking=accept-new $remoteScriptPath "${ServerUser}@${ServerHost}:/tmp/mwangaza-$releaseId-remote.sh"
 }
+if ($LASTEXITCODE -ne 0) {
+  throw 'Failed to upload remote script via scp. Check ServerHost and KeyPath.'
+}
 
 $remoteCommand = "bash /tmp/mwangaza-$releaseId-remote.sh"
 
@@ -89,6 +95,9 @@ if ($KeyPath) {
   & ssh -p $SshPort -o StrictHostKeyChecking=accept-new -i $KeyPath "${ServerUser}@${ServerHost}" $remoteCommand
 } else {
   & ssh -p $SshPort -o StrictHostKeyChecking=accept-new "${ServerUser}@${ServerHost}" $remoteCommand
+}
+if ($LASTEXITCODE -ne 0) {
+  throw 'Remote deploy command failed over ssh. Check server connectivity and logs.'
 }
 
 Remove-Item -Path $archivePath -ErrorAction SilentlyContinue
