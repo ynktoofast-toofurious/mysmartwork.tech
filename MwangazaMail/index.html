@@ -160,7 +160,7 @@
       const ACCESS_CODE_KEY = "mwangaza_access_code_value";
       const SEO_ACCESS_CODE = "YNK19912026";
       const SEO_PATH = "/admin/#seo";
-      const PROJECT_ACCESS_CODES = ["YNK-MW-2026", "YNK-ACCESS-2026", SEO_ACCESS_CODE];
+      const PROJECT_ACCESS_CODES = ["YNKMW2026", "YNKACCESS2026", "YNK19912026"];
       const ROOT_URL = "https://www.mysmartwork.tech/";
       const accessBackdrop = document.getElementById("accessBackdrop");
       const accessCodeInput = document.getElementById("accessCodeInput");
@@ -169,7 +169,8 @@
       const accessBackBtn = document.getElementById("accessBackBtn");
       const root = document.getElementById("root");
 
-      const savedAccessCode = localStorage.getItem(ACCESS_CODE_KEY);
+      const normalizeCode = (code) => (code || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+      const savedAccessCode = normalizeCode(localStorage.getItem(ACCESS_CODE_KEY));
       const hasValidAccess = localStorage.getItem(ACCESS_KEY) === "true" && PROJECT_ACCESS_CODES.includes(savedAccessCode || "");
 
       if (!hasValidAccess) {
@@ -201,13 +202,13 @@
       };
 
       if (localStorage.getItem(ACCESS_KEY) === "true") {
-        const savedCode = localStorage.getItem(ACCESS_CODE_KEY);
+        const savedCode = normalizeCode(localStorage.getItem(ACCESS_CODE_KEY));
         if (!PROJECT_ACCESS_CODES.includes(savedCode || "")) {
           localStorage.removeItem(ACCESS_KEY);
           localStorage.removeItem(ACCESS_CODE_KEY);
           localStorage.removeItem("mwangaza_auth");
           showGate();
-        } else if (savedCode === SEO_ACCESS_CODE) {
+        } else if (savedCode === normalizeCode(SEO_ACCESS_CODE)) {
           localStorage.setItem("mwangaza_auth", "true");
           window.location.replace(SEO_PATH);
         } else {
@@ -218,7 +219,7 @@
       }
 
       accessConfirmBtn.addEventListener("click", () => {
-        const enteredCode = accessCodeInput.value.trim();
+        const enteredCode = normalizeCode(accessCodeInput.value);
         if (!PROJECT_ACCESS_CODES.includes(enteredCode)) {
           accessError.textContent = "Invalid access code. Please try again.";
           return;
@@ -227,7 +228,7 @@
         localStorage.setItem(ACCESS_KEY, "true");
         localStorage.setItem(ACCESS_CODE_KEY, enteredCode);
 
-        if (enteredCode === SEO_ACCESS_CODE) {
+        if (enteredCode === normalizeCode(SEO_ACCESS_CODE)) {
           localStorage.setItem("mwangaza_auth", "true");
           window.location.replace(SEO_PATH);
           return;

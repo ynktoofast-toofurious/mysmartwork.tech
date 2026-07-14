@@ -229,23 +229,18 @@
     </div>
 
     <script>
-      const TOKEN_ROUTES = {
-        "y7m4q2x9": "/MwangazaMail/",
-        "a3k8t5r1": "/ALKASH-TRANS/"
-      };
       const SEO_PATH = "/admin/#seo";
       const SEO_ACCESS_CODE = "YNK19912026";
       const PROJECT_CODE_ROUTES = {
-        "YNK-MW-2026": "/MwangazaMail/",
-        "YNK-ALK-2026": "/ALKASH-TRANS/",
-        "YNK-ACCESS-2026": "/MwangazaMail/"
+        "YNKMW2026": "/MwangazaMail/",
+        "YNKALK2026": "/ALKASH-TRANS/",
+        "YNKACCESS2026": "/MwangazaMail/"
       };
-      const PROJECT_ACCESS_CODES = [...Object.keys(PROJECT_CODE_ROUTES), SEO_ACCESS_CODE];
+      const SEO_ACCESS_CODE_CANONICAL = "YNK19912026";
       const ACCESS_KEY = "mwangaza_access_code_unlocked";
       const ACCESS_CODE_KEY = "mwangaza_access_code_value";
       const ROOT_URL = "https://www.mysmartwork.tech/";
       const routeToken = new URLSearchParams(window.location.search).get("r");
-      const requestedRoute = routeToken ? TOKEN_ROUTES[routeToken] || null : null;
 
       const openProjectBtn = document.getElementById("openProjectBtn");
       const accessBackdrop = document.getElementById("accessBackdrop");
@@ -254,11 +249,11 @@
       const accessConfirmBtn = document.getElementById("accessConfirmBtn");
       const accessCancelBtn = document.getElementById("accessCancelBtn");
 
-      const normalizeCode = (code) => code.trim().toUpperCase();
+      const normalizeCode = (code) => (code || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
 
       const resolveDestinationForCode = (code) => {
         const normalizedCode = normalizeCode(code || "");
-        if (normalizedCode === SEO_ACCESS_CODE) {
+        if (normalizedCode === SEO_ACCESS_CODE_CANONICAL) {
           return SEO_PATH;
         }
         return PROJECT_CODE_ROUTES[normalizedCode] || null;
@@ -268,8 +263,8 @@
         if (localStorage.getItem(ACCESS_KEY) !== "true") {
           return false;
         }
-        const savedCode = localStorage.getItem(ACCESS_CODE_KEY);
-        if (!PROJECT_ACCESS_CODES.includes(savedCode || "")) {
+        const savedCode = localStorage.getItem(ACCESS_CODE_KEY) || "";
+        if (!resolveDestinationForCode(savedCode)) {
           localStorage.removeItem(ACCESS_KEY);
           localStorage.removeItem(ACCESS_CODE_KEY);
           localStorage.removeItem("mwangaza_auth");
@@ -319,12 +314,13 @@
         redirectToRoute(destinationRoute);
       };
 
-      if (requestedRoute) {
-        if (isAccessGranted()) {
-          redirectToRoute(requestedRoute);
-        } else {
-          openAccessModal();
-        }
+      const TOKEN_ROUTES = {
+        "y7m4q2x9": "/MwangazaMail/",
+        "a3k8t5r1": "/ALKASH-TRANS/"
+      };
+      const requestedRoute = routeToken ? TOKEN_ROUTES[routeToken] || null : null;
+      if (requestedRoute && !isAccessGranted()) {
+        openAccessModal();
       }
 
       openProjectBtn.addEventListener("click", () => {
