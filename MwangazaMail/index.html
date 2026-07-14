@@ -246,6 +246,9 @@
       });
 
       accessBackBtn.addEventListener("click", () => {
+        localStorage.removeItem(ACCESS_KEY);
+        localStorage.removeItem(ACCESS_CODE_KEY);
+        localStorage.removeItem("mwangaza_auth");
         window.location.assign(ROOT_URL);
       });
 

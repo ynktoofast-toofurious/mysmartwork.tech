@@ -307,6 +307,12 @@
         accessBackdrop.setAttribute("aria-hidden", "true");
       };
 
+      const clearSavedAccess = () => {
+        localStorage.removeItem(ACCESS_KEY);
+        localStorage.removeItem(ACCESS_CODE_KEY);
+        localStorage.removeItem("mwangaza_auth");
+      };
+
       const proceedToProject = () => {
         const enteredCode = normalizeCode(accessCodeInput.value);
         const destinationRoute = resolveDestinationForCode(enteredCode);
@@ -335,21 +341,19 @@
       if (requestedRoute) {
         if (isAccessGranted()) {
           const savedCode = localStorage.getItem(ACCESS_CODE_KEY) || "";
-          redirectToRoute(getRouteWithAccessCode(requestedRoute, savedCode));
+          if (resolveDestinationForCode(savedCode) === requestedRoute) {
+            redirectToRoute(getRouteWithAccessCode(requestedRoute, savedCode));
+          } else {
+            clearSavedAccess();
+            openAccessModal();
+          }
         } else {
           openAccessModal();
         }
       }
 
       openProjectBtn.addEventListener("click", () => {
-        if (isAccessGranted()) {
-          const savedCode = localStorage.getItem(ACCESS_CODE_KEY) || "";
-          const destinationRoute = resolveDestinationForCode(savedCode);
-          if (destinationRoute) {
-            redirectToRoute(getRouteWithAccessCode(destinationRoute, savedCode));
-            return;
-          }
-        }
+        clearSavedAccess();
         openAccessModal();
       });
       accessCancelBtn.addEventListener("click", closeAccessModal);
