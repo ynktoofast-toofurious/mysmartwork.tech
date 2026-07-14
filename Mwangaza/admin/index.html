@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MwangazaMail Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css?v=20260530-incidents-v3" />
+  </head>
+  <body>
+    <script>
+      if (localStorage.getItem("mwangaza_auth") !== "true") {
+        window.location.replace("../");
+      }
+    </script>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand-block">
+          <div class="brand-mark">O</div>
+          <div class="brand-name">MwangazaMail</div>
+        </div>
+
+        <nav class="main-nav">
+          <button class="nav-item is-active" data-tab="dashboard" type="button">Dashboard</button>
+          <button class="nav-item" data-tab="claimreports" type="button">Rapport d'incidents</button>
+          <button class="nav-item" data-tab="utilisateurs" type="button">Utilisateurs</button>
+          <button class="nav-item" data-tab="abonnements" type="button">Abonnements</button>
+          <button class="nav-item" data-tab="analytics" type="button">Analytics</button>
+          <button class="nav-item" data-tab="fonctionnalites" type="button">Fonctionnalites</button>
+        </nav>
+
+        <button class="logout-btn" id="logoutBtn" type="button">Deconnexion</button>
+      </aside>
+
+      <main class="main-panel">
+        <header class="topbar">
+          <div class="topbar-left">
+            <button class="icon-btn" id="refreshBtn" type="button" aria-label="Rafraichir">↻</button>
+            <span class="route-pill" id="routePill">/admin/dashboard</span>
+            <span class="data-status" id="dataStatus">Connexion...</span>
+          </div>
+          <div class="topbar-right">
+            <span class="user-greeting" id="userGreeting"></span>
+            <button class="ghost-btn" id="analyseIaBtn" type="button">Analyse IA</button>
+            <button class="primary-btn" id="openUserDrawerBtn" type="button">Gerer les utilisateurs →</button>
+          </div>
+        </header>
+
+        <section class="page-title">
+          <h1 id="sectionTitle">Dashboard Admin</h1>
+          <p id="sectionSubtitle">Vue d'ensemble de la plateforme</p>
+        </section>
+
+        <section id="dashboardSection" class="tab-section is-visible">
+          <section class="stats-grid" aria-label="KPI">
+            <article class="stat-card"><span class="stat-icon icon-blue">◉</span><p class="stat-value">11</p><p class="stat-label">Utilisateurs actifs</p></article>
+            <article class="stat-card"><span class="stat-icon icon-violet">↗</span><p class="stat-value">$10 100</p><p class="stat-label">Revenus estimes</p></article>
+            <article class="stat-card"><span class="stat-icon icon-green">▭</span><p class="stat-value">11</p><p class="stat-label">Abonnements actifs</p></article>
+            <article class="stat-card"><span class="stat-icon icon-amber">▦</span><p class="stat-value">3</p><p class="stat-label">Plan Premium</p></article>
+          </section>
+
+          <section class="charts-grid">
+            <article class="panel-card">
+              <h2>Revenus par plan</h2>
+              <div class="bar-chart"><div class="bar-track"><span class="bar bar-blue" style="height: 10%"></span></div><div class="bar-track"><span class="bar bar-violet" style="height: 28%"></span></div><div class="bar-track"><span class="bar bar-amber" style="height: 88%"></span></div></div>
+              <div class="bar-labels"><span>Pilote</span><span>Standard</span><span>Premium</span></div>
+            </article>
+            <article class="panel-card">
+              <h2>Repartition par plan</h2>
+              <div class="donut-wrap">
+                <div class="donut"></div>
+                <ul class="legend">
+                  <li><span><i class="dot dot-blue"></i>Pilote</span><b>4 clients</b></li>
+                  <li><span><i class="dot dot-violet"></i>Standard</span><b>4 clients</b></li>
+                  <li><span><i class="dot dot-amber"></i>Premium</span><b>3 clients</b></li>
+                </ul>
+              </div>
+            </article>
+          </section>
+
+        </section>
+
+        <section id="claimreportsSection" class="tab-section">
+          <section class="panel-card table-card">
+            <h2>Vue d'ensemble des incidents</h2>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>Indicateur</th><th>Valeur</th><th>Analyse</th></tr>
+                </thead>
+                <tbody id="claimInsightRows"></tbody>
+              </table>
+            </div>
+          </section>
+          <section class="panel-card table-card">
+            <div class="users-toolbar claim-toolbar">
+              <h2 style="margin:0">Rapport d'incidents</h2>
+              <div class="claim-actions">
+                <button id="claimSelectAllBtn" class="ghost-btn" type="button">Tout selectionner</button>
+                <button id="claimClearSelectionBtn" class="ghost-btn" type="button">Effacer la selection</button>
+                <button id="claimDeleteSelectedBtn" class="primary-btn claim-delete" type="button">Supprimer la selection</button>
+              </div>
+            </div>
+            <div class="filter-row" id="incidentFilterRow">
+              <select id="filterCategory"><option value="">Categorie</option></select>
+              <select id="filterCity"><option value="">Ville</option></select>
+              <select id="filterSeverity"><option value="">Severite</option></select>
+              <select id="filterStatus"><option value="">Statut</option></select>
+              <input id="filterSearch" type="search" placeholder="Rechercher ref / institution" />
+              <button id="applyIncidentFilters" type="button">Filtrer</button>
+              <button id="resetIncidentFilters" type="button">Reinitialiser</button>
+            </div>
+            <div class="table-wrap"><table><thead><tr><th><input id="claimSelectAll" type="checkbox" aria-label="Selectionner tous les incidents" /></th><th>Ref.</th><th>Categorie</th><th>Institution</th><th>Ville</th><th>Telephone</th><th>Source</th><th>Heure d'entree</th><th>Severite</th><th>Statut</th><th>Revision</th><th>Description</th><th>Action</th></tr></thead><tbody id="reportRows"></tbody></table></div>
+          </section>
+        </section>
+
+        <section id="utilisateursSection" class="tab-section">
+          <section class="stats-grid">
+            <article class="stat-card"><p class="stat-value">146</p><p class="stat-label">Comptes total</p></article>
+            <article class="stat-card"><p class="stat-value">97</p><p class="stat-label">Actifs ce mois</p></article>
+            <article class="stat-card"><p class="stat-value">12</p><p class="stat-label">Nouveaux (7j)</p></article>
+            <article class="stat-card"><p class="stat-value">6</p><p class="stat-label">En attente validation</p></article>
+          </section>
+          <section class="panel-card table-card">
+            <h2>Liste des utilisateurs</h2>
+            <div class="users-toolbar">
+              <button id="addUserBtn" class="primary-btn" type="button">Ajouter utilisateur</button>
+            </div>
+            <div class="table-wrap"><table><thead><tr><th>Nom</th><th>Email</th><th>Role</th><th>Ville</th><th>Statut</th><th>Derniere activite</th><th>Action</th></tr></thead><tbody id="usersRows"></tbody></table></div>
+          </section>
+        </section>
+
+        <section id="abonnementsSection" class="tab-section">
+          <section class="plan-grid" id="planCards"></section>
+          <section class="panel-card table-card">
+            <h2>Historique des abonnements</h2>
+            <div class="table-wrap"><table><thead><tr><th>Institution</th><th>Plan</th><th>Montant</th><th>Debut</th><th>Renouvellement</th><th>Etat</th></tr></thead><tbody id="subscriptionRows"></tbody></table></div>
+          </section>
+        </section>
+
+        <section id="analyticsSection" class="tab-section">
+          <section class="panel-card">
+            <h2>Tendance mensuelle</h2>
+            <div class="hbars" id="analyticsBars"></div>
+          </section>
+          <section class="panel-card table-card">
+            <h2>Top categories d'incidents</h2>
+            <div class="table-wrap"><table><thead><tr><th>Categorie</th><th>Volume</th><th>Variation</th><th>Delai moyen de resolution</th></tr></thead><tbody id="categoryRows"></tbody></table></div>
+          </section>
+        </section>
+
+        <section id="fonctionnalitesSection" class="tab-section">
+          <section class="panel-card">
+            <h2>Modules de la plateforme</h2>
+            <div class="feature-list" id="featureList"></div>
+          </section>
+        </section>
+
+
+        <footer class="powered-footer">
+          <a href="https://ynk-techusa.com/" target="_blank" rel="noreferrer">Powered by YNK-Tech USA</a>
+        </footer>
+      </main>
+    </div>
+
+    <div class="drawer-backdrop" id="userDrawerBackdrop" hidden></div>
+    <aside class="user-drawer" id="userDrawer" aria-hidden="true">
+      <div class="drawer-header">
+        <h3 id="userDrawerTitle">Ajouter un utilisateur</h3>
+        <button id="closeUserDrawerBtn" class="icon-btn" type="button" aria-label="Fermer">✕</button>
+      </div>
+      <form id="userForm" class="drawer-form">
+        <label>
+          Nom complet
+          <input id="userFormName" name="fullName" required maxlength="200" />
+        </label>
+        <label>
+          Email
+          <input id="userFormEmail" name="email" type="email" required maxlength="200" />
+        </label>
+        <label>
+          Role
+          <select id="userFormRole" name="role" required>
+            <option value="admin">admin</option>
+            <option value="agent">agent</option>
+            <option value="viewer">viewer</option>
+          </select>
+        </label>
+        <label>
+          Ville
+          <input id="userFormCity" name="city" required maxlength="80" />
+        </label>
+        <label>
+          Mot de passe <span class="label-optional">(optionnel, min 6 caracteres)</span>
+          <input id="userFormPassword" name="password" type="password" minlength="6" maxlength="120" autocomplete="new-password" />
+        </label>
+        <div class="drawer-actions">
+          <button id="cancelUserFormBtn" class="ghost-btn" type="button">Annuler</button>
+          <button id="submitUserFormBtn" class="primary-btn" type="submit">Sauvegarder</button>
+        </div>
+      </form>
+    </aside>
+
+    <div class="drawer-backdrop" id="claimDrawerBackdrop" hidden></div>
+    <aside class="user-drawer claim-drawer" id="claimDrawer" aria-hidden="true">
+      <div class="drawer-header">
+        <h3 id="claimDrawerTitle">Detail de l'incident</h3>
+        <button id="closeClaimDrawerBtn" class="icon-btn" type="button" aria-label="Fermer">✕</button>
+      </div>
+      <form id="claimForm" class="drawer-form">
+        <label>
+          Reference
+          <input id="claimFormRef" name="incidentRef" readonly />
+        </label>
+        <label>
+          Categorie
+          <input id="claimFormCategory" name="category" required maxlength="120" />
+        </label>
+        <label>
+          Institution
+          <input id="claimFormInstitution" name="institution" required maxlength="200" />
+        </label>
+        <label>
+          Ville
+          <input id="claimFormCity" name="city" required maxlength="80" />
+        </label>
+        <label>
+          Telephone declarant
+          <input id="claimFormPhone" name="reporterPhone" readonly />
+        </label>
+        <label>
+          Description
+          <textarea id="claimFormDescription" name="description" rows="5" maxlength="2000"></textarea>
+        </label>
+        <label>
+          Severite
+          <select id="claimFormSeverity" name="severity" required>
+            <option value="faible">faible</option>
+            <option value="moyen">moyen</option>
+            <option value="eleve">eleve</option>
+            <option value="critique">critique</option>
+          </select>
+        </label>
+        <label>
+          Statut
+          <select id="claimFormStatus" name="status" required>
+            <option value="nouveau">nouveau</option>
+            <option value="en_cours">en cours</option>
+            <option value="resolu">resolu</option>
+          </select>
+        </label>
+        <div class="drawer-actions">
+          <button id="cancelClaimFormBtn" class="ghost-btn" type="button">Annuler</button>
+          <button id="submitClaimFormBtn" class="primary-btn" type="submit">Sauvegarder l'incident</button>
+        </div>
+      </form>
+    </aside>
+
+    <div class="ai-backdrop" id="aiBackdrop" hidden></div>
+    <aside class="ai-drawer" id="aiDrawer" aria-hidden="true">
+      <div class="ai-modal-header">
+        <h3 id="aiModalTitle">Analyse IA</h3>
+        <button id="closeAiModalBtn" class="icon-btn" type="button" aria-label="Fermer">✕</button>
+      </div>
+      <p class="ai-modal-hint">Posez une question sur les incidents, tendances et performances.</p>
+      <div id="aiChatMessages" class="ai-chat-messages" aria-live="polite">
+        <div class="ai-message assistant">Bonjour. Je peux analyser les incidents, abonnements et KPI du tableau.</div>
+      </div>
+      <form id="aiChatForm" class="ai-chat-form">
+        <textarea id="aiQuestion" rows="3" placeholder="Ex: Quelles categories explosent ce mois-ci et pourquoi ?"></textarea>
+        <div class="ai-modal-actions">
+          <button id="sendAiBtn" class="primary-btn" type="submit">Envoyer</button>
+        </div>
+      </form>
+    </aside>
+
+    <div class="confirm-backdrop" id="confirmBackdrop" hidden></div>
+    <section class="confirm-modal" id="confirmModal" aria-hidden="true">
+      <h3>Confirmer le changement</h3>
+      <p id="confirmMessage">Voulez-vous enregistrer cette modification utilisateur ?</p>
+      <div class="confirm-actions">
+        <button id="confirmCancelBtn" class="ghost-btn" type="button">Annuler</button>
+        <button id="confirmOkBtn" class="primary-btn" type="button">Confirmer</button>
+      </div>
+    </section>
+
+    <script src="script.js?v=20260530-incidents-v4"></script>
+  </body>
+</html>

@@ -1,12 +1,21 @@
-# MwangazaMail (Landing + Admin + Neon PostgreSQL API)
+# mysmartwork.tech (Mwangaza + ALKASH + Portal + API)
 
 This repository contains:
 
+- A shared root portal (`index.html`) for project-code access
+- A Mwangaza project folder (`Mwangaza/`)
+- An ALKASH project folder (`ALKASH/`)
 - A public landing page (`index.html`, `script.js`, `styles.css`)
 - A protected admin front-end (`admin/`)
 - A Node.js API (`api/`) designed for Neon PostgreSQL-backed analytics and governance
 - A no-Docker deployment path (PM2 + Nginx on a Linux VM)
 - Optional Docker setup for running web + API together
+
+## Repository Structure
+
+- `Mwangaza/` contains the Mwangaza project files served publicly under `/MwangazaMail/`
+- `ALKASH/` contains the ALKASH project source and build served publicly under `/ALKASH-TRANS/`
+- Root files power the shared portal and operational assets for `mysmartwork.tech`
 
 ## 1) Configure API Environment
 

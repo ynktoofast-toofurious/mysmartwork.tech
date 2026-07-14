@@ -17,7 +17,7 @@ $releaseId = (Get-Date).ToString('yyyyMMddHHmmss')
 $archivePath = Join-Path $env:TEMP "mwangaza-$releaseId.tgz"
 
 Write-Host "Creating release archive $archivePath"
-& tar -czf $archivePath --exclude=.git --exclude=node_modules --exclude=api/node_modules --exclude=.DS_Store -C $repoRoot .
+& tar -czf $archivePath --exclude=.git --exclude=node_modules --exclude=api/node_modules --exclude=ALKASH/node_modules --exclude=.DS_Store -C $repoRoot .
 if ($LASTEXITCODE -ne 0) {
   throw 'Failed to create release archive.'
 }
@@ -40,7 +40,12 @@ sudo tar -xzf /tmp/mwangaza-$releaseId.tgz -C /opt/mwangaza/releases/$releaseId
 cd /opt/mwangaza/releases/$releaseId/api
 npm ci --omit=dev
 
+cd /opt/mwangaza/releases/$releaseId/ALKASH
+npm ci
+npm run build
+
 sudo ln -sfn /opt/mwangaza/releases/$releaseId /opt/mwangaza/current
+sudo ln -sfn /opt/mwangaza/current/ALKASH/dist /var/www/alkash-trans-site
 
 if [ -f /opt/mwangaza/current/deploy/nodocker/nginx-mwangaza.conf ]; then
   sudo sed \
