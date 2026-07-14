@@ -254,11 +254,14 @@
       const accessConfirmBtn = document.getElementById("accessConfirmBtn");
       const accessCancelBtn = document.getElementById("accessCancelBtn");
 
+      const normalizeCode = (code) => code.trim().toUpperCase();
+
       const resolveDestinationForCode = (code) => {
-        if (code === SEO_ACCESS_CODE) {
+        const normalizedCode = normalizeCode(code || "");
+        if (normalizedCode === SEO_ACCESS_CODE) {
           return SEO_PATH;
         }
-        return PROJECT_CODE_ROUTES[code] || null;
+        return PROJECT_CODE_ROUTES[normalizedCode] || null;
       };
 
       const isAccessGranted = () => {
@@ -297,7 +300,7 @@
       };
 
       const proceedToProject = () => {
-        const enteredCode = accessCodeInput.value.trim();
+        const enteredCode = normalizeCode(accessCodeInput.value);
         const destinationRoute = resolveDestinationForCode(enteredCode);
         if (!destinationRoute) {
           accessError.textContent = "Invalid access code. Please try again.";
@@ -316,20 +319,25 @@
         redirectToRoute(destinationRoute);
       };
 
-      if (isAccessGranted()) {
-        accessBackdrop.remove();
-      }
-
       if (requestedRoute) {
         if (isAccessGranted()) {
-          const savedCode = localStorage.getItem(ACCESS_CODE_KEY);
-          redirectToRoute(resolveDestinationForCode(savedCode || ""));
+          redirectToRoute(requestedRoute);
         } else {
           openAccessModal();
         }
       }
 
-      openProjectBtn.addEventListener("click", openAccessModal);
+      openProjectBtn.addEventListener("click", () => {
+        if (isAccessGranted()) {
+          const savedCode = localStorage.getItem(ACCESS_CODE_KEY) || "";
+          const destinationRoute = resolveDestinationForCode(savedCode);
+          if (destinationRoute) {
+            redirectToRoute(destinationRoute);
+            return;
+          }
+        }
+        openAccessModal();
+      });
       accessCancelBtn.addEventListener("click", closeAccessModal);
       accessConfirmBtn.addEventListener("click", proceedToProject);
       accessBackdrop.addEventListener("click", (event) => {
