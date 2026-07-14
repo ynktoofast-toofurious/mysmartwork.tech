@@ -281,6 +281,19 @@
         window.location.assign(targetRoute);
       };
 
+      const getRouteWithAccessCode = (targetRoute, code) => {
+        if (!targetRoute || targetRoute === SEO_PATH) {
+          return targetRoute;
+        }
+        const normalizedCode = normalizeCode(code || "");
+        if (!normalizedCode) {
+          return targetRoute;
+        }
+        const routeUrl = new URL(targetRoute, window.location.origin);
+        routeUrl.searchParams.set("ac", normalizedCode);
+        return `${routeUrl.pathname}${routeUrl.search}${routeUrl.hash}`;
+      };
+
       const openAccessModal = () => {
         accessBackdrop.classList.add("is-open");
         accessBackdrop.setAttribute("aria-hidden", "false");
@@ -311,7 +324,7 @@
           return;
         }
 
-        redirectToRoute(destinationRoute);
+        redirectToRoute(getRouteWithAccessCode(destinationRoute, enteredCode));
       };
 
       const TOKEN_ROUTES = {
@@ -319,8 +332,13 @@
         "a3k8t5r1": "/ALKASH-TRANS/"
       };
       const requestedRoute = routeToken ? TOKEN_ROUTES[routeToken] || null : null;
-      if (requestedRoute && !isAccessGranted()) {
-        openAccessModal();
+      if (requestedRoute) {
+        if (isAccessGranted()) {
+          const savedCode = localStorage.getItem(ACCESS_CODE_KEY) || "";
+          redirectToRoute(getRouteWithAccessCode(requestedRoute, savedCode));
+        } else {
+          openAccessModal();
+        }
       }
 
       openProjectBtn.addEventListener("click", () => {
@@ -328,7 +346,7 @@
           const savedCode = localStorage.getItem(ACCESS_CODE_KEY) || "";
           const destinationRoute = resolveDestinationForCode(savedCode);
           if (destinationRoute) {
-            redirectToRoute(destinationRoute);
+            redirectToRoute(getRouteWithAccessCode(destinationRoute, savedCode));
             return;
           }
         }

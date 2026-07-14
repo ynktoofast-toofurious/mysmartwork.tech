@@ -170,6 +170,14 @@
       const root = document.getElementById("root");
 
       const normalizeCode = (code) => (code || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+      const accessCodeFromQuery = normalizeCode(new URLSearchParams(window.location.search).get("ac"));
+      if (PROJECT_ACCESS_CODES.includes(accessCodeFromQuery)) {
+        localStorage.setItem(ACCESS_KEY, "true");
+        localStorage.setItem(ACCESS_CODE_KEY, accessCodeFromQuery);
+        if (window.location.search.includes("ac=")) {
+          window.history.replaceState({}, "", `${window.location.pathname}${window.location.hash}`);
+        }
+      }
       const savedAccessCode = normalizeCode(localStorage.getItem(ACCESS_CODE_KEY));
       const hasValidAccess = localStorage.getItem(ACCESS_KEY) === "true" && PROJECT_ACCESS_CODES.includes(savedAccessCode || "");
 
