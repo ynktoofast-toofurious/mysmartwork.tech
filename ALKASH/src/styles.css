@@ -966,6 +966,23 @@ select {
     gap: 0.8rem;
 }
 
+.quote-item-main {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    min-width: 0;
+}
+
+.quote-item-image {
+    width: 56px;
+    height: 56px;
+    border-radius: 0.6rem;
+    border: 1px solid var(--line);
+    object-fit: cover;
+    background: var(--paper);
+    flex-shrink: 0;
+}
+
 .quote-item-card h3,
 .quote-item-card p {
     margin: 0;

@@ -546,9 +546,17 @@ function ServicesPage({ copy }) {
                 <div className="quote-item-grid">
                     {quoteBuilderItems.map((item) => (
                         <article className="quote-item-card" key={item.key}>
-                            <div>
+                            <div className="quote-item-main">
+                                <img
+                                    className="quote-item-image"
+                                    src={getAssetHref(item.image)}
+                                    alt={item.label}
+                                    loading="lazy"
+                                />
+                                <div>
                                 <h3>{item.label}</h3>
                                 <p>${item.price.toLocaleString()}</p>
+                                </div>
                             </div>
                             <button className="quote-add-btn" type="button" onClick={() => handleAddToQuote(item)} aria-label={`Add ${item.label} to quote`}>
                                 +
