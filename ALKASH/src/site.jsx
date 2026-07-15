@@ -452,7 +452,6 @@ function AboutPage({ copy }) {
 
 function ServicesPage({ copy }) {
     const [draftCount, setDraftCount] = useState(() => readQuoteDraft().reduce((sum, item) => sum + item.quantity, 0));
-    const [showPoster, setShowPoster] = useState(true);
     const [activeTab, setActiveTab] = useState('All');
 
     const visibleItems = useMemo(
@@ -528,20 +527,6 @@ function ServicesPage({ copy }) {
                     <p>Use the + button to add items from the official price list. Items in draft: <strong>{draftCount}</strong></p>
                     <a className="button button-primary" href={getMaskedHref('quote')}>Open Quote Builder</a>
                 </div>
-
-                {showPoster ? (
-                    <figure className="quote-poster-card">
-                        <img
-                            src={getAssetHref('Logo/alkash-pricing-card.png')}
-                            alt="Alkash service and shipping price poster"
-                            onError={() => setShowPoster(false)}
-                        />
-                    </figure>
-                ) : (
-                    <div className="quote-poster-card quote-poster-fallback">
-                        <p>Add your provided price image at <strong>ALKASH/public/Logo/alkash-pricing-card.png</strong> to display it here.</p>
-                    </div>
-                )}
 
                 <div className="quote-item-grid">
                     {quoteBuilderItems.map((item) => (
