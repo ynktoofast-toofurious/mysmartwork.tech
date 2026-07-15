@@ -19,6 +19,7 @@ import {
     setUserFeature,
     setUserRole
 } from './portal.js';
+import { DashboardSidebar, InventoryPage, AnnouncementsPage, SEOPage, DashboardOverview } from './dashboard-components.jsx';
 
 const routes = [
     { key: 'home', href: getMaskedHref('home') },
@@ -953,38 +954,8 @@ function UserDashboardPage({ session }) {
 }
 
 function AdminDashboardPage({ session }) {
-    const [users, setUsers] = useState(() => getUsers());
-    const [cases, setCases] = useState(() => getCases());
-    const [health, setHealth] = useState(() => getPlatformHealthSummary());
-
-    function refreshData() {
-        setUsers(getUsers());
-        setCases(getCases());
-        setHealth(getPlatformHealthSummary());
-    }
-
-    function updateRole(email, role) {
-        setUserRole(email, role);
-        refreshData();
-    }
-
-    function updateEnabled(email, enabled) {
-        setUserEnabled(email, enabled);
-        refreshData();
-    }
-
-    function updateFeature(email, feature, enabled) {
-        setUserFeature(email, feature, enabled);
-        refreshData();
-    }
-
-    function deleteUser(email) {
-        if (email.toLowerCase() === session.email.toLowerCase()) {
-            return;
-        }
-        removeUser(email);
-        refreshData();
-    }
+    const [activeTab, setActiveTab] = useState('overview');
+    const [health] = useState(() => getPlatformHealthSummary());
 
     if (!session || !isAdminRole(session.role)) {
         return (
@@ -999,103 +970,21 @@ function AdminDashboardPage({ session }) {
     }
 
     return (
-        <PageFrame eyebrow="Admin" title="Platform Dashboard" intro="Monitor user accounts, open/problem cases, and platform health.">
-            <div className="admin-health-grid">
-                <article className="metric-card"><strong>{health.totalUsers}</strong><span>Total users</span></article>
-                <article className="metric-card"><strong>{health.activeUsers}</strong><span>Active users</span></article>
-                <article className="metric-card"><strong>{health.openCases}</strong><span>Open/problem cases</span></article>
-                <article className="metric-card"><strong>{health.uptime}</strong><span>Platform uptime</span></article>
-            </div>
-
-            <div className="dashboard-grid-single">
-                <div className="schedule-table-wrapper">
-                    <table className="schedule-table admin-table">
-                        <thead>
-                            <tr>
-                                <th>User</th>
-                                <th>Role</th>
-                                <th>Status</th>
-                                <th>Privileges</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {users.map((user) => (
-                                <tr key={user.email}>
-                                    <td>
-                                        <strong>{user.name}</strong>
-                                        <div>{user.email}</div>
-                                    </td>
-                                    <td>
-                                        <select value={user.role} onChange={(event) => updateRole(user.email, event.target.value)}>
-                                            <option value="user">user</option>
-                                            <option value="co-admin">co-admin</option>
-                                            <option value="admin">admin</option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <button
-                                            className="button button-secondary tiny-action"
-                                            type="button"
-                                            onClick={() => updateEnabled(user.email, !user.enabled)}
-                                        >
-                                            {user.enabled ? 'Disable' : 'Enable'}
-                                        </button>
-                                    </td>
-                                    <td>
-                                        <div className="feature-chips">
-                                            {featureCatalog.map((feature) => {
-                                                const granted = (user.features || []).includes(feature.key);
-                                                return (
-                                                    <button
-                                                        key={feature.key}
-                                                        className={`button button-secondary tiny-action ${granted ? 'granted' : ''}`}
-                                                        type="button"
-                                                        onClick={() => updateFeature(user.email, feature.key, !granted)}
-                                                    >
-                                                        {feature.label}
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <button className="button button-secondary tiny-action" type="button" onClick={() => deleteUser(user.email)}>Remove</button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-
-                <div className="schedule-table-wrapper">
-                    <table className="schedule-table">
-                        <thead>
-                            <tr>
-                                <th>Case ID</th>
-                                <th>User</th>
-                                <th>Issue</th>
-                                <th>Status</th>
-                                <th>Created</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {cases.map((item) => (
-                                <tr key={item.id}>
-                                    <td>{item.id}</td>
-                                    <td>{item.userEmail}</td>
-                                    <td>{item.issue}</td>
-                                    <td>
-                                        <span className={`status-pill ${item.severity === 'problem' ? 'status-limited' : 'status-open'}`}>
-                                            {item.severity}
-                                        </span>
-                                    </td>
-                                    <td>{item.createdAt}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+        <PageFrame eyebrow="Admin" title="Platform Dashboard" intro="Manage inventory, announcements, and SEO settings from one compact view.">
+            <div className="admin-dashboard-layout">
+                <DashboardSidebar activeTab={activeTab} onTabChange={setActiveTab} session={session} />
+                <main className="dashboard-main">
+                    {activeTab === 'overview' && <DashboardOverview session={session} health={health} />}
+                    {activeTab === 'inventory' && (
+                        <InventoryPage
+                            quoteBuilderItems={quoteBuilderItems}
+                            session={session}
+                            getServiceImageHref={getServiceImageHref}
+                        />
+                    )}
+                    {activeTab === 'announcements' && <AnnouncementsPage session={session} />}
+                    {activeTab === 'seo' && <SEOPage session={session} />}
+                </main>
             </div>
         </PageFrame>
     );
