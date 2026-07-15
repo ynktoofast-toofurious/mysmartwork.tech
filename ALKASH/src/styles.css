@@ -1081,7 +1081,8 @@ select {
     .announcement-form span { font-weight: 600; color: var(--navy); font-size: 0.82rem; }
 
     .announcement-form input,
-    .announcement-form textarea {
+    .announcement-form textarea,
+    .announcement-form select {
         padding: 0.6rem 0.8rem;
         border: 1px solid #d1d5db;
         border-radius: var(--radius-sm);
@@ -1091,10 +1092,16 @@ select {
     }
 
     .announcement-form input:focus,
-    .announcement-form textarea:focus {
+    .announcement-form textarea:focus,
+    .announcement-form select:focus {
         outline: none;
         border-color: var(--blue);
         box-shadow: 0 0 0 3px rgba(66,176,213,0.1);
+    }
+
+    .announcement-form input[type='file'] {
+        padding: 0.45rem 0.6rem;
+        background: #fff;
     }
 
     .checkbox-label { flex-direction: row !important; align-items: center; gap: 0.5rem !important; }
@@ -1136,6 +1143,107 @@ select {
     .status-badge.inactive { background: #f3f4f6; color: #6b7280; }
 
     .creator { color: #9ca3af; }
+
+    /* ─── Home announcement carousel ─── */
+    .announcement-carousel-wrap {
+        background: #f8fafc;
+        border-bottom: 1px solid #e5e7eb;
+        padding: 1rem 0 0.65rem;
+    }
+
+    .announcement-carousel-slide {
+        min-height: 220px;
+        border-radius: 16px;
+        overflow: hidden;
+        position: relative;
+        border: 1px solid #e2e8f0;
+        display: grid;
+        align-items: stretch;
+    }
+
+    .announcement-carousel-slide.brand-wave {
+        background: linear-gradient(120deg, #0f172a 0%, #1e3a8a 50%, #38bdf8 100%);
+    }
+
+    .announcement-carousel-slide.brand-navy {
+        background: linear-gradient(110deg, #0b1f3a 0%, #112f57 45%, #164b7a 100%);
+    }
+
+    .announcement-carousel-slide.brand-sky {
+        background: linear-gradient(110deg, #0f3a5a 0%, #1f6f9e 45%, #7cc7f0 100%);
+    }
+
+    .announcement-carousel-slide.custom-image {
+        background-size: cover;
+        background-position: center;
+    }
+
+    .announcement-carousel-image {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .announcement-carousel-overlay {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 0.55rem;
+        padding: 1.6rem 1.8rem;
+        max-width: 70ch;
+        color: #fff;
+        background: linear-gradient(90deg, rgba(8, 20, 39, 0.75), rgba(8, 20, 39, 0.2));
+    }
+
+    .announcement-carousel-kicker {
+        margin: 0;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        font-size: 0.72rem;
+        font-weight: 700;
+        opacity: 0.9;
+    }
+
+    .announcement-carousel-overlay h2 {
+        margin: 0;
+        color: #fff;
+        font-size: clamp(1.2rem, 2.2vw, 2rem);
+        letter-spacing: -0.01em;
+    }
+
+    .announcement-carousel-overlay p {
+        margin: 0;
+        font-size: 0.98rem;
+        line-height: 1.55;
+        color: rgba(255, 255, 255, 0.95);
+    }
+
+    .announcement-carousel-dots {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.45rem;
+        margin-top: 0.6rem;
+    }
+
+    .announcement-carousel-dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        border: none;
+        background: #cbd5e1;
+        cursor: pointer;
+        transition: transform 0.15s ease, background 0.15s ease;
+    }
+
+    .announcement-carousel-dot.active {
+        background: var(--blue);
+        transform: scale(1.15);
+    }
 
     .empty-state {
         text-align: center;
@@ -1242,6 +1350,24 @@ select {
         .dash-metrics-grid { grid-template-columns: 1fr 1fr; }
         .inventory-grid { grid-template-columns: repeat(3, 1fr); }
         .announcement-header { flex-direction: column; }
+
+        .announcement-carousel-wrap {
+            padding: 0.75rem 0 0.5rem;
+        }
+
+        .announcement-carousel-slide {
+            min-height: 180px;
+            border-radius: 12px;
+        }
+
+        .announcement-carousel-overlay {
+            padding: 1rem 1rem 1.1rem;
+            max-width: 100%;
+        }
+
+        .announcement-carousel-overlay p {
+            font-size: 0.88rem;
+        }
     }
 
     @media (max-width: 400px) {

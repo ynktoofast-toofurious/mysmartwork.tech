@@ -331,6 +331,82 @@ function PageFrame({ eyebrow, title, intro, children, compact = false }) {
     );
 }
 
+function HomeAnnouncementCarousel() {
+    const [slides, setSlides] = useState([]);
+    const [activeIndex, setActiveIndex] = useState(0);
+
+    useEffect(() => {
+        try {
+            const stored = JSON.parse(localStorage.getItem('announcements') || '[]');
+            const activeSlides = stored.filter((item) => item.active);
+            setSlides(activeSlides);
+        } catch {
+            setSlides([]);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (slides.length <= 1) {
+            return;
+        }
+
+        const timer = window.setInterval(() => {
+            setActiveIndex((prev) => (prev + 1) % slides.length);
+        }, 5000);
+
+        return () => window.clearInterval(timer);
+    }, [slides]);
+
+    if (!slides.length) {
+        return null;
+    }
+
+    const activeSlide = slides[activeIndex] || slides[0];
+    const bgStyle = activeSlide.backgroundStyle || 'brand-wave';
+    const customUrl = activeSlide.customBackgroundUrl || '';
+    const isImageSlide = activeSlide.slideType === 'image' && activeSlide.imageUrl;
+
+    const sectionClass = `announcement-carousel-slide ${bgStyle}`;
+    const style = bgStyle === 'custom-image' && customUrl
+        ? { backgroundImage: `linear-gradient(90deg, rgba(9,27,52,0.55), rgba(9,27,52,0.25)), url(${customUrl})` }
+        : undefined;
+
+    return (
+        <section className="announcement-carousel-wrap">
+            <div className="container">
+                <div className={sectionClass} style={style}>
+                    {isImageSlide ? (
+                        <img
+                            src={activeSlide.imageUrl}
+                            alt={activeSlide.title || 'Announcement banner'}
+                            className="announcement-carousel-image"
+                        />
+                    ) : null}
+
+                    <div className="announcement-carousel-overlay">
+                        <p className="announcement-carousel-kicker">Latest Announcement</p>
+                        <h2>{activeSlide.title || 'Announcement'}</h2>
+                        {activeSlide.content ? <p>{activeSlide.content}</p> : null}
+                    </div>
+                </div>
+
+                {slides.length > 1 ? (
+                    <div className="announcement-carousel-dots">
+                        {slides.map((item, index) => (
+                            <button
+                                key={item.id || index}
+                                className={`announcement-carousel-dot${index === activeIndex ? ' active' : ''}`}
+                                onClick={() => setActiveIndex(index)}
+                                aria-label={`View announcement ${index + 1}`}
+                            />
+                        ))}
+                    </div>
+                ) : null}
+            </div>
+        </section>
+    );
+}
+
 function HomePage({ copy, language }) {
     const [quickReference, setQuickReference] = useState('');
     const [quickResult, setQuickResult] = useState(null);
@@ -357,6 +433,8 @@ function HomePage({ copy, language }) {
 
     return (
         <main className="page-enter">
+            <HomeAnnouncementCarousel />
+
             <section className="hero-section hero-home">
                 <div className="hero-media"></div>
                 <div className="container hero-grid">

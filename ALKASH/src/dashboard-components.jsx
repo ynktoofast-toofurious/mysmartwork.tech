@@ -236,16 +236,63 @@ export function AnnouncementsPage({ session }) {
         return saved ? JSON.parse(saved) : [];
     });
 
-    const [formData, setFormData] = useState({ title: '', content: '', active: true });
+    const [formData, setFormData] = useState({
+        title: '',
+        content: '',
+        active: true,
+        slideType: 'text',
+        backgroundStyle: 'brand-wave',
+        customBackgroundUrl: '',
+        imageUrl: ''
+    });
+    const [bannerFile, setBannerFile] = useState(null);
+    const [isSaving, setIsSaving] = useState(false);
+    const [formMessage, setFormMessage] = useState('');
+
+    const brandedBackgrounds = [
+        { value: 'brand-wave', label: 'ALKASH Wave (Light)' },
+        { value: 'brand-navy', label: 'ALKASH Navy Gradient' },
+        { value: 'brand-sky', label: 'ALKASH Sky Blue' },
+        { value: 'custom-image', label: 'Custom Background Image URL' }
+    ];
 
     async function handleAddAnnouncement(e) {
         e.preventDefault();
 
+        setIsSaving(true);
+        setFormMessage('');
+
+        let uploadedImageUrl = formData.imageUrl || '';
+
+        if (formData.slideType === 'image' && bannerFile) {
+            const safeName = bannerFile.name.replace(/\s+/g, '-').toLowerCase();
+            const uploadPath = `announcements/banners/${Date.now()}-${safeName}`;
+            const uploadResult = await uploadToS3(bannerFile, uploadPath);
+
+            if (!uploadResult.success) {
+                setFormMessage(`Upload failed: ${uploadResult.error || 'unknown error'}`);
+                setIsSaving(false);
+                return;
+            }
+
+            uploadedImageUrl = uploadResult.url || '';
+        }
+
+        if (formData.slideType === 'image' && !uploadedImageUrl) {
+            setFormMessage('Please upload a banner image or provide an image URL.');
+            setIsSaving(false);
+            return;
+        }
+
         const newAnnouncement = {
             id: Date.now(),
-            title: formData.title,
-            content: formData.content,
+            title: formData.title.trim(),
+            content: formData.content.trim(),
             active: formData.active,
+            slideType: formData.slideType,
+            backgroundStyle: formData.backgroundStyle,
+            customBackgroundUrl: formData.customBackgroundUrl.trim(),
+            imageUrl: uploadedImageUrl,
             createdBy: session?.name || 'Admin',
             createdAt: new Date().toISOString()
         };
@@ -259,7 +306,18 @@ export function AnnouncementsPage({ session }) {
         localStorage.setItem('announcements', JSON.stringify(updated));
 
         // Reset form
-        setFormData({ title: '', content: '', active: true });
+        setFormData({
+            title: '',
+            content: '',
+            active: true,
+            slideType: 'text',
+            backgroundStyle: 'brand-wave',
+            customBackgroundUrl: '',
+            imageUrl: ''
+        });
+        setBannerFile(null);
+        setFormMessage('Announcement slide added successfully.');
+        setIsSaving(false);
     }
 
     function handleDeleteAnnouncement(id) {
@@ -284,6 +342,19 @@ export function AnnouncementsPage({ session }) {
             <div className="announcement-form">
                 <h3>Create New Announcement</h3>
                 <form onSubmit={handleAddAnnouncement}>
+                    {formMessage ? <div className="message success">{formMessage}</div> : null}
+
+                    <label>
+                        <span>Slide Type</span>
+                        <select
+                            value={formData.slideType}
+                            onChange={(e) => setFormData({ ...formData, slideType: e.target.value })}
+                        >
+                            <option value="text">Text Banner</option>
+                            <option value="image">Image Banner</option>
+                        </select>
+                    </label>
+
                     <label>
                         <span>Announcement Title</span>
                         <input
@@ -295,15 +366,65 @@ export function AnnouncementsPage({ session }) {
                         />
                     </label>
                     <label>
-                        <span>Content</span>
+                        <span>Content / Caption</span>
                         <textarea
-                            placeholder="Enter announcement content"
+                            placeholder="Enter announcement message"
                             rows="4"
                             value={formData.content}
                             onChange={(e) => setFormData({...formData, content: e.target.value})}
                             required
                         />
                     </label>
+
+                    {formData.slideType === 'text' ? (
+                        <>
+                            <label>
+                                <span>Background Preset</span>
+                                <select
+                                    value={formData.backgroundStyle}
+                                    onChange={(e) => setFormData({ ...formData, backgroundStyle: e.target.value })}
+                                >
+                                    {brandedBackgrounds.map(bg => (
+                                        <option key={bg.value} value={bg.value}>{bg.label}</option>
+                                    ))}
+                                </select>
+                            </label>
+
+                            {formData.backgroundStyle === 'custom-image' ? (
+                                <label>
+                                    <span>Custom Background URL</span>
+                                    <input
+                                        type="url"
+                                        placeholder="https://..."
+                                        value={formData.customBackgroundUrl}
+                                        onChange={(e) => setFormData({ ...formData, customBackgroundUrl: e.target.value })}
+                                    />
+                                </label>
+                            ) : null}
+                        </>
+                    ) : (
+                        <>
+                            <label>
+                                <span>Upload Banner Image</span>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(e) => setBannerFile(e.target.files?.[0] || null)}
+                                />
+                            </label>
+
+                            <label>
+                                <span>Or Banner Image URL</span>
+                                <input
+                                    type="url"
+                                    placeholder="https://..."
+                                    value={formData.imageUrl}
+                                    onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                                />
+                            </label>
+                        </>
+                    )}
+
                     <label className="checkbox-label">
                         <input
                             type="checkbox"
@@ -312,7 +433,7 @@ export function AnnouncementsPage({ session }) {
                         />
                         <span>Display on home page (Active)</span>
                     </label>
-                    <button type="submit" style={{ 
+                    <button type="submit" disabled={isSaving} style={{ 
                         backgroundColor: 'var(--blue)', 
                         color: 'white', 
                         padding: '0.75rem 1rem',
@@ -321,7 +442,7 @@ export function AnnouncementsPage({ session }) {
                         cursor: 'pointer',
                         fontWeight: '600'
                     }}>
-                        Create Announcement
+                        {isSaving ? 'Saving...' : 'Create Announcement'}
                     </button>
                 </form>
             </div>
@@ -338,6 +459,7 @@ export function AnnouncementsPage({ session }) {
                                     <div>
                                         <h4>{announcement.title}</h4>
                                         <p>{announcement.content}</p>
+                                        <p className="creator">Type: {announcement.slideType || 'text'}</p>
                                     </div>
                                     <button
                                         onClick={() => handleDeleteAnnouncement(announcement.id)}
