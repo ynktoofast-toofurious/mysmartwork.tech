@@ -19,6 +19,12 @@ const sidebarSections = [
         ]
     },
     {
+        label: 'Users',
+        items: [
+            { id: 'users', label: 'Manage Users', icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> }
+        ]
+    },
+    {
         label: 'Settings',
         items: [
             { id: 'seo', label: 'SEO Settings', icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg> }
@@ -568,6 +574,207 @@ export function AnnouncementsPage({ session }) {
                 )}
             </div>
         </div>
+        </div>
+    );
+}
+
+/**
+ * Users Management Page
+ */
+export function UsersPage({ session, getUsers, getCases, featureCatalog, setUserRole, setUserEnabled, setUserFeature, removeUser, registerUser }) {
+    const [users, setUsers] = useState(() => getUsers());
+    const [cases] = useState(() => getCases());
+    const [search, setSearch] = useState('');
+    const [filterRole, setFilterRole] = useState('all');
+    const [expandedUser, setExpandedUser] = useState(null);
+    const [showAddForm, setShowAddForm] = useState(false);
+    const [addMsg, setAddMsg] = useState('');
+    const [newUser, setNewUser] = useState({ name: '', email: '', password: '', role: 'user' });
+
+    function refresh() { setUsers(getUsers()); }
+
+    function handleRole(email, role) { setUserRole(email, role); refresh(); }
+    function handleEnabled(email, enabled) { setUserEnabled(email, enabled); refresh(); }
+    function handleFeature(email, key, enabled) { setUserFeature(email, key, enabled); refresh(); }
+
+    function handleRemove(email) {
+        if (email.toLowerCase() === session?.email?.toLowerCase()) return;
+        if (!window.confirm(`Remove user ${email}? This cannot be undone.`)) return;
+        removeUser(email);
+        refresh();
+    }
+
+    function handleAddUser(e) {
+        e.preventDefault();
+        const result = registerUser({ name: newUser.name.trim(), email: newUser.email.trim(), password: newUser.password });
+        if (!result.ok) { setAddMsg(result.message); return; }
+        if (newUser.role !== 'user') { setUserRole(newUser.email.trim().toLowerCase(), newUser.role); }
+        setNewUser({ name: '', email: '', password: '', role: 'user' });
+        setAddMsg('');
+        setShowAddForm(false);
+        refresh();
+    }
+
+    const caseCountFor = (email) => cases.filter(c => c.userEmail?.toLowerCase() === email.toLowerCase()).length;
+
+    const filtered = users.filter(u => {
+        const matchRole = filterRole === 'all' || u.role === filterRole;
+        const q = search.toLowerCase();
+        const matchSearch = !q || u.name?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q);
+        return matchRole && matchSearch;
+    });
+
+    const roleColors = { admin: '#1e40af', 'co-admin': '#7c3aed', user: '#374151' };
+    const roleBg    = { admin: '#dbeafe', 'co-admin': '#ede9fe', user: '#f3f4f6' };
+
+    return (
+        <div className="dash-page">
+            <div className="dash-breadcrumb">
+                <span className="dash-breadcrumb-root">Alkash-Trans Admin</span>
+                <span className="dash-breadcrumb-sep">›</span>
+                <span className="dash-breadcrumb-current">Manage Users</span>
+            </div>
+
+            <div className="dash-page-header" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
+                <div>
+                    <h2 className="dash-page-title">Users</h2>
+                    <p className="dash-page-sub">{users.length} accounts · manage roles, features and access.</p>
+                </div>
+                <button className="um-add-btn" onClick={() => { setShowAddForm(p => !p); setAddMsg(''); }}>
+                    {showAddForm ? '✕ Cancel' : '+ Add User'}
+                </button>
+            </div>
+
+            {showAddForm && (
+                <div className="um-add-form">
+                    <h3>New User</h3>
+                    {addMsg && <div className="message warning">{addMsg}</div>}
+                    <form onSubmit={handleAddUser} className="um-add-form-grid">
+                        <label><span>Full Name</span><input required placeholder="Jane Doe" value={newUser.name} onChange={e => setNewUser({ ...newUser, name: e.target.value })} /></label>
+                        <label><span>Email</span><input required type="email" placeholder="jane@example.com" value={newUser.email} onChange={e => setNewUser({ ...newUser, email: e.target.value })} /></label>
+                        <label><span>Password</span><input required type="password" placeholder="Temporary password" value={newUser.password} onChange={e => setNewUser({ ...newUser, password: e.target.value })} /></label>
+                        <label><span>Role</span>
+                            <select value={newUser.role} onChange={e => setNewUser({ ...newUser, role: e.target.value })}>
+                                <option value="user">User</option>
+                                <option value="co-admin">Co-Admin</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </label>
+                        <button type="submit" className="ann-submit-btn">Create Account</button>
+                    </form>
+                </div>
+            )}
+
+            <div className="um-toolbar">
+                <input className="um-search" type="search" placeholder="Search name or email…" value={search} onChange={e => setSearch(e.target.value)} />
+                <select className="um-filter" value={filterRole} onChange={e => setFilterRole(e.target.value)}>
+                    <option value="all">All Roles</option>
+                    <option value="admin">Admin</option>
+                    <option value="co-admin">Co-Admin</option>
+                    <option value="user">User</option>
+                </select>
+            </div>
+
+            <div className="um-table-wrap">
+                <table className="um-table">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Cases</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {filtered.length === 0 && (
+                            <tr><td colSpan={5} className="um-empty">No users match your search.</td></tr>
+                        )}
+                        {filtered.map(user => {
+                            const isMe = user.email.toLowerCase() === session?.email?.toLowerCase();
+                            const open = expandedUser === user.email;
+                            return (
+                                <>
+                                    <tr key={user.email} className={`um-row${open ? ' expanded' : ''}`}>
+                                        <td>
+                                            <div className="um-user-cell">
+                                                <div className="um-avatar">{(user.name || user.email)[0].toUpperCase()}</div>
+                                                <div>
+                                                    <div className="um-user-name">{user.name} {isMe && <span className="um-you">you</span>}</div>
+                                                    <div className="um-user-email">{user.email}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <select
+                                                className="um-role-select"
+                                                value={user.role}
+                                                disabled={isMe}
+                                                onChange={e => handleRole(user.email, e.target.value)}
+                                                style={{ background: roleBg[user.role] || '#f3f4f6', color: roleColors[user.role] || '#374151' }}
+                                            >
+                                                <option value="user">User</option>
+                                                <option value="co-admin">Co-Admin</option>
+                                                <option value="admin">Admin</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <button
+                                                className={`um-status-btn ${user.enabled ? 'enabled' : 'disabled'}`}
+                                                disabled={isMe}
+                                                onClick={() => handleEnabled(user.email, !user.enabled)}
+                                            >
+                                                {user.enabled ? '● Active' : '○ Disabled'}
+                                            </button>
+                                        </td>
+                                        <td>
+                                            <span className="um-case-count">{caseCountFor(user.email)}</span>
+                                        </td>
+                                        <td>
+                                            <div style={{ display: 'flex', gap: '0.4rem' }}>
+                                                <button className="um-expand-btn" onClick={() => setExpandedUser(open ? null : user.email)}>
+                                                    {open ? '▲' : '▼'} Features
+                                                </button>
+                                                <button
+                                                    className="um-delete-btn"
+                                                    disabled={isMe}
+                                                    onClick={() => handleRemove(user.email)}
+                                                    title={isMe ? 'Cannot remove yourself' : 'Remove user'}
+                                                >
+                                                    Remove
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {open && (
+                                        <tr key={`${user.email}-feat`} className="um-features-row">
+                                            <td colSpan={5}>
+                                                <div className="um-features-panel">
+                                                    <p className="um-features-label">Feature Access</p>
+                                                    <div className="um-features-grid">
+                                                        {featureCatalog.map(feat => {
+                                                            const granted = (user.features || []).includes(feat.key);
+                                                            return (
+                                                                <button
+                                                                    key={feat.key}
+                                                                    className={`um-feat-chip ${granted ? 'granted' : ''}`}
+                                                                    onClick={() => handleFeature(user.email, feat.key, !granted)}
+                                                                >
+                                                                    {granted ? '✓ ' : ''}{feat.label}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )}
+                                </>
+                            );
+                        })}
+                    </tbody>
+                </table>
+            </div>
         </div>
     );
 }

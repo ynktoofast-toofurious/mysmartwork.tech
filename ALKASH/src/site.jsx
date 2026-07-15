@@ -19,7 +19,7 @@ import {
     setUserFeature,
     setUserRole
 } from './portal.js';
-import { DashboardSidebar, InventoryPage, AnnouncementsPage, SEOPage, DashboardOverview } from './dashboard-components.jsx';
+import { DashboardSidebar, InventoryPage, AnnouncementsPage, SEOPage, DashboardOverview, UsersPage } from './dashboard-components.jsx';
 
 const routes = [
     { key: 'home', href: getMaskedHref('home') },
@@ -1068,6 +1068,19 @@ function AdminDashboardPage({ session }) {
                     )}
                     {activeTab === 'announcements' && <AnnouncementsPage session={session} />}
                     {activeTab === 'seo' && <SEOPage session={session} />}
+                    {activeTab === 'users' && (
+                        <UsersPage
+                            session={session}
+                            getUsers={getUsers}
+                            getCases={getCases}
+                            featureCatalog={featureCatalog}
+                            setUserRole={setUserRole}
+                            setUserEnabled={setUserEnabled}
+                            setUserFeature={setUserFeature}
+                            removeUser={removeUser}
+                            registerUser={registerUser}
+                        />
+                    )}
                 </main>
             </div>
         </PageFrame>

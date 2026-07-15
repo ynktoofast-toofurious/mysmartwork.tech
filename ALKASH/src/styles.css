@@ -1220,6 +1220,248 @@ select {
         font-size: 0.875rem;
     }
 
+    /* ─── Users management ─── */
+    .um-add-btn {
+        background: var(--navy);
+        color: #fff;
+        border: none;
+        padding: 0.55rem 1rem;
+        border-radius: var(--radius-sm);
+        font-weight: 700;
+        font-size: 0.85rem;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+
+    .um-add-form {
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: var(--radius-md);
+        padding: 1.25rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .um-add-form h3 { margin: 0 0 1rem; font-size: 1rem; color: var(--navy); }
+
+    .um-add-form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 0.75rem;
+        align-items: end;
+    }
+
+    .um-add-form-grid label { display: flex; flex-direction: column; gap: 0.3rem; }
+    .um-add-form-grid span { font-size: 0.8rem; font-weight: 600; color: var(--navy); }
+    .um-add-form-grid input,
+    .um-add-form-grid select {
+        padding: 0.55rem 0.7rem;
+        border: 1px solid #d1d5db;
+        border-radius: var(--radius-sm);
+        font-family: inherit;
+        font-size: 0.88rem;
+    }
+
+    .um-toolbar {
+        display: flex;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .um-search {
+        flex: 1;
+        min-width: 180px;
+        padding: 0.55rem 0.8rem;
+        border: 1px solid #d1d5db;
+        border-radius: var(--radius-sm);
+        font-size: 0.88rem;
+        font-family: inherit;
+    }
+
+    .um-filter {
+        padding: 0.55rem 0.8rem;
+        border: 1px solid #d1d5db;
+        border-radius: var(--radius-sm);
+        font-size: 0.88rem;
+        font-family: inherit;
+        background: #fff;
+    }
+
+    .um-table-wrap {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: var(--radius-md);
+        overflow-x: auto;
+    }
+
+    .um-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 640px;
+        font-size: 0.875rem;
+    }
+
+    .um-table thead tr {
+        background: #f9fafb;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .um-table th {
+        padding: 0.75rem 1rem;
+        text-align: left;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+    }
+
+    .um-table td {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #f3f4f6;
+        vertical-align: middle;
+    }
+
+    .um-row:last-child td { border-bottom: none; }
+
+    .um-row:hover td { background: #f9fafb; }
+
+    .um-row.expanded td { background: #f0f9ff; }
+
+    .um-user-cell { display: flex; align-items: center; gap: 0.65rem; }
+
+    .um-avatar {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: var(--navy);
+        color: #fff;
+        display: grid;
+        place-items: center;
+        font-size: 0.85rem;
+        font-weight: 700;
+        flex-shrink: 0;
+    }
+
+    .um-user-name {
+        font-weight: 600;
+        color: var(--navy);
+        font-size: 0.875rem;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+    .um-you {
+        background: #dbeafe;
+        color: #1d4ed8;
+        font-size: 0.7rem;
+        font-weight: 700;
+        padding: 0.1rem 0.4rem;
+        border-radius: 999px;
+    }
+
+    .um-user-email { font-size: 0.8rem; color: #6b7280; }
+
+    .um-role-select {
+        border: 1px solid transparent;
+        border-radius: var(--radius-sm);
+        padding: 0.3rem 0.6rem;
+        font-size: 0.8rem;
+        font-weight: 700;
+        cursor: pointer;
+        font-family: inherit;
+    }
+
+    .um-role-select:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .um-status-btn {
+        border: none;
+        border-radius: 999px;
+        padding: 0.3rem 0.7rem;
+        font-size: 0.78rem;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .um-status-btn.enabled  { background: #dcfce7; color: #15803d; }
+    .um-status-btn.disabled { background: #f3f4f6; color: #6b7280; }
+    .um-status-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    .um-case-count {
+        background: #f3f4f6;
+        border-radius: 999px;
+        padding: 0.2rem 0.6rem;
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: #374151;
+    }
+
+    .um-expand-btn {
+        background: #eff6ff;
+        color: #1d4ed8;
+        border: 1px solid #bfdbfe;
+        border-radius: var(--radius-sm);
+        padding: 0.3rem 0.65rem;
+        font-size: 0.78rem;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+
+    .um-delete-btn {
+        background: #fee2e2;
+        color: #dc2626;
+        border: none;
+        border-radius: var(--radius-sm);
+        padding: 0.3rem 0.65rem;
+        font-size: 0.78rem;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .um-delete-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .um-features-row td { background: #f8faff !important; padding: 0 1rem 0.75rem !important; }
+
+    .um-features-panel { padding: 0.75rem 0; }
+
+    .um-features-label {
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+        color: #6b7280;
+        margin: 0 0 0.5rem;
+    }
+
+    .um-features-grid { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+    .um-feat-chip {
+        background: #f3f4f6;
+        color: #374151;
+        border: 1px solid #e5e7eb;
+        border-radius: 999px;
+        padding: 0.3rem 0.8rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.12s, color 0.12s, border-color 0.12s;
+    }
+
+    .um-feat-chip.granted {
+        background: #dcfce7;
+        color: #15803d;
+        border-color: #86efac;
+    }
+
+    .um-empty {
+        text-align: center;
+        color: #9ca3af;
+        padding: 2rem 1rem !important;
+        font-size: 0.875rem;
+    }
+
     /* ─── Home announcement carousel ─── */
     .announcement-carousel-wrap {
         background: #f8fafc;
