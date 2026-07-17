@@ -481,7 +481,7 @@ function WhatsAppIslandDemo() {
     const [messages, setMessages] = useState([
         {
             role: 'assistant',
-            text: 'Hello, I am your AI WhatsApp assistant. Ask me about shipment claims or incident reporting.'
+            text: 'Hello, I am your Alkash shipping assistant. I can help with shipment updates and quote requests.'
         }
     ]);
     const [draft, setDraft] = useState('');
@@ -512,7 +512,11 @@ function WhatsAppIslandDemo() {
             const response = await fetch(buildApiUrl('/api/whatsapp/webchat'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId, text })
+                body: JSON.stringify({
+                    userId,
+                    text,
+                    history: messages.map((item) => ({ role: item.role, content: item.text }))
+                })
             });
 
             if (!response.ok) {
@@ -525,7 +529,7 @@ function WhatsAppIslandDemo() {
         } catch {
             appendMessage({
                 role: 'assistant',
-                text: 'Demo fallback: API not reachable. Start the backend API to test live OpenAI responses.'
+                text: 'Demo fallback: API not reachable. Start the backend API to test live shipment and quote responses.'
             });
             setApiError('Live API unavailable. Using fallback response.');
         } finally {

@@ -1,0 +1,16 @@
+{
+    "name": "Alkash-Trans",
+    "short_name": "Alkash-Trans",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#102340",
+    "description": "Shipping and logistics services from the United States to Kinshasa, DRC.",
+    "icons": [
+        {
+            "src": "/Logo/logo-2.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}

@@ -711,6 +711,81 @@ function buildCaseCompletedMessage(incidentRef, language) {
   ].join("\n");
 }
 
+function shipmentFallbackReply(messageText) {
+  const text = String(messageText || "").toLowerCase();
+  const isQuoteIntent = /(quote|pricing|price|cost|devis|tarif|rate|estimate)/.test(text);
+  const isTrackingIntent = /(track|tracking|status|where|eta|arrive|shipment|cargo)/.test(text);
+
+  if (isTrackingIntent) {
+    return "I can help with shipment tracking. Please share your reference number (for example: ATX-2047) and I will guide you on the next step.";
+  }
+
+  if (isQuoteIntent) {
+    return "Great, I can prepare a shipping quote. Please share: origin city, destination city, cargo type, total weight/volume, and target shipping date.";
+  }
+
+  return "I am Alkash shipping assistant. I can help with shipment updates and quote requests. Tell me if you need tracking or a new quote.";
+}
+
+export async function processShipmentQuoteWebchat(messageText, history = []) {
+  const text = normalizeText(messageText, "");
+  const compactHistory = Array.isArray(history)
+    ? history
+        .filter((item) => item && (item.role === "user" || item.role === "assistant"))
+        .map((item) => ({ role: item.role, content: normalizeText(item.content || item.text, "") }))
+        .filter((item) => item.content)
+        .slice(-8)
+    : [];
+
+  if (!config.openai.apiKey) {
+    return {
+      responseText: shipmentFallbackReply(text),
+      complete: false
+    };
+  }
+
+  const systemPrompt = [
+    "You are Alkash-Trans WhatsApp assistant.",
+    "Your scope is ONLY shipment support and quote support for cargo logistics.",
+    "Always keep responses concise, practical, and customer-facing.",
+    "If user asks off-topic, politely redirect to shipping/tracking/quoting.",
+    "For quote requests, ask for missing details: origin, destination, cargo type, weight/volume, and preferred shipping date.",
+    "For tracking requests, ask for shipment reference if missing.",
+    "Do not invent confirmed prices, ETAs, or booking guarantees.",
+    "Return plain text only."
+  ].join("\n");
+
+  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${config.openai.apiKey}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      model: config.openai.model,
+      temperature: 0.3,
+      messages: [
+        { role: "system", content: systemPrompt },
+        ...compactHistory,
+        { role: "user", content: text }
+      ]
+    })
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`OpenAI shipment webchat failed: ${response.status} ${errorText}`);
+  }
+
+  const data = await response.json();
+  const raw = normalizeText(data?.choices?.[0]?.message?.content, "");
+
+  return {
+    responseText: raw || shipmentFallbackReply(text),
+    complete: /(quote prepared|quotation ready|please confirm booking|ready to book)/i.test(raw)
+  };
+}
+
 export function getIncomingTextMessages(body) {
   const messages = [];
   const entries = Array.isArray(body?.entry) ? body.entry : [];

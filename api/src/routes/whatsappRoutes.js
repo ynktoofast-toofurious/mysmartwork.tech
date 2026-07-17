@@ -3,6 +3,7 @@ import { config } from "../config.js";
 import {
   getIncomingTextMessages,
   processClaimMessage,
+  processShipmentQuoteWebchat,
   sendWhatsAppText,
   wasMessageAlreadyProcessed
 } from "../services/whatsappClaimService.js";
@@ -71,7 +72,7 @@ router.post("/webhook", async (req, res, next) => {
 // Web chat endpoint — browser clients send messages and receive bot responses
 router.post("/webchat", async (req, res, next) => {
   try {
-    const { userId, text } = req.body;
+    const { userId, text, history } = req.body;
 
     if (!userId || typeof userId !== "string" || !/^[a-zA-Z0-9_-]{8,64}$/.test(userId)) {
       return res.status(400).json({ message: "Valid userId (8–64 alphanumeric chars) required" });
@@ -80,15 +81,12 @@ router.post("/webchat", async (req, res, next) => {
       return res.status(400).json({ message: "text required (max 2000 chars)" });
     }
 
-    const messageId = `web_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
-    const from = `web_${userId}`;
-
-    const result = await processClaimMessage({ from, messageId, text: text.trim() });
+    const result = await processShipmentQuoteWebchat(text.trim(), history);
 
     res.json({
       responseText: result.responseText,
-      referenceNumber: result.referenceNumber,
-      complete: Boolean(result.claim)
+      referenceNumber: result.referenceNumber || null,
+      complete: Boolean(result.complete)
     });
   } catch (err) {
     next(err);
