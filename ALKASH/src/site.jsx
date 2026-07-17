@@ -82,6 +82,8 @@ const quoteBuilderItems = [
 
 const serviceShopTabs = ['All', 'Boxes', 'Travel', 'Barrels', 'Vehicles'];
 const WEBCHAT_USER_ID_KEY = 'alkashWebchatUserId';
+const PROD_API_ORIGINS = ['https://api.mysmartwork.tech'];
+const ALB_API_ORIGIN = 'http://mwangaza-api-alb-942251842.us-east-1.elb.amazonaws.com';
 
 function getWebchatUserId() {
     const existing = localStorage.getItem(WEBCHAT_USER_ID_KEY);
@@ -103,6 +105,32 @@ function buildApiUrl(pathname) {
     const base = apiBase.replace(/\/$/, '');
     const path = pathname.startsWith('/') ? pathname : `/${pathname}`;
     return `${base}${path}`;
+}
+
+function getWebchatCandidates() {
+    const localHosts = ['localhost', '127.0.0.1'];
+    const isLocalBrowser = localHosts.includes(window.location.hostname);
+    const isHTTPS = window.location.protocol === 'https:';
+    const envBase = String(import.meta.env.VITE_API_BASE_URL || '').trim();
+    const candidates = [];
+
+    if (envBase) {
+        candidates.push(buildApiUrl('/api/whatsapp/webchat'));
+    }
+
+    if (isLocalBrowser) {
+        candidates.push('http://localhost:4000/api/whatsapp/webchat');
+        candidates.push(`${ALB_API_ORIGIN}/api/whatsapp/webchat`);
+    } else if (isHTTPS) {
+        candidates.push(...PROD_API_ORIGINS.map((origin) => `${origin}/api/whatsapp/webchat`));
+        candidates.push('/api/whatsapp/webchat');
+    } else {
+        candidates.push(`${ALB_API_ORIGIN}/api/whatsapp/webchat`);
+        candidates.push(...PROD_API_ORIGINS.map((origin) => `${origin}/api/whatsapp/webchat`));
+        candidates.push('/api/whatsapp/webchat');
+    }
+
+    return Array.from(new Set(candidates));
 }
 
 function readQuoteDraft() {
@@ -508,21 +536,36 @@ function WhatsAppIslandDemo() {
         setBusy(true);
 
         try {
-            const response = await fetch(buildApiUrl('/api/whatsapp/webchat'), {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    userId,
-                    text,
-                    history: messages.map((item) => ({ role: item.role, content: item.text }))
-                })
-            });
+            let payload = null;
+            const endpoints = getWebchatCandidates();
 
-            if (!response.ok) {
-                throw new Error(`API_ERROR_${response.status}`);
+            for (const endpoint of endpoints) {
+                try {
+                    const response = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            userId,
+                            text,
+                            history: messages.map((item) => ({ role: item.role, content: item.text }))
+                        })
+                    });
+
+                    if (!response.ok) {
+                        continue;
+                    }
+
+                    payload = await response.json();
+                    break;
+                } catch {
+                    // Try next endpoint candidate.
+                }
             }
 
-            const payload = await response.json();
+            if (!payload) {
+                throw new Error('WEBCHAT_UNREACHABLE');
+            }
+
             const reply = String(payload.responseText || '').trim() || 'Thanks. I am ready for your next message.';
             appendMessage({ role: 'assistant', text: reply });
         } catch {

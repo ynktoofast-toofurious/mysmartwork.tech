@@ -6,7 +6,12 @@ export const config = {
   port: Number(process.env.PORT || 4000),
   publicBaseUrl: process.env.PUBLIC_BASE_URL || "",
   database: {
-    connectionString: process.env.DATABASE_URL || process.env.NEON_DATABASE_URL || "",
+    connectionString:
+      process.env.DATABASE_URL ||
+      process.env.NEON_DATABASE_URL ||
+      process.env.MWANGAZAMAIL_DATABASE_URL ||
+      process.env.MWANGAZA_DATABASE_URL ||
+      "",
     host: process.env.NEON_HOST || process.env.POSTGRES_HOST || "",
     port: Number(process.env.NEON_PORT || process.env.POSTGRES_PORT || 5432),
     database: process.env.NEON_DB || process.env.POSTGRES_DB || "",

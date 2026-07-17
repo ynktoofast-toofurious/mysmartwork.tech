@@ -26,7 +26,7 @@ The API supports either a Neon connection string or individual PostgreSQL fields
 Required variables are defined in `api/src/config.js` and include:
 
 - `PORT`
-- `DATABASE_URL` or `NEON_DATABASE_URL`
+- `DATABASE_URL` or `NEON_DATABASE_URL` (also accepts `MWANGAZAMAIL_DATABASE_URL` / `MWANGAZA_DATABASE_URL`)
 - `NEON_HOST`
 - `NEON_PORT`
 - `NEON_DB`
