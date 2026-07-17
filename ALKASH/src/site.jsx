@@ -82,6 +82,7 @@ const quoteBuilderItems = [
 
 const serviceShopTabs = ['All', 'Boxes', 'Travel', 'Barrels', 'Vehicles'];
 const WEBCHAT_USER_ID_KEY = 'alkashWebchatUserId';
+const ISLAND_ACTIVATE_KEY = 'alkashOpenIslandPhone';
 
 function getWebchatUserId() {
     const existing = localStorage.getItem(WEBCHAT_USER_ID_KEY);
@@ -575,6 +576,15 @@ function HomePage({ copy, language }) {
     const [quickResult, setQuickResult] = useState(null);
     const [quickResultData, setQuickResultData] = useState(null);
     const [showQuickMap, setShowQuickMap] = useState(false);
+    const [showIslandPhone, setShowIslandPhone] = useState(false);
+
+    useEffect(() => {
+        const shouldOpen = localStorage.getItem(ISLAND_ACTIVATE_KEY) === '1';
+        if (shouldOpen) {
+            setShowIslandPhone(true);
+            localStorage.removeItem(ISLAND_ACTIVATE_KEY);
+        }
+    }, []);
 
     function handleQuickTrack() {
         const result = lookupTracking(quickReference, language);
@@ -619,6 +629,9 @@ function HomePage({ copy, language }) {
                         <div className="hero-actions">
                             <a className="button button-primary" href={getMaskedHref('quote')}>{copy.ctaQuote}</a>
                             <a className="button button-secondary" href={getMaskedHref('contact')}>{copy.ctaContact}</a>
+                            <button className="button button-secondary" type="button" onClick={() => setShowIslandPhone(true)}>
+                                WhatsApp Demo
+                            </button>
                         </div>
                     </div>
 
@@ -649,7 +662,7 @@ function HomePage({ copy, language }) {
                             </div>
                         </div>
 
-                        <WhatsAppIslandDemo />
+                        {showIslandPhone ? <WhatsAppIslandDemo /> : null}
 
                         <div className="floating-card">
                             <span className="card-kicker">{copy.routeKicker}</span>
@@ -1371,6 +1384,11 @@ function SiteApp({ pageKey }) {
         window.location.href = getMaskedHref('home');
     }
 
+    function handleOpenIslandPhone() {
+        localStorage.setItem(ISLAND_ACTIVATE_KEY, '1');
+        window.location.href = getMaskedHref('home');
+    }
+
     return (
         <div className="app-shell">
             {showLoader ? (
@@ -1385,9 +1403,7 @@ function SiteApp({ pageKey }) {
             <Header copy={copy} pageKey={pageKey} language={language} setLanguage={setLanguage} session={session} onLogout={handleLogout} />
             <PageComponent copy={copy} language={language} session={session} onSessionChange={setSession} />
             <Footer copy={copy} />
-            {pageKey === 'contact' ? (
-                <a className="whatsapp-float" href="https://wa.me/18178846898" target="_blank" rel="noreferrer">WhatsApp</a>
-            ) : null}
+            <button className="whatsapp-float" type="button" onClick={handleOpenIslandPhone}>WhatsApp</button>
         </div>
     );
 }
