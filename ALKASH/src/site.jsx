@@ -82,7 +82,6 @@ const quoteBuilderItems = [
 
 const serviceShopTabs = ['All', 'Boxes', 'Travel', 'Barrels', 'Vehicles'];
 const WEBCHAT_USER_ID_KEY = 'alkashWebchatUserId';
-const ISLAND_ACTIVATE_KEY = 'alkashOpenIslandPhone';
 
 function getWebchatUserId() {
     const existing = localStorage.getItem(WEBCHAT_USER_ID_KEY);
@@ -580,15 +579,6 @@ function HomePage({ copy, language }) {
     const [quickResult, setQuickResult] = useState(null);
     const [quickResultData, setQuickResultData] = useState(null);
     const [showQuickMap, setShowQuickMap] = useState(false);
-    const [showIslandPhone, setShowIslandPhone] = useState(false);
-
-    useEffect(() => {
-        const shouldOpen = localStorage.getItem(ISLAND_ACTIVATE_KEY) === '1';
-        if (shouldOpen) {
-            setShowIslandPhone(true);
-            localStorage.removeItem(ISLAND_ACTIVATE_KEY);
-        }
-    }, []);
 
     function handleQuickTrack() {
         const result = lookupTracking(quickReference, language);
@@ -633,9 +623,6 @@ function HomePage({ copy, language }) {
                         <div className="hero-actions">
                             <a className="button button-primary" href={getMaskedHref('quote')}>{copy.ctaQuote}</a>
                             <a className="button button-secondary" href={getMaskedHref('contact')}>{copy.ctaContact}</a>
-                            <button className="button button-secondary" type="button" onClick={() => setShowIslandPhone(true)}>
-                                WhatsApp Demo
-                            </button>
                         </div>
                     </div>
 
@@ -665,8 +652,6 @@ function HomePage({ copy, language }) {
                                 ) : <p>{quickResult?.message || copy.tracking.helper}</p>}
                             </div>
                         </div>
-
-                        {showIslandPhone ? <WhatsAppIslandDemo /> : null}
 
                         <div className="floating-card">
                             <span className="card-kicker">{copy.routeKicker}</span>
@@ -1063,6 +1048,7 @@ function GalleryPage({ copy }) {
 
 function ContactPage({ copy }) {
     const [feedback, setFeedback] = useState('');
+    const [showIslandPhone, setShowIslandPhone] = useState(false);
 
     return (
         <PageFrame eyebrow={copy.contact.eyebrow} title={copy.contact.title}>
@@ -1093,6 +1079,19 @@ function ContactPage({ copy }) {
             <div className="map-wrapper">
                 <iframe title="Kinshasa map" src="https://www.google.com/maps?q=Kinshasa%2C%20Democratic%20Republic%20of%20the%20Congo&z=10&output=embed" loading="lazy" referrerPolicy="no-referrer-when-downgrade"></iframe>
             </div>
+
+            <button className="whatsapp-float" type="button" onClick={() => setShowIslandPhone(true)}>
+                WhatsApp
+            </button>
+
+            {showIslandPhone ? (
+                <div className="island-overlay" role="dialog" aria-modal="true" aria-label="WhatsApp AI chat">
+                    <div className="island-overlay-panel">
+                        <button className="island-overlay-close" type="button" onClick={() => setShowIslandPhone(false)}>Close</button>
+                        <WhatsAppIslandDemo />
+                    </div>
+                </div>
+            ) : null}
         </PageFrame>
     );
 }
@@ -1388,11 +1387,6 @@ function SiteApp({ pageKey }) {
         window.location.href = getMaskedHref('home');
     }
 
-    function handleOpenIslandPhone() {
-        localStorage.setItem(ISLAND_ACTIVATE_KEY, '1');
-        window.location.href = getMaskedHref('home');
-    }
-
     return (
         <div className="app-shell">
             {showLoader ? (
@@ -1407,7 +1401,6 @@ function SiteApp({ pageKey }) {
             <Header copy={copy} pageKey={pageKey} language={language} setLanguage={setLanguage} session={session} onLogout={handleLogout} />
             <PageComponent copy={copy} language={language} session={session} onSessionChange={setSession} />
             <Footer copy={copy} />
-            <button className="whatsapp-float" type="button" onClick={handleOpenIslandPhone}>WhatsApp</button>
         </div>
     );
 }

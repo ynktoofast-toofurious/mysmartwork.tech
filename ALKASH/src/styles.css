@@ -3214,6 +3214,36 @@ select {
     box-shadow: 0 10px 22px rgba(29, 170, 97, 0.24);
 }
 
+.island-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 260;
+    background: rgba(15, 23, 42, 0.52);
+    display: grid;
+    place-items: center;
+    padding: 1rem;
+}
+
+.island-overlay-panel {
+    width: min(560px, 100%);
+    background: #ffffff;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--line);
+    box-shadow: 0 24px 44px rgba(15, 23, 42, 0.26);
+    padding: 1rem;
+}
+
+.island-overlay-close {
+    border: 1px solid var(--line);
+    background: #fff;
+    color: var(--navy);
+    border-radius: 10px;
+    min-height: 36px;
+    padding: 0.45rem 0.8rem;
+    cursor: pointer;
+    margin-bottom: 0.7rem;
+}
+
 .dashboard-grid-single {
     display: grid;
     gap: 1.2rem;
