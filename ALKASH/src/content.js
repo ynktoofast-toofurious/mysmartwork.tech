@@ -280,7 +280,14 @@ export const trackingData = {
             title: 'Expedition en transit maritime',
             message: 'Votre conteneur a quitte Houston et est actuellement en transit vers Kinshasa. Arrivee estimee : 12 septembre 2026.',
             detail: 'Derniere mise a jour : documents douaniers confirmes et depart du navire effectue.'
-        }
+        },
+        journey: [
+            { stage: 'origin', name: { en: 'Houston, USA', fr: 'Houston, USA' }, lat: 29.7604, lon: -95.3698, completed: true, date: '2026-08-15' },
+            { stage: 'transit', name: { en: 'Mid-Atlantic', fr: 'Milieu de l\'Atlantique' }, lat: 20.0, lon: -40.0, completed: true, date: '2026-08-22' },
+            { stage: 'transit', name: { en: 'South Atlantic', fr: 'Sud Atlantique' }, lat: 0.0, lon: -30.0, completed: true, date: '2026-08-29' },
+            { stage: 'current', name: { en: 'Gulf of Guinea (Current)', fr: 'Golfe de Guinee (Actuel)' }, lat: 3.5, lon: 8.0, completed: false, date: '2026-09-05' },
+            { stage: 'destination', name: { en: 'Kinshasa, DR Congo', fr: 'Kinshasa, RD Congo' }, lat: -4.3276, lon: 15.3136, completed: false, date: '2026-09-12' }
+        ]
     },
     'ATX-2210': {
         en: {
@@ -292,7 +299,11 @@ export const trackingData = {
             title: 'Pret pour le depart',
             message: 'Votre cargaison a ete emballee, documentee et planifiee pour le prochain depart disponible depuis New York.',
             detail: 'Derniere mise a jour : fenetre de chargement confirmee pour le 29 aout 2026.'
-        }
+        },
+        journey: [
+            { stage: 'current', name: { en: 'New York, USA (Current)', fr: 'New York, USA (Actuel)' }, lat: 40.7128, lon: -74.0060, completed: false, date: '2026-08-29' },
+            { stage: 'destination', name: { en: 'Kinshasa, DR Congo', fr: 'Kinshasa, RD Congo' }, lat: -4.3276, lon: 15.3136, completed: false, date: '2026-09-20' }
+        ]
     },
     'ATX-2304': {
         en: {
@@ -304,7 +315,14 @@ export const trackingData = {
             title: 'Arrive a Kinshasa',
             message: 'Votre expedition est arrivee a Kinshasa et attend la collecte finale ou la coordination de la livraison.',
             detail: 'Derniere mise a jour : arrivee confirmee et notification client envoyee.'
-        }
+        },
+        journey: [
+            { stage: 'origin', name: { en: 'Rotterdam, Netherlands', fr: 'Rotterdam, Pays-Bas' }, lat: 51.9225, lon: 4.4792, completed: true, date: '2026-07-20' },
+            { stage: 'transit', name: { en: 'Mediterranean Sea', fr: 'Mer Mediterranee' }, lat: 35.0, lon: 20.0, completed: true, date: '2026-08-05' },
+            { stage: 'transit', name: { en: 'Suez Canal', fr: 'Canal de Suez' }, lat: 30.5, lon: 32.0, completed: true, date: '2026-08-15' },
+            { stage: 'transit', name: { en: 'Indian Ocean', fr: 'Ocean Indien' }, lat: 0.0, lon: 55.0, completed: true, date: '2026-08-28' },
+            { stage: 'destination', name: { en: 'Kinshasa, DR Congo (Arrived)', fr: 'Kinshasa, RD Congo (Arrive)' }, lat: -4.3276, lon: 15.3136, completed: true, date: '2026-09-05' }
+        ]
     }
 };
 

@@ -2555,6 +2555,313 @@ select {
     border-radius: var(--radius-sm);
     font-family: inherit;
     font-size: inherit;
+    transition: border-color 0.2s, outline 0.2s;
+}
+
+.quick-edit-modal input:focus,
+.quick-edit-modal textarea:focus {
+    outline: 2px solid rgba(66, 176, 213, 0.3);
+    border-color: var(--blue-deep);
+}
+
+.quick-edit-modal .quick-edit-save {
+    background: linear-gradient(135deg, #15803d 0%, #166534 100%);
+    color: white;
+}
+
+.quick-edit-modal .quick-edit-save:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(21, 128, 61, 0.3);
+}
+
+.quick-edit-modal .quick-edit-cancel {
+    background: #f3f4f6;
+    color: var(--navy);
+    border: 1px solid #d1d5db;
+}
+
+.quick-edit-modal .quick-edit-cancel:hover {
+    background: #e5e7eb;
+}
+
+/* ────────────────────────────────────────── */
+/* Tracking Map Modal Styles */
+/* ────────────────────────────────────────── */
+
+.tracking-map-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3000;
+    padding: 1rem;
+    animation: fadeIn 0.2s ease-in;
+}
+
+.tracking-map-modal {
+    background: var(--white);
+    border-radius: var(--radius-md);
+    padding: 0;
+    max-width: 900px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 25px 50px rgba(16, 35, 64, 0.3);
+    animation: slideUp 0.3s ease-out;
+    display: flex;
+    flex-direction: column;
+}
+
+.tracking-map-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--line);
+    background: linear-gradient(135deg, rgba(66, 176, 213, 0.05), rgba(29, 111, 149, 0.05));
+}
+
+.tracking-map-header h2 {
+    margin: 0;
+    color: var(--navy);
+    font-size: 1.35rem;
+}
+
+.tracking-map-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--slate);
+    transition: color 0.2s;
+}
+
+.tracking-map-close:hover {
+    color: var(--navy);
+}
+
+.tracking-map-container {
+    padding: 1.5rem;
+    background: var(--paper);
+    flex: 1;
+    overflow: auto;
+}
+
+.tracking-map-svg {
+    width: 100%;
+    height: auto;
+    border-radius: var(--radius-md);
+    background: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.tracking-location-label {
+    pointer-events: none;
+    text-shadow: 0 0 3px white;
+}
+
+.tracking-date-label {
+    pointer-events: none;
+    text-shadow: 0 0 2px white;
+}
+
+.tracking-map-legend {
+    display: flex;
+    gap: 2rem;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--line);
+    background: var(--white);
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--ink);
+}
+
+.legend-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid white;
+}
+
+.legend-dot.completed {
+    background: #22c55e;
+}
+
+.legend-dot.current {
+    background: #ef4444;
+}
+
+.legend-dot.pending {
+    background: #9ca3af;
+}
+
+.tracking-map-details {
+    padding: 1.5rem;
+    border-top: 1px solid var(--line);
+}
+
+.tracking-map-details h3 {
+    margin: 0 0 1rem;
+    color: var(--navy);
+    font-size: 1.1rem;
+}
+
+.journey-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.timeline-item {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--paper);
+    border-radius: var(--radius-sm);
+    border-left: 3px solid #9ca3af;
+}
+
+.timeline-item.completed {
+    border-left-color: #22c55e;
+    background: rgba(34, 197, 94, 0.05);
+}
+
+.timeline-item.current {
+    border-left-color: #ef4444;
+    background: rgba(239, 68, 68, 0.05);
+}
+
+.timeline-item.destination {
+    border-left-color: #3b82f6;
+}
+
+.timeline-marker {
+    flex: 0 0 12px;
+    margin-top: 0.25rem;
+}
+
+.timeline-item.completed .timeline-marker::before {
+    content: '✓';
+    color: #22c55e;
+    font-weight: 600;
+}
+
+.timeline-item.current .timeline-marker::before {
+    content: '●';
+    color: #ef4444;
+    animation: blink-pulse 1s ease-in-out infinite;
+}
+
+@keyframes blink-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+.timeline-item:not(.completed):not(.current) .timeline-marker::before {
+    content: '◯';
+    color: #9ca3af;
+}
+
+.timeline-content h4 {
+    margin: 0 0 0.25rem;
+    color: var(--navy);
+    font-size: 0.95rem;
+}
+
+.timeline-content {
+    flex: 1;
+}
+
+.timeline-date {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--slate);
+}
+
+.timeline-status {
+    margin: 0.25rem 0 0;
+    font-size: 0.85rem;
+    color: var(--blue);
+    font-weight: 500;
+}
+
+.tracking-map-close-btn {
+    margin: 1rem 1.5rem;
+    background: linear-gradient(135deg, #42b0d5 0%, #1d6f95 100%);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius-button);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.tracking-map-close-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(66, 176, 213, 0.3);
+}
+
+.tracking-map-btn {
+    margin-top: 1rem;
+    background: linear-gradient(135deg, #42b0d5 0%, #1d6f95 100%);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius-button);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.tracking-map-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(66, 176, 213, 0.3);
+}
+
+@media (max-width: 768px) {
+    .tracking-map-modal {
+        max-width: 95%;
+        max-height: 95vh;
+    }
+
+    .tracking-map-header {
+        padding: 1rem;
+    }
+
+    .tracking-map-header h2 {
+        font-size: 1.1rem;
+    }
+
+    .tracking-map-container {
+        padding: 1rem;
+    }
+
+    .tracking-map-legend {
+        flex-direction: column;
+        gap: 0.75rem;
+        padding: 1rem;
+    }
+
+    .tracking-map-details {
+        padding: 1rem;
+    }
+
+    .timeline-item {
+        padding: 0.75rem;
+    }
+
+    .tracking-map-close-btn {
+        margin: 1rem;
+    }
+}
     color: var(--ink);
 }
 

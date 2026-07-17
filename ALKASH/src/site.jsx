@@ -3,6 +3,7 @@ import { trackingData, translations } from './content.js';
 import { getAssetHref, getMaskedHref } from './routes.js';
 import { EditModeProvider } from './edit-context.jsx';
 import { EditModeToggle, EditableContent, AnnouncementQuickEdit } from './edit-components.jsx';
+import { TrackingMap } from './tracking-map.jsx';
 import {
     addSupportCase,
     clearSession,
@@ -793,6 +794,7 @@ function TrackingPage({ copy, language }) {
     const [reference, setReference] = useState('');
     const [result, setResult] = useState(null);
     const [message, setMessage] = useState(copy.tracking.helper);
+    const [showMap, setShowMap] = useState(false);
 
     useEffect(() => {
         setResult(null);
@@ -818,6 +820,12 @@ function TrackingPage({ copy, language }) {
         setMessage('');
     }
 
+    function handleViewMap() {
+        if (result) {
+            setShowMap(true);
+        }
+    }
+
     return (
         <PageFrame eyebrow={copy.tracking.eyebrow} title={copy.tracking.title} intro={copy.tracking.intro}>
             <div className="tracking-layout-box">
@@ -834,10 +842,21 @@ function TrackingPage({ copy, language }) {
                             <h2>{result.title}</h2>
                             <p>{result.message}</p>
                             <p><strong>{copy.tracking.updateLabel}:</strong> {result.detail}</p>
+                            <button className="button button-primary tracking-map-btn" onClick={handleViewMap}>
+                                📍 View Shipment Map
+                            </button>
                         </>
                     ) : <p>{message}</p>}
                 </div>
             </div>
+            
+            {showMap && result && (
+                <TrackingMap 
+                    trackingData={result} 
+                    language={language} 
+                    onClose={() => setShowMap(false)} 
+                />
+            )}
         </PageFrame>
     );
 }
