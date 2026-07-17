@@ -81,6 +81,29 @@ const quoteBuilderItems = [
 ];
 
 const serviceShopTabs = ['All', 'Boxes', 'Travel', 'Barrels', 'Vehicles'];
+const WEBCHAT_USER_ID_KEY = 'alkashWebchatUserId';
+
+function getWebchatUserId() {
+    const existing = localStorage.getItem(WEBCHAT_USER_ID_KEY);
+    if (existing && /^[a-zA-Z0-9_-]{8,64}$/.test(existing)) {
+        return existing;
+    }
+
+    const generated = `demo_${Math.random().toString(36).slice(2, 14)}`;
+    localStorage.setItem(WEBCHAT_USER_ID_KEY, generated);
+    return generated;
+}
+
+function buildApiUrl(pathname) {
+    const apiBase = String(import.meta.env.VITE_API_BASE_URL || '').trim();
+    if (!apiBase) {
+        return pathname;
+    }
+
+    const base = apiBase.replace(/\/$/, '');
+    const path = pathname.startsWith('/') ? pathname : `/${pathname}`;
+    return `${base}${path}`;
+}
 
 function readQuoteDraft() {
     try {
@@ -453,6 +476,100 @@ function HomeAnnouncementCarousel() {
     );
 }
 
+function WhatsAppIslandDemo() {
+    const [messages, setMessages] = useState([
+        {
+            role: 'assistant',
+            text: 'Hello, I am your AI WhatsApp assistant. Ask me about shipment claims or incident reporting.'
+        }
+    ]);
+    const [draft, setDraft] = useState('');
+    const [busy, setBusy] = useState(false);
+    const [apiError, setApiError] = useState('');
+    const userId = useMemo(() => getWebchatUserId(), []);
+
+    function appendMessage(message) {
+        setMessages((current) => {
+            const next = [...current, message];
+            return next.slice(-8);
+        });
+    }
+
+    async function handleSend(event) {
+        event.preventDefault();
+        const text = draft.trim();
+        if (!text || busy) {
+            return;
+        }
+
+        setDraft('');
+        setApiError('');
+        appendMessage({ role: 'user', text });
+        setBusy(true);
+
+        try {
+            const response = await fetch(buildApiUrl('/api/whatsapp/webchat'), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, text })
+            });
+
+            if (!response.ok) {
+                throw new Error(`API_ERROR_${response.status}`);
+            }
+
+            const payload = await response.json();
+            const reply = String(payload.responseText || '').trim() || 'Thanks. I am ready for your next message.';
+            appendMessage({ role: 'assistant', text: reply });
+        } catch {
+            appendMessage({
+                role: 'assistant',
+                text: 'Demo fallback: API not reachable. Start the backend API to test live OpenAI responses.'
+            });
+            setApiError('Live API unavailable. Using fallback response.');
+        } finally {
+            setBusy(false);
+        }
+    }
+
+    return (
+        <div className="quick-track-card whatsapp-island-card">
+            <div className="island-phone-shell" aria-label="WhatsApp AI demo phone">
+                <div className="island-phone-notch">
+                    <span>WhatsApp Island Demo</span>
+                    <strong>OpenAI</strong>
+                </div>
+
+                <div className="island-phone-screen">
+                    <div className="island-chat-header">Demo conversation</div>
+                    <div className="island-chat-thread">
+                        {messages.map((message, index) => (
+                            <div key={`${message.role}-${index}`} className={`island-bubble ${message.role}`}>
+                                {message.text}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                <form className="island-composer" onSubmit={handleSend}>
+                    <input
+                        type="text"
+                        value={draft}
+                        onChange={(event) => setDraft(event.target.value)}
+                        placeholder="Type your WhatsApp demo message..."
+                        maxLength={500}
+                    />
+                    <button className="button button-primary" type="submit" disabled={busy}>
+                        {busy ? 'Sending...' : 'Send'}
+                    </button>
+                </form>
+
+                {apiError ? <p className="island-error-note">{apiError}</p> : null}
+            </div>
+        </div>
+    );
+}
+
 function HomePage({ copy, language }) {
     const [quickReference, setQuickReference] = useState('');
     const [quickResult, setQuickResult] = useState(null);
@@ -531,6 +648,8 @@ function HomePage({ copy, language }) {
                                 ) : <p>{quickResult?.message || copy.tracking.helper}</p>}
                             </div>
                         </div>
+
+                        <WhatsAppIslandDemo />
 
                         <div className="floating-card">
                             <span className="card-kicker">{copy.routeKicker}</span>

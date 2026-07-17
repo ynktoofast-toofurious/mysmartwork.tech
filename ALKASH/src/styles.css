@@ -672,6 +672,112 @@ select {
     margin-top: 0.8rem;
 }
 
+.whatsapp-island-card {
+    background: linear-gradient(150deg, #e7f6ef 0%, #dff0ff 100%);
+}
+
+.island-phone-shell {
+    width: 100%;
+    border: 1px solid rgba(16, 35, 64, 0.15);
+    border-radius: 22px;
+    background: #0f1720;
+    padding: 0.55rem;
+    box-shadow: 0 20px 32px rgba(15, 23, 32, 0.25);
+}
+
+.island-phone-notch {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.35rem 0.75rem;
+    margin-bottom: 0.55rem;
+    border-radius: 999px;
+    background: rgba(148, 163, 184, 0.2);
+    color: #f8fafc;
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.island-phone-notch strong {
+    color: #34d399;
+    font-size: 0.68rem;
+}
+
+.island-phone-screen {
+    border-radius: 16px;
+    background: linear-gradient(180deg, #0b141a 0%, #111b21 100%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 0.7rem;
+}
+
+.island-chat-header {
+    color: #b9cad8;
+    font-size: 0.78rem;
+    margin-bottom: 0.6rem;
+}
+
+.island-chat-thread {
+    display: grid;
+    gap: 0.5rem;
+    max-height: 220px;
+    overflow-y: auto;
+    padding-right: 0.2rem;
+}
+
+.island-bubble {
+    max-width: 90%;
+    border-radius: 12px;
+    padding: 0.55rem 0.65rem;
+    font-size: 0.84rem;
+    line-height: 1.45;
+}
+
+.island-bubble.assistant {
+    justify-self: start;
+    background: #1f2c34;
+    color: #e2edf5;
+}
+
+.island-bubble.user {
+    justify-self: end;
+    background: #005c4b;
+    color: #effaf7;
+}
+
+.island-composer {
+    margin-top: 0.65rem;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.55rem;
+}
+
+.island-composer input {
+    width: 100%;
+    border-radius: 999px;
+    border: 1px solid rgba(148, 163, 184, 0.5);
+    padding: 0.68rem 0.9rem;
+    background: #f8fafc;
+    color: #0f172a;
+}
+
+.island-composer .button {
+    min-height: 40px;
+    padding: 0.55rem 0.9rem;
+}
+
+.island-composer .button:disabled {
+    opacity: 0.75;
+    cursor: not-allowed;
+}
+
+.island-error-note {
+    margin: 0.5rem 0 0;
+    font-size: 0.75rem;
+    color: #dc2626;
+}
+
 .trust-strip,
 
     /* ======================================
@@ -2865,8 +2971,6 @@ select {
         margin: 1rem;
     }
 }
-    color: var(--ink);
-}
 
 .quick-edit-modal input:focus,
 .quick-edit-modal textarea:focus {
@@ -2915,8 +3019,6 @@ select {
 
 .quick-edit-cancel:hover {
     background: #e5e7eb;
-}
-    font-weight: 600;
 }
 
 .tracking-layout-box {
