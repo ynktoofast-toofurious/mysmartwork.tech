@@ -1240,7 +1240,9 @@ function ServicesPage({ copy }) {
     const [activeTab, setActiveTab] = useState('All');
     const [imageOverrides] = useState(() => loadInventoryImageOverrides());
     const [addedToast, setAddedToast] = useState('');
+    const [cartBump, setCartBump] = useState(false);
     const toastTimerRef = useRef(null);
+    const bumpTimerRef = useRef(null);
 
     const visibleItems = useMemo(
         () => quoteBuilderItems.filter((item) => activeTab === 'All' || item.category === activeTab),
@@ -1259,17 +1261,41 @@ function ServicesPage({ copy }) {
             clearTimeout(toastTimerRef.current);
         }
         toastTimerRef.current = setTimeout(() => setAddedToast(''), 2200);
+
+        setCartBump(true);
+        if (bumpTimerRef.current) {
+            clearTimeout(bumpTimerRef.current);
+        }
+        bumpTimerRef.current = setTimeout(() => setCartBump(false), 420);
     }
 
     useEffect(() => () => {
         if (toastTimerRef.current) {
             clearTimeout(toastTimerRef.current);
         }
+        if (bumpTimerRef.current) {
+            clearTimeout(bumpTimerRef.current);
+        }
     }, []);
 
     return (
         <PageFrame eyebrow={copy.services.eyebrow} title={copy.services.title} intro={copy.services.intro}>
             {addedToast ? <div className="quote-add-toast" role="status">{addedToast}</div> : null}
+            {draftCount > 0 ? createPortal(
+                <a
+                    className={`quote-cart-fab${cartBump ? ' is-bumping' : ''}`}
+                    href={getMaskedHref('quote')}
+                    aria-label={`View your quote cart, ${draftCount} item${draftCount === 1 ? '' : 's'} added`}
+                >
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <circle cx="9" cy="21" r="1"/>
+                        <circle cx="20" cy="21" r="1"/>
+                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                    </svg>
+                    <span className="quote-cart-badge">{draftCount}</span>
+                </a>,
+                document.body
+            ) : null}
             <section className="service-shop-shell">
                 <div className="service-shop-head">
                     <h2>Top Savings for You</h2>
