@@ -3443,6 +3443,59 @@ select {
     }
 }
 
+/* Home scroll experience enhancements */
+html.scroll-enhanced-home {
+    scroll-behavior: smooth;
+    scroll-snap-type: y proximity;
+    scroll-padding-top: 104px;
+}
+
+body.scroll-enhanced-home .home-scroll-experience {
+    position: relative;
+}
+
+body.scroll-enhanced-home .snap-section {
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+}
+
+body.scroll-enhanced-home .hero-home,
+body.scroll-enhanced-home .section.snap-section,
+body.scroll-enhanced-home .announcement-carousel-wrap.snap-section {
+    min-height: max(72vh, 520px);
+    display: flex;
+    align-items: center;
+}
+
+body.scroll-enhanced-home .hero-panel-sticky {
+    position: sticky;
+    top: 120px;
+    align-self: start;
+}
+
+body.scroll-enhanced-home [data-parallax-speed] {
+    will-change: transform;
+    transition: transform 0.08s linear;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html.scroll-enhanced-home {
+        scroll-behavior: auto;
+        scroll-snap-type: none;
+    }
+
+    body.scroll-enhanced-home [data-parallax-speed] {
+        transition: none;
+        transform: none !important;
+    }
+}
+
+@media (max-width: 1080px) {
+    body.scroll-enhanced-home .hero-panel-sticky {
+        position: static;
+    }
+}
+
 @keyframes spin {
     from {
         transform: rotate(0deg);

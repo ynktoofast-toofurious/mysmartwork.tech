@@ -455,7 +455,7 @@ function HomeAnnouncementCarousel() {
 
     return (
         <>
-        <section className="announcement-carousel-wrap">
+        <section className="announcement-carousel-wrap snap-section">
             <div className="container">
                 <EditableContent
                     id={activeSlide.id}
@@ -623,6 +623,47 @@ function HomePage({ copy, language }) {
     const [quickResultData, setQuickResultData] = useState(null);
     const [showQuickMap, setShowQuickMap] = useState(false);
 
+    useEffect(() => {
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (prefersReducedMotion) {
+            return undefined;
+        }
+
+        const parallaxNodes = Array.from(document.querySelectorAll('[data-parallax-speed]'));
+        if (!parallaxNodes.length) {
+            return undefined;
+        }
+
+        let ticking = false;
+        const updateParallax = () => {
+            const scrollY = window.scrollY || window.pageYOffset || 0;
+            parallaxNodes.forEach((node) => {
+                const speed = Number(node.getAttribute('data-parallax-speed') || 0);
+                const offset = Math.round(scrollY * speed);
+                node.style.transform = `translate3d(0, ${offset}px, 0)`;
+            });
+            ticking = false;
+        };
+
+        const handleScroll = () => {
+            if (ticking) {
+                return;
+            }
+            ticking = true;
+            window.requestAnimationFrame(updateParallax);
+        };
+
+        updateParallax();
+        window.addEventListener('scroll', handleScroll, { passive: true });
+
+        return () => {
+            window.removeEventListener('scroll', handleScroll);
+            parallaxNodes.forEach((node) => {
+                node.style.transform = '';
+            });
+        };
+    }, []);
+
     function handleQuickTrack() {
         const result = lookupTracking(quickReference, language);
 
@@ -653,11 +694,11 @@ function HomePage({ copy, language }) {
     }
 
     return (
-        <main className="page-enter">
+        <main className="page-enter home-scroll-experience">
             <HomeAnnouncementCarousel />
 
-            <section className="hero-section hero-home">
-                <div className="hero-media"></div>
+            <section className="hero-section hero-home snap-section">
+                <div className="hero-media" data-parallax-speed="0.14"></div>
                 <div className="container hero-grid">
                     <div className="hero-copy">
                         <p className="eyebrow">{copy.heroEyebrow}</p>
@@ -669,7 +710,7 @@ function HomePage({ copy, language }) {
                         </div>
                     </div>
 
-                    <div className="hero-panel slide-up-card">
+                    <div className="hero-panel hero-panel-sticky slide-up-card">
                         <div className="quick-track-card hero-quick-track">
                             <h2>Quick Tracking</h2>
                             <p>Track your package instantly from the home page.</p>
@@ -696,7 +737,7 @@ function HomePage({ copy, language }) {
                             </div>
                         </div>
 
-                        <div className="floating-card">
+                        <div className="floating-card" data-parallax-speed="-0.06">
                             <span className="card-kicker">{copy.routeKicker}</span>
                             <h2>USA <span>to</span> Kinshasa</h2>
                             <p>{copy.routeText}</p>
@@ -704,12 +745,12 @@ function HomePage({ copy, language }) {
                                 {copy.routePoints.map((point) => <span key={point}>{point}</span>)}
                             </div>
                         </div>
-                        <img className="hero-logo" src={getAssetHref('Logo/logo-1.png')} alt="Alkash-Trans brand mark" />
+                        <img className="hero-logo" data-parallax-speed="-0.1" src={getAssetHref('Logo/logo-1.png')} alt="Alkash-Trans brand mark" />
                     </div>
                 </div>
             </section>
 
-            <section className="section trust-strip">
+            <section className="section trust-strip snap-section">
                 <div className="container home-metrics">
                     {copy.heroPoints.map((point) => (
                         <article className="metric-card" key={point.value}>
@@ -720,7 +761,7 @@ function HomePage({ copy, language }) {
                 </div>
             </section>
 
-            <section className="section">
+            <section className="section snap-section">
                 <div className="container home-story-grid">
                     <article className="story-card">
                         <h2>{copy.homeSections.introTitle}</h2>
@@ -1412,6 +1453,20 @@ function SiteApp({ pageKey }) {
             return () => window.clearTimeout(timer);
         }
     }, []);
+
+    useEffect(() => {
+        const html = document.documentElement;
+        const body = document.body;
+        const isHome = pageKey === 'home';
+
+        html.classList.toggle('scroll-enhanced-home', isHome);
+        body.classList.toggle('scroll-enhanced-home', isHome);
+
+        return () => {
+            html.classList.remove('scroll-enhanced-home');
+            body.classList.remove('scroll-enhanced-home');
+        };
+    }, [pageKey]);
 
     useEffect(() => {
         if (pageKey === 'dashboard' && (!session || isAdminRole(session.role))) {
