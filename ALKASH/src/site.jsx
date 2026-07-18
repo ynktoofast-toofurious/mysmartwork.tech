@@ -398,13 +398,23 @@ function WhatsAppHeroLauncher({ onOpen }) {
     return (
         <div className="whatsapp-hero-launcher">
             <div className="island-phone-shell island-phone-preview" aria-hidden="true">
-                <div className="island-phone-notch">
-                    <span>WhatsApp Island Demo</span>
-                    <strong>&#9679; Live</strong>
+                <div className="island-status-bar">
+                    <span>9:41</span>
+                    <span className="island-status-icons">
+                        <svg width="15" height="11" viewBox="0 0 18 12" fill="none" aria-hidden="true"><rect x="0" y="7" width="3" height="5" rx="0.5" fill="currentColor"/><rect x="5" y="5" width="3" height="7" rx="0.5" fill="currentColor"/><rect x="10" y="3" width="3" height="9" rx="0.5" fill="currentColor"/><rect x="15" y="0" width="3" height="12" rx="0.5" fill="currentColor"/></svg>
+                        <svg width="16" height="11" viewBox="0 0 24 16" fill="none" aria-hidden="true"><rect x="0.5" y="0.5" width="20" height="11" rx="2.5" stroke="currentColor"/><rect x="2" y="2" width="17" height="8" rx="1.5" fill="currentColor"/><rect x="21.5" y="4" width="2" height="4" rx="1" fill="currentColor"/></svg>
+                    </span>
+                </div>
+                <div className="island-chat-header">
+                    <span className="island-avatar">A</span>
+                    <div className="island-header-text">
+                        <strong>Alkash Assistant</strong>
+                        <span className="island-status-online">Online</span>
+                    </div>
                 </div>
                 <div className="island-phone-screen">
-                    <div className="island-chat-header">Try the AI demo</div>
                     <div className="island-chat-thread">
+                        <span className="island-date-pill">Today</span>
                         <div className="island-bubble assistant">Hi! Ask me about routes, pricing, or your shipment status.</div>
                         <div className="island-bubble user">Track ATX-2047</div>
                     </div>
@@ -540,7 +550,7 @@ function HomeAnnouncementCarousel() {
     );
 }
 
-function WhatsAppIslandDemo() {
+function WhatsAppIslandDemo({ onBack }) {
     const [messages, setMessages] = useState([
         {
             role: 'assistant',
@@ -618,14 +628,30 @@ function WhatsAppIslandDemo() {
     return (
         <div className="quick-track-card whatsapp-island-card">
             <div className="island-phone-shell" aria-label="WhatsApp AI demo phone">
-                <div className="island-phone-notch">
-                    <span>WhatsApp Island Demo</span>
-                    <strong>OpenAI</strong>
+                <div className="island-status-bar">
+                    <span>9:41</span>
+                    <span className="island-status-icons">
+                        <svg width="15" height="11" viewBox="0 0 18 12" fill="none" aria-hidden="true"><rect x="0" y="7" width="3" height="5" rx="0.5" fill="currentColor"/><rect x="5" y="5" width="3" height="7" rx="0.5" fill="currentColor"/><rect x="10" y="3" width="3" height="9" rx="0.5" fill="currentColor"/><rect x="15" y="0" width="3" height="12" rx="0.5" fill="currentColor"/></svg>
+                        <svg width="16" height="11" viewBox="0 0 24 16" fill="none" aria-hidden="true"><rect x="0.5" y="0.5" width="20" height="11" rx="2.5" stroke="currentColor"/><rect x="2" y="2" width="17" height="8" rx="1.5" fill="currentColor"/><rect x="21.5" y="4" width="2" height="4" rx="1" fill="currentColor"/></svg>
+                    </span>
+                </div>
+
+                <div className="island-chat-header">
+                    {onBack ? (
+                        <button type="button" className="island-back-btn" aria-label="Back" onClick={onBack}>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6"/></svg>
+                        </button>
+                    ) : null}
+                    <span className="island-avatar" aria-hidden="true">A</span>
+                    <div className="island-header-text">
+                        <strong>Alkash Assistant</strong>
+                        <span className="island-status-online">Online</span>
+                    </div>
                 </div>
 
                 <div className="island-phone-screen">
-                    <div className="island-chat-header">Demo conversation</div>
                     <div className="island-chat-thread">
+                        <span className="island-date-pill">Today</span>
                         {messages.map((message, index) => (
                             <div key={`${message.role}-${index}`} className={`island-bubble ${message.role}`}>
                                 {message.text}
@@ -639,11 +665,11 @@ function WhatsAppIslandDemo() {
                         type="text"
                         value={draft}
                         onChange={(event) => setDraft(event.target.value)}
-                        placeholder="Type your WhatsApp demo message..."
+                        placeholder="Type a message"
                         maxLength={500}
                     />
-                    <button className="button button-primary" type="submit" disabled={busy}>
-                        {busy ? 'Sending...' : 'Send'}
+                    <button className="island-send-btn" type="submit" disabled={busy} aria-label={busy ? 'Sending…' : 'Send'}>
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 20l18-8L3 4v6l12 2-12 2z"/></svg>
                     </button>
                 </form>
 
@@ -1231,7 +1257,7 @@ function ContactPage({ copy }) {
                 <div className="island-overlay" role="dialog" aria-modal="true" aria-label="WhatsApp AI chat">
                     <div className="island-overlay-panel">
                         <button className="island-overlay-close" type="button" onClick={() => setShowIslandPhone(false)}>Close</button>
-                        <WhatsAppIslandDemo />
+                        <WhatsAppIslandDemo onBack={() => setShowIslandPhone(false)} />
                     </div>
                 </div>,
                 document.body
