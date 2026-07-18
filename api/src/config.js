@@ -5,6 +5,9 @@ dotenv.config();
 export const config = {
   port: Number(process.env.PORT || 4000),
   publicBaseUrl: process.env.PUBLIC_BASE_URL || "",
+  ai: {
+    shipmentProvider: String(process.env.SHIPMENT_AI_PROVIDER || "auto").toLowerCase()
+  },
   database: {
     connectionString:
       process.env.DATABASE_URL ||
@@ -33,5 +36,9 @@ export const config = {
   openai: {
     apiKey: process.env.OPENAI_API_KEY || "",
     model: process.env.OPENAI_MODEL || "gpt-4o-mini"
+  },
+  gemini: {
+    apiKey: process.env.GEMINI_API_KEY || "",
+    model: process.env.GEMINI_MODEL || "gemini-1.5-flash"
   }
 };

@@ -241,6 +241,9 @@ Required environment variables in `api/.env`:
 - `WHATSAPP_DAILY_MESSAGE_ALERT_THRESHOLD` (optional early warning level, default `240`)
 - `OPENAI_API_KEY`
 - `OPENAI_MODEL` (default `gpt-4o-mini`)
+- `GEMINI_API_KEY` (used by ALKASH shipment/quote webchat)
+- `GEMINI_MODEL` (default `gemini-1.5-flash`)
+- `SHIPMENT_AI_PROVIDER` (`auto`, `gemini`, or `openai`; default `auto` and prefers Gemini)
 
 Meta webhook setup values:
 

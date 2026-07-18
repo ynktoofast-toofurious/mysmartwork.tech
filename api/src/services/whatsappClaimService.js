@@ -727,33 +727,65 @@ function shipmentFallbackReply(messageText) {
   return "I am Alkash shipping assistant. I can help with shipment updates and quote requests. Tell me if you need tracking or a new quote.";
 }
 
-export async function processShipmentQuoteWebchat(messageText, history = []) {
-  const text = normalizeText(messageText, "");
-  const compactHistory = Array.isArray(history)
-    ? history
-        .filter((item) => item && (item.role === "user" || item.role === "assistant"))
-        .map((item) => ({ role: item.role, content: normalizeText(item.content || item.text, "") }))
-        .filter((item) => item.content)
-        .slice(-8)
-    : [];
-
-  if (!config.openai.apiKey) {
-    return {
-      responseText: shipmentFallbackReply(text),
-      complete: false
-    };
+function extractGeminiText(payload) {
+  const parts = payload?.candidates?.[0]?.content?.parts;
+  if (!Array.isArray(parts)) {
+    return "";
   }
 
-  const systemPrompt = [
-    "You are Alkash-Trans WhatsApp assistant.",
-    "Your scope is ONLY shipment support and quote support for cargo logistics.",
-    "Always keep responses concise, practical, and customer-facing.",
-    "If user asks off-topic, politely redirect to shipping/tracking/quoting.",
-    "For quote requests, ask for missing details: origin, destination, cargo type, weight/volume, and preferred shipping date.",
-    "For tracking requests, ask for shipment reference if missing.",
-    "Do not invent confirmed prices, ETAs, or booking guarantees.",
-    "Return plain text only."
-  ].join("\n");
+  return parts
+    .map((part) => normalizeText(part?.text, ""))
+    .filter(Boolean)
+    .join("\n")
+    .trim();
+}
+
+async function requestShipmentReplyWithGemini({ text, compactHistory, systemPrompt }) {
+  if (!config.gemini.apiKey) {
+    throw new Error("Gemini API key is not configured");
+  }
+
+  const model = normalizeText(config.gemini.model, "gemini-1.5-flash");
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(config.gemini.apiKey)}`;
+
+  const contents = [
+    ...compactHistory.map((item) => ({
+      role: item.role === "assistant" ? "model" : "user",
+      parts: [{ text: item.content }]
+    })),
+    { role: "user", parts: [{ text }] }
+  ];
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      systemInstruction: {
+        parts: [{ text: systemPrompt }]
+      },
+      contents,
+      generationConfig: {
+        temperature: 0.3,
+        maxOutputTokens: 300
+      }
+    })
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Gemini shipment webchat failed: ${response.status} ${errorText}`);
+  }
+
+  const data = await response.json();
+  return extractGeminiText(data);
+}
+
+async function requestShipmentReplyWithOpenAI({ text, compactHistory, systemPrompt }) {
+  if (!config.openai.apiKey) {
+    throw new Error("OpenAI API key is not configured");
+  }
 
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
@@ -778,7 +810,68 @@ export async function processShipmentQuoteWebchat(messageText, history = []) {
   }
 
   const data = await response.json();
-  const raw = normalizeText(data?.choices?.[0]?.message?.content, "");
+  return normalizeText(data?.choices?.[0]?.message?.content, "");
+}
+
+function getShipmentProviderOrder() {
+  const preferred = normalizeText(config.ai?.shipmentProvider, "auto").toLowerCase();
+  if (preferred === "openai") {
+    return ["openai", "gemini"];
+  }
+  if (preferred === "gemini") {
+    return ["gemini", "openai"];
+  }
+  return ["gemini", "openai"];
+}
+
+export async function processShipmentQuoteWebchat(messageText, history = []) {
+  const text = normalizeText(messageText, "");
+  const compactHistory = Array.isArray(history)
+    ? history
+        .filter((item) => item && (item.role === "user" || item.role === "assistant"))
+        .map((item) => ({ role: item.role, content: normalizeText(item.content || item.text, "") }))
+        .filter((item) => item.content)
+        .slice(-8)
+    : [];
+
+  if (!config.gemini.apiKey && !config.openai.apiKey) {
+    return {
+      responseText: shipmentFallbackReply(text),
+      complete: false
+    };
+  }
+
+  const systemPrompt = [
+    "You are Alkash-Trans WhatsApp assistant.",
+    "Your scope is ONLY shipment support and quote support for cargo logistics.",
+    "Always keep responses concise, practical, and customer-facing.",
+    "If user asks off-topic, politely redirect to shipping/tracking/quoting.",
+    "For quote requests, ask for missing details: origin, destination, cargo type, weight/volume, and preferred shipping date.",
+    "For tracking requests, ask for shipment reference if missing.",
+    "Do not invent confirmed prices, ETAs, or booking guarantees.",
+    "Return plain text only."
+  ].join("\n");
+
+  let raw = "";
+  const providers = getShipmentProviderOrder();
+
+  for (const provider of providers) {
+    try {
+      if (provider === "gemini" && config.gemini.apiKey) {
+        raw = await requestShipmentReplyWithGemini({ text, compactHistory, systemPrompt });
+      }
+
+      if (provider === "openai" && !raw && config.openai.apiKey) {
+        raw = await requestShipmentReplyWithOpenAI({ text, compactHistory, systemPrompt });
+      }
+
+      if (raw) {
+        break;
+      }
+    } catch (error) {
+      console.error(`[shipment-webchat] ${provider} provider failed:`, error.message);
+    }
+  }
 
   return {
     responseText: raw || shipmentFallbackReply(text),

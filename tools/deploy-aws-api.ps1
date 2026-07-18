@@ -89,6 +89,9 @@ if (-not $envMap.ContainsKey('WHATSAPP_PHONE_NUMBER_ID')) { $envMap['WHATSAPP_PH
 if (-not $envMap.ContainsKey('WHATSAPP_GRAPH_VERSION')) { $envMap['WHATSAPP_GRAPH_VERSION'] = 'v20.0' }
 if (-not $envMap.ContainsKey('OPENAI_API_KEY')) { $envMap['OPENAI_API_KEY'] = '' }
 if (-not $envMap.ContainsKey('OPENAI_MODEL')) { $envMap['OPENAI_MODEL'] = 'gpt-4o-mini' }
+if (-not $envMap.ContainsKey('GEMINI_API_KEY')) { $envMap['GEMINI_API_KEY'] = '' }
+if (-not $envMap.ContainsKey('GEMINI_MODEL')) { $envMap['GEMINI_MODEL'] = 'gemini-1.5-flash' }
+if (-not $envMap.ContainsKey('SHIPMENT_AI_PROVIDER')) { $envMap['SHIPMENT_AI_PROVIDER'] = 'auto' }
 
 $SecretName = 'mwangaza/api/prod'
 $SecretJson = ($envMap | ConvertTo-Json -Compress)
