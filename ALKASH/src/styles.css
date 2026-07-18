@@ -2102,6 +2102,22 @@ select {
     background: var(--white);
 }
 
+.quote-add-toast {
+    position: sticky;
+    top: 0.75rem;
+    z-index: 5;
+    justify-self: start;
+    margin-bottom: 0.6rem;
+    padding: 0.55rem 0.9rem;
+    border-radius: 999px;
+    background: #21875a;
+    color: var(--white);
+    font-weight: 700;
+    font-size: 0.9rem;
+    box-shadow: 0 8px 20px rgba(33, 135, 90, 0.28);
+    animation: cardRise 0.25s ease both;
+}
+
 .service-shop-head h2,
 .service-shop-head p {
     margin: 0;
@@ -2164,7 +2180,7 @@ select {
 
 .shop-thumb {
     width: 100%;
-    height: 96px;
+    height: 140px;
     border-radius: var(--radius-sm);
     border: 1px solid var(--line);
     background: linear-gradient(160deg, #f4f8fb, #e6eff5);
@@ -2182,6 +2198,8 @@ select {
     width: 100%;
     height: 100%;
     object-fit: contain;
+    padding: 0.4rem;
+    box-sizing: border-box;
     display: block;
 }
 
@@ -2326,7 +2344,8 @@ select {
     height: 56px;
     border-radius: 0.6rem;
     border: 1px solid var(--line);
-    object-fit: cover;
+    object-fit: contain;
+    padding: 3px;
     background: var(--paper);
     flex-shrink: 0;
 }
@@ -3534,6 +3553,7 @@ select {
 
 .ask-alkash-fab.is-open {
     background: var(--blue-deep);
+    box-shadow: 0 0 0 4px rgba(29, 111, 149, 0.32), 0 14px 28px rgba(16, 35, 64, 0.32);
 }
 
 .ask-alkash-fab-ring {
@@ -3542,6 +3562,14 @@ select {
     border-radius: 50%;
     border: 2px solid rgba(29, 111, 149, 0.55);
     animation: whatsappPulse 2.4s ease-out infinite;
+}
+
+/* Stop the "come click me" pulse once the panel is already open - a
+   persistently pulsing ring on an already-active button reads as
+   "still needs attention", not "already on". */
+.ask-alkash-fab.is-open .ask-alkash-fab-ring {
+    animation: none;
+    opacity: 0;
 }
 
 .ask-alkash-fab .hover-label {
@@ -3952,6 +3980,19 @@ select {
     .section,
     .page-content {
         padding: 4rem 0;
+    }
+
+    /* Smaller hero heading + tighter padding on mobile so the page hero
+       doesn't fill the whole viewport - users can see there's more content
+       to scroll to instead of it looking like a full-screen title card. */
+    .page-hero-inner {
+        padding: 2.4rem 0 1.6rem;
+    }
+
+    .hero-copy h1,
+    .page-title {
+        font-size: clamp(1.7rem, 7vw, 2.4rem);
+        max-width: none;
     }
 }
 

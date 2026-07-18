@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { trackingData, translations } from './content.js';
 import { getAssetHref, getMaskedHref } from './routes.js';
@@ -895,11 +895,17 @@ function AskAlkashAssistant({ session }) {
                 aria-label={open ? 'Close Ask Alkash assistant' : 'Open Ask Alkash assistant'}
             >
                 <span className="ask-alkash-fab-ring" aria-hidden="true"></span>
-                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" aria-hidden="true">
-                    <path d="M12 2a7 7 0 0 0-7 7c0 3.2 1.9 5.1 3 6.2V18a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.8c1.1-1.1 3-3 3-6.2a7 7 0 0 0-7-7Z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
-                    <path d="M9.5 21h5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-                </svg>
-                <span className="hover-label">Ask Alkash</span>
+                {open ? (
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" aria-hidden="true">
+                        <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                    </svg>
+                ) : (
+                    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" aria-hidden="true">
+                        <path d="M12 2a7 7 0 0 0-7 7c0 3.2 1.9 5.1 3 6.2V18a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.8c1.1-1.1 3-3 3-6.2a7 7 0 0 0-7-7Z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+                        <path d="M9.5 21h5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+                    </svg>
+                )}
+                <span className="hover-label">{open ? 'Close' : 'Ask Alkash'}</span>
             </button>
 
             <aside
@@ -1188,6 +1194,8 @@ function ServicesPage({ copy }) {
     const [draftCount, setDraftCount] = useState(() => readQuoteDraft().reduce((sum, item) => sum + item.quantity, 0));
     const [activeTab, setActiveTab] = useState('All');
     const [imageOverrides] = useState(() => loadInventoryImageOverrides());
+    const [addedToast, setAddedToast] = useState('');
+    const toastTimerRef = useRef(null);
 
     const visibleItems = useMemo(
         () => quoteBuilderItems.filter((item) => activeTab === 'All' || item.category === activeTab),
@@ -1201,10 +1209,22 @@ function ServicesPage({ copy }) {
     function handleAddToQuote(item) {
         const updated = addItemToQuoteDraft(item);
         setDraftCount(updated.reduce((sum, entry) => sum + entry.quantity, 0));
+        setAddedToast(`✓ Added ${item.label} to your quote`);
+        if (toastTimerRef.current) {
+            clearTimeout(toastTimerRef.current);
+        }
+        toastTimerRef.current = setTimeout(() => setAddedToast(''), 2200);
     }
+
+    useEffect(() => () => {
+        if (toastTimerRef.current) {
+            clearTimeout(toastTimerRef.current);
+        }
+    }, []);
 
     return (
         <PageFrame eyebrow={copy.services.eyebrow} title={copy.services.title} intro={copy.services.intro}>
+            {addedToast ? <div className="quote-add-toast" role="status">{addedToast}</div> : null}
             <section className="service-shop-shell">
                 <div className="service-shop-head">
                     <h2>Top Savings for You</h2>
