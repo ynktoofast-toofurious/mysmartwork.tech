@@ -24,6 +24,7 @@ import {
     setUserRole
 } from './portal.js';
 import { DashboardSidebar, InventoryPage, AnnouncementsPage, SEOPage, DashboardOverview, UsersPage, loadInventoryImageOverrides } from './dashboard-components.jsx';
+import { trackPageView } from './analytics.js';
 
 const routes = [
     { key: 'home', href: getMaskedHref('home') },
@@ -633,7 +634,7 @@ function WhatsAppIslandDemo({ onBack }) {
         } catch {
             appendMessage({
                 role: 'assistant',
-                text: 'Demo fallback: API not reachable. Start the backend API to test live shipment and quote responses.'
+                text: "I'm having trouble reaching our live systems right now. Please try again shortly, or use the Ask Alkash assistant for quick help."
             });
             setApiError('Live API unavailable. Using fallback response.');
         } finally {
@@ -744,7 +745,7 @@ const askAlkashAdminFaqs = [
     {
         keywords: ['seo', 'meta', 'search engine', 'sitemap'],
         answer: 'Manage page titles, meta descriptions, and search settings from the SEO tab.',
-        action: { label: 'Open SEO Settings', href: `${getMaskedHref('admin')}#seo` }
+        action: { label: 'Open SEO Stats', href: `${getMaskedHref('admin')}#seo` }
     },
     {
         keywords: ['user', 'users', 'role', 'permission', 'access'],
@@ -853,7 +854,7 @@ function AskAlkashAssistant({ session }) {
         ? [
             { label: 'Edit inventory pictures', href: `${getMaskedHref('admin')}#inventory` },
             { label: 'Manage announcements', href: `${getMaskedHref('admin')}#announcements` },
-            { label: 'SEO settings', href: `${getMaskedHref('admin')}#seo` },
+            { label: 'SEO stats', href: `${getMaskedHref('admin')}#seo` },
             { label: 'Manage users', href: `${getMaskedHref('admin')}#users` }
         ]
         : [
@@ -1729,7 +1730,6 @@ function LoginPage({ onSessionChange }) {
                 <label><span>Password</span><input name="password" type="password" required /></label>
                 <button className="button button-primary" type="submit">Login</button>
                 <p className="form-feedback">{feedback}</p>
-                <p className="hint-note">Demo admin credentials: admin@alkashtrans.com / admin123</p>
             </form>
         </PageFrame>
     );
@@ -1815,7 +1815,7 @@ function AdminDashboardPage({ session }) {
     }
 
     return (
-        <PageFrame compact eyebrow="Admin" title="Platform Dashboard" intro="Manage inventory, announcements, and SEO settings from one compact view.">
+        <PageFrame compact eyebrow="Admin" title="Platform Dashboard" intro="Manage inventory, announcements, and SEO stats from one compact view.">
             <div className="admin-dashboard-layout">
                 <DashboardSidebar activeTab={activeTab} onTabChange={changeTab} session={session} />
                 <main className="dashboard-main">
@@ -1929,6 +1929,10 @@ function SiteApp({ pageKey }) {
             html.classList.remove('scroll-enhanced-home');
             body.classList.remove('scroll-enhanced-home');
         };
+    }, [pageKey]);
+
+    useEffect(() => {
+        trackPageView(pageKey);
     }, [pageKey]);
 
     useEffect(() => {

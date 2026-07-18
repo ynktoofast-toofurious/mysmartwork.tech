@@ -4,6 +4,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { uploadToS3, archiveAnnouncementToS3 } from './s3-utils.js';
 import { processImage, saveImageToLibrary, getImageLibrary, deleteImageFromLibrary, incrementImageUsage } from './image-utils.js';
+import { loadPageViewStats, PAGE_VIEW_LABELS, getViewsInLastHours } from './analytics.js';
 
 const sidebarSections = [
     {
@@ -28,7 +29,7 @@ const sidebarSections = [
     {
         label: 'Settings',
         items: [
-            { id: 'seo', label: 'SEO Settings', icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg> }
+            { id: 'seo', label: 'SEO Stats', icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg> }
         ]
     }
 ];
@@ -110,11 +111,6 @@ export function DashboardOverview({ session, health }) {
                 <p className="dash-page-sub">Platform health and activity overview</p>
             </div>
 
-            <div className="dash-alert-bar">
-                <span className="dash-alert-icon">ℹ</span>
-                <span>All images, announcements, and quotes are stored in <strong>AWS S3</strong>. Zero local storage.</span>
-            </div>
-
             <div className="dash-metrics-grid">
                 {metrics.map(m => (
                     <div key={m.label} className="dash-metric-card">
@@ -142,10 +138,6 @@ export function DashboardOverview({ session, health }) {
                 <div className="dash-info-row">
                     <span className="dash-info-label">Email</span>
                     <span className="dash-info-value">{session?.email}</span>
-                </div>
-                <div className="dash-info-row">
-                    <span className="dash-info-label">Storage</span>
-                    <span className="dash-info-value">AWS S3 — <span style={{color:'#25d366',fontWeight:600}}>Active</span></span>
                 </div>
             </div>
         </div>
@@ -1000,7 +992,7 @@ export function UsersPage({ session, getUsers, getCases, featureCatalog, setUser
 }
 
 /**
- * SEO Settings Management
+ * SEO Stats - Meta Tag Settings + Page Visit Statistics
  */
 export function SEOPage({ session }) {
     const [seoData, setSeoData] = useState(() => {
@@ -1013,23 +1005,103 @@ export function SEOPage({ session }) {
             canonicalUrl: 'https://www.mysmartwork.tech/ALKASH-TRANS'
         };
     });
+    const [viewStats, setViewStats] = useState(() => loadPageViewStats());
+
+    useEffect(() => {
+        function refreshStats() {
+            setViewStats(loadPageViewStats());
+        }
+
+        window.addEventListener('storage', refreshStats);
+        window.addEventListener('focus', refreshStats);
+        return () => {
+            window.removeEventListener('storage', refreshStats);
+            window.removeEventListener('focus', refreshStats);
+        };
+    }, []);
 
     function handleSave(e) {
         e.preventDefault();
         localStorage.setItem('seoSettings', JSON.stringify(seoData));
     }
 
+    const pageRows = Object.entries(viewStats.byPage)
+        .map(([pageKey, entry]) => ({
+            pageKey,
+            label: PAGE_VIEW_LABELS[pageKey] || pageKey,
+            count: entry.count || 0,
+            lastVisited: entry.lastVisited
+        }))
+        .sort((a, b) => b.count - a.count);
+
+    const maxCount = pageRows.reduce((max, row) => Math.max(max, row.count), 0) || 1;
+    const viewsToday = getViewsInLastHours(viewStats, 24);
+    const viewsThisWeek = getViewsInLastHours(viewStats, 24 * 7);
+
     return (
         <div className="dash-page">
             <div className="dash-breadcrumb">
                 <span className="dash-breadcrumb-root">Alkash-Trans Admin</span>
                 <span className="dash-breadcrumb-sep">›</span>
-                <span className="dash-breadcrumb-current">SEO Settings</span>
+                <span className="dash-breadcrumb-current">SEO Stats</span>
             </div>
             <div className="dash-page-header">
-                <h2 className="dash-page-title">SEO Settings</h2>
-                <p className="dash-page-sub">Configure meta tags for better search engine visibility.</p>
+                <h2 className="dash-page-title">SEO Stats</h2>
+                <p className="dash-page-sub">Page visit statistics and meta tags for search engine visibility.</p>
             </div>
+
+            <div className="dash-metrics-grid">
+                <div className="dash-metric-card">
+                    <div className="dash-metric-icon">👁</div>
+                    <div className="dash-metric-body">
+                        <div className="dash-metric-value">{viewStats.totalViews}</div>
+                        <div className="dash-metric-label">Total Page Views</div>
+                    </div>
+                </div>
+                <div className="dash-metric-card">
+                    <div className="dash-metric-icon">📅</div>
+                    <div className="dash-metric-body">
+                        <div className="dash-metric-value">{viewsToday}</div>
+                        <div className="dash-metric-label">Views (24h)</div>
+                    </div>
+                </div>
+                <div className="dash-metric-card">
+                    <div className="dash-metric-icon">📈</div>
+                    <div className="dash-metric-body">
+                        <div className="dash-metric-value">{viewsThisWeek}</div>
+                        <div className="dash-metric-label">Views (7 days)</div>
+                    </div>
+                </div>
+                <div className="dash-metric-card">
+                    <div className="dash-metric-icon">📄</div>
+                    <div className="dash-metric-body">
+                        <div className="dash-metric-value">{pageRows.length}</div>
+                        <div className="dash-metric-label">Pages Tracked</div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="dash-section-header">Page Visit Breakdown</div>
+
+            <div className="seo-stats-table">
+                {pageRows.length ? pageRows.map((row) => (
+                    <div className="seo-stats-row" key={row.pageKey}>
+                        <div className="seo-stats-row-head">
+                            <span className="seo-stats-page-name">{row.label}</span>
+                            <span className="seo-stats-page-count">{row.count} views</span>
+                        </div>
+                        <div className="seo-stats-bar-track">
+                            <div className="seo-stats-bar-fill" style={{ width: `${Math.max(4, (row.count / maxCount) * 100)}%` }} />
+                        </div>
+                        <span className="seo-stats-last-visited">
+                            Last visited: {row.lastVisited ? new Date(row.lastVisited).toLocaleString() : '—'}
+                        </span>
+                    </div>
+                )) : (
+                    <p className="dash-page-sub">No page visits recorded yet.</p>
+                )}
+            </div>
+
         <div className="dashboard-panel seo-panel">
 
             <div className="seo-form">
