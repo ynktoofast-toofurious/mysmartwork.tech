@@ -664,6 +664,29 @@ function HomePage({ copy, language }) {
         };
     }, []);
 
+    useEffect(() => {
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const revealNodes = Array.from(document.querySelectorAll('.home-scroll-experience .section.snap-section, .home-scroll-experience .announcement-carousel-wrap.snap-section'));
+
+        if (prefersReducedMotion || !revealNodes.length || typeof IntersectionObserver === 'undefined') {
+            revealNodes.forEach((node) => node.classList.add('in-view'));
+            return undefined;
+        }
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    entry.target.classList.toggle('in-view', entry.isIntersecting);
+                });
+            },
+            { threshold: 0.2, rootMargin: '0px 0px -10% 0px' }
+        );
+
+        revealNodes.forEach((node) => observer.observe(node));
+
+        return () => observer.disconnect();
+    }, []);
+
     function handleQuickTrack() {
         const result = lookupTracking(quickReference, language);
 

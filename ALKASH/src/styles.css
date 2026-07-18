@@ -3446,17 +3446,8 @@ select {
 /* Home scroll experience enhancements */
 html.scroll-enhanced-home {
     scroll-behavior: smooth;
-    scroll-snap-type: y proximity;
+    scroll-snap-type: y mandatory;
     scroll-padding-top: var(--header-offset, 110px);
-}
-
-/* Mandatory snapping only where a viewport can comfortably fit a full
-   section, so the "locked into place" feel stays consistent instead of
-   trapping scroll on short/cramped viewports. */
-@media (min-width: 900px) and (min-height: 640px) {
-    html.scroll-enhanced-home {
-        scroll-snap-type: y mandatory;
-    }
 }
 
 body.scroll-enhanced-home .home-scroll-experience {
@@ -3466,13 +3457,6 @@ body.scroll-enhanced-home .home-scroll-experience {
 body.scroll-enhanced-home .snap-section {
     scroll-snap-align: start;
     scroll-snap-stop: always;
-    min-height: max(72vh, 520px);
-}
-
-body.scroll-enhanced-home .section.snap-section,
-body.scroll-enhanced-home .announcement-carousel-wrap.snap-section {
-    display: flex;
-    align-items: center;
 }
 
 /* .hero-section normally ships a transform-based entrance animation and
@@ -3482,24 +3466,27 @@ body.scroll-enhanced-home .announcement-carousel-wrap.snap-section {
    to an opacity-only reveal and opens up the overflow while the enhanced
    home experience is active. */
 body.scroll-enhanced-home .hero-section.snap-section {
-    animation: homeSectionReveal 0.5s ease both;
+    animation: none;
     transform: none;
     overflow: visible;
+    opacity: 1;
 }
 
-body.scroll-enhanced-home .section.snap-section {
-    animation: homeSectionReveal 0.5s ease both;
-    transform: none;
+/* Sections fade + rise into place as they cross into view (toggled by an
+   IntersectionObserver in JS via the .in-view class), instead of firing a
+   single invisible animation at mount before the section is even scrolled
+   to. This is what actually makes the scroll experience feel alive. */
+body.scroll-enhanced-home .section.snap-section,
+body.scroll-enhanced-home .announcement-carousel-wrap.snap-section {
+    opacity: 0;
+    transform: translateY(36px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
 }
 
-@keyframes homeSectionReveal {
-    from {
-        opacity: 0;
-    }
-
-    to {
-        opacity: 1;
-    }
+body.scroll-enhanced-home .section.snap-section.in-view,
+body.scroll-enhanced-home .announcement-carousel-wrap.snap-section.in-view {
+    opacity: 1;
+    transform: translateY(0);
 }
 
 body.scroll-enhanced-home .hero-panel-sticky {
@@ -3516,6 +3503,13 @@ body.scroll-enhanced-home [data-parallax-speed] {
     html.scroll-enhanced-home {
         scroll-behavior: auto;
         scroll-snap-type: none;
+    }
+
+    body.scroll-enhanced-home .section.snap-section,
+    body.scroll-enhanced-home .announcement-carousel-wrap.snap-section {
+        opacity: 1;
+        transform: none;
+        transition: none;
     }
 
     body.scroll-enhanced-home [data-parallax-speed] {
