@@ -757,8 +757,7 @@ select {
     width: 100%;
     border-radius: 999px;
     border: 1px solid rgba(148, 163, 184, 0.5);
-    padding: 0.68rem 0.9rem;
-    background: #f8fafc;
+    padding: 0.68rem 0.9rem;    background: #f8fafc;
     color: #0f172a;
 }
 
@@ -776,6 +775,110 @@ select {
     margin: 0.5rem 0 0;
     font-size: 0.75rem;
     color: #dc2626;
+}
+
+.whatsapp-hero-launcher {
+    position: relative;
+    width: min(280px, 100%);
+}
+
+.island-phone-preview {
+    transform: rotate(-2deg);
+    box-shadow: 0 26px 40px rgba(15, 23, 32, 0.28);
+}
+
+.island-phone-preview .island-chat-thread {
+    max-height: none;
+    overflow-y: visible;
+}
+
+.whatsapp-launch-button {
+    position: absolute;
+    right: -0.6rem;
+    bottom: -0.6rem;
+    width: 60px;
+    height: 60px;
+    display: grid;
+    place-items: center;
+    border: none;
+    border-radius: 50%;
+    background: #1daa61;
+    color: var(--white);
+    cursor: pointer;
+    box-shadow: 0 12px 24px rgba(29, 170, 97, 0.38);
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.whatsapp-launch-button:hover,
+.whatsapp-launch-button:focus-visible {
+    transform: scale(1.06);
+    box-shadow: 0 16px 28px rgba(29, 170, 97, 0.46);
+}
+
+.whatsapp-launch-ring {
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    border: 2px solid rgba(29, 170, 97, 0.45);
+    animation: whatsappPulse 2.2s ease-out infinite;
+}
+
+@keyframes whatsappPulse {
+    0% {
+        transform: scale(0.85);
+        opacity: 0.75;
+    }
+
+    100% {
+        transform: scale(1.35);
+        opacity: 0;
+    }
+}
+
+.island-overlay {
+    animation: islandOverlayFade 0.2s ease both;
+}
+
+.island-overlay-panel {
+    animation: islandSplitOpen 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+    transform-origin: center;
+}
+
+@keyframes islandOverlayFade {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes islandSplitOpen {
+    0% {
+        opacity: 0;
+        transform: scaleY(0.08) scaleX(0.75);
+    }
+
+    55% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 1;
+        transform: scaleY(1) scaleX(1);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .whatsapp-launch-ring {
+        animation: none;
+    }
+
+    .island-overlay,
+    .island-overlay-panel {
+        animation: none;
+    }
 }
 
 .trust-strip,
@@ -2188,6 +2291,32 @@ select {
 
 .page-hero-inner {
     padding: 4.6rem 0 3rem;
+}
+
+.page-hero-inner-split {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(260px, 0.85fr);
+    gap: 2.5rem;
+    align-items: center;
+}
+
+.page-hero-copy {
+    min-width: 0;
+}
+
+.page-hero-aside {
+    display: flex;
+    justify-content: center;
+}
+
+@media (max-width: 900px) {
+    .page-hero-inner-split {
+        grid-template-columns: 1fr;
+    }
+
+    .page-hero-aside {
+        order: -1;
+    }
 }
 
 .page-shell.compact .page-hero-inner {

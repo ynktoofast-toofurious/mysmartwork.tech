@@ -373,20 +373,55 @@ function Header({ copy, pageKey, language, setLanguage, session, onLogout }) {
     );
 }
 
-function PageFrame({ eyebrow, title, intro, children, compact = false }) {
+function PageFrame({ eyebrow, title, intro, children, compact = false, heroAside = null }) {
     return (
         <main className={`page-shell page-enter${compact ? ' compact' : ''}`}>
             <section className="page-hero">
-                <div className="container page-hero-inner">
-                    {eyebrow ? <p className="eyebrow">{eyebrow}</p> : null}
-                    <h1 className="page-title">{title}</h1>
-                    {intro ? <p className="page-intro">{intro}</p> : null}
+                <div className={`container page-hero-inner${heroAside ? ' page-hero-inner-split' : ''}`}>
+                    <div className="page-hero-copy">
+                        {eyebrow ? <p className="eyebrow">{eyebrow}</p> : null}
+                        <h1 className="page-title">{title}</h1>
+                        {intro ? <p className="page-intro">{intro}</p> : null}
+                    </div>
+                    {heroAside ? <div className="page-hero-aside">{heroAside}</div> : null}
                 </div>
             </section>
             <section className="page-content">
                 <div className="container">{children}</div>
             </section>
         </main>
+    );
+}
+
+function WhatsAppHeroLauncher({ onOpen }) {
+    return (
+        <div className="whatsapp-hero-launcher">
+            <div className="island-phone-shell island-phone-preview" aria-hidden="true">
+                <div className="island-phone-notch">
+                    <span>WhatsApp Island Demo</span>
+                    <strong>&#9679; Live</strong>
+                </div>
+                <div className="island-phone-screen">
+                    <div className="island-chat-header">Try the AI demo</div>
+                    <div className="island-chat-thread">
+                        <div className="island-bubble assistant">Hi! Ask me about routes, pricing, or your shipment status.</div>
+                        <div className="island-bubble user">Track ATX-2047</div>
+                    </div>
+                </div>
+            </div>
+
+            <button
+                className="whatsapp-launch-button"
+                type="button"
+                onClick={onOpen}
+                aria-label="Open the WhatsApp AI demo phone"
+            >
+                <span className="whatsapp-launch-ring" aria-hidden="true"></span>
+                <svg viewBox="0 0 32 32" width="26" height="26" fill="currentColor" aria-hidden="true" focusable="false">
+                    <path d="M16.004 3C9.377 3 4 8.377 4 15.004c0 2.362.687 4.564 1.873 6.416L4 29l7.78-1.84a11.94 11.94 0 0 0 4.224.76c6.627 0 12.004-5.377 12.004-12.004S22.63 3 16.004 3Zm.002 21.6a9.55 9.55 0 0 1-4.87-1.33l-.35-.207-4.62 1.093 1.11-4.5-.228-.366A9.556 9.556 0 1 1 16.006 24.6Zm5.24-7.15c-.287-.144-1.696-.837-1.958-.933-.263-.096-.454-.144-.646.144-.191.287-.742.933-.91 1.124-.167.191-.335.215-.622.072-.287-.144-1.212-.447-2.31-1.428-.854-.762-1.43-1.703-1.598-1.99-.167-.287-.018-.442.126-.585.13-.13.287-.335.43-.502.144-.167.191-.287.287-.478.096-.191.048-.359-.024-.502-.072-.144-.646-1.556-.885-2.132-.233-.56-.47-.484-.646-.494l-.55-.01a1.06 1.06 0 0 0-.766.359c-.263.287-1.005.982-1.005 2.394 0 1.412 1.029 2.777 1.172 2.968.144.191 2.024 3.092 4.906 4.335.685.296 1.22.473 1.637.605.688.219 1.314.188 1.809.114.552-.082 1.696-.694 1.936-1.364.24-.67.24-1.244.167-1.364-.072-.12-.263-.191-.55-.335Z"/>
+                </svg>
+            </button>
+        </div>
     );
 }
 
@@ -1158,7 +1193,11 @@ function ContactPage({ copy }) {
     const [showIslandPhone, setShowIslandPhone] = useState(false);
 
     return (
-        <PageFrame eyebrow={copy.contact.eyebrow} title={copy.contact.title}>
+        <PageFrame
+            eyebrow={copy.contact.eyebrow}
+            title={copy.contact.title}
+            heroAside={<WhatsAppHeroLauncher onOpen={() => setShowIslandPhone(true)} />}
+        >
             <div className="contact-layout-grid">
                 <div className="contact-sidebar">
                     <article className="contact-card"><span className="label">{copy.contact.phone}</span><a href="tel:+18178846898">+1 817 884 6898</a></article>
@@ -1186,10 +1225,6 @@ function ContactPage({ copy }) {
             <div className="map-wrapper">
                 <iframe title="Kinshasa map" src="https://www.google.com/maps?q=Kinshasa%2C%20Democratic%20Republic%20of%20the%20Congo&z=10&output=embed" loading="lazy" referrerPolicy="no-referrer-when-downgrade"></iframe>
             </div>
-
-            <button className="whatsapp-float" type="button" onClick={() => setShowIslandPhone(true)}>
-                WhatsApp
-            </button>
 
             {showIslandPhone ? (
                 <div className="island-overlay" role="dialog" aria-modal="true" aria-label="WhatsApp AI chat">
