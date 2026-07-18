@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { trackingData, translations } from './content.js';
 import { getAssetHref, getMaskedHref } from './routes.js';
 import { EditModeProvider } from './edit-context.jsx';
@@ -1226,13 +1227,14 @@ function ContactPage({ copy }) {
                 <iframe title="Kinshasa map" src="https://www.google.com/maps?q=Kinshasa%2C%20Democratic%20Republic%20of%20the%20Congo&z=10&output=embed" loading="lazy" referrerPolicy="no-referrer-when-downgrade"></iframe>
             </div>
 
-            {showIslandPhone ? (
+            {showIslandPhone ? createPortal(
                 <div className="island-overlay" role="dialog" aria-modal="true" aria-label="WhatsApp AI chat">
                     <div className="island-overlay-panel">
                         <button className="island-overlay-close" type="button" onClick={() => setShowIslandPhone(false)}>Close</button>
                         <WhatsAppIslandDemo />
                     </div>
-                </div>
+                </div>,
+                document.body
             ) : null}
         </PageFrame>
     );
