@@ -152,6 +152,20 @@ export function DashboardOverview({ session, health }) {
     );
 }
 
+const INVENTORY_IMAGE_OVERRIDES_KEY = 'alkashInventoryImageOverrides';
+
+function loadInventoryImageOverrides() {
+    try {
+        return JSON.parse(localStorage.getItem(INVENTORY_IMAGE_OVERRIDES_KEY) || '{}');
+    } catch {
+        return {};
+    }
+}
+
+function saveInventoryImageOverrides(overrides) {
+    localStorage.setItem(INVENTORY_IMAGE_OVERRIDES_KEY, JSON.stringify(overrides));
+}
+
 /**
  * Inventory Management - Service Images Editor
  */
@@ -159,7 +173,8 @@ export function InventoryPage({ quoteBuilderItems, session, getServiceImageHref 
     const [services] = useState(quoteBuilderItems);
     const [uploading, setUploading] = useState(null);
     const [uploadMessage, setUploadMessage] = useState('');
-    
+    const [imageOverrides, setImageOverrides] = useState(() => loadInventoryImageOverrides());
+
     async function handleImageUpload(event, serviceKey) {
         const file = event.target.files?.[0];
         if (!file) return;
@@ -167,19 +182,41 @@ export function InventoryPage({ quoteBuilderItems, session, getServiceImageHref 
         setUploading(serviceKey);
         setUploadMessage('');
 
+        const processed = await processImage(file);
+        if (!processed.success) {
+            setUploadMessage(`✗ ${processed.error}`);
+            setUploading(null);
+            return;
+        }
+
+        // Show the picked picture immediately as the item's preview and keep it
+        // persisted locally, since AWS S3 upload below is only a mock endpoint.
+        setImageOverrides(prev => {
+            const next = { ...prev, [serviceKey]: processed.base64 };
+            saveInventoryImageOverrides(next);
+            return next;
+        });
+
         const path = `services/${serviceKey}.png`;
         const result = await uploadToS3(file, path);
 
-        if (result.success) {
-            setUploadMessage(`✓ ${serviceKey} image uploaded to S3`);
-        } else {
-            setUploadMessage(`✗ Upload failed: ${result.error}`);
-        }
+        setUploadMessage(result.success
+            ? `✓ ${serviceKey} preview updated and uploaded to S3`
+            : `✓ ${serviceKey} preview updated (S3 upload failed: ${result.error})`);
 
         setTimeout(() => {
             setUploading(null);
             setUploadMessage('');
         }, 3000);
+    }
+
+    function resetImage(serviceKey) {
+        setImageOverrides(prev => {
+            const next = { ...prev };
+            delete next[serviceKey];
+            saveInventoryImageOverrides(next);
+            return next;
+        });
     }
 
     return (
@@ -191,7 +228,7 @@ export function InventoryPage({ quoteBuilderItems, session, getServiceImageHref 
             </div>
             <div className="dash-page-header">
                 <h2 className="dash-page-title">Service Inventory</h2>
-                <p className="dash-page-sub">Hover any item to change its image. Uploads go directly to AWS S3.</p>
+                <p className="dash-page-sub">Tap the edit button on any item to preview and set a new picture from your device.</p>
             </div>
         <div className="dashboard-panel inventory-panel">
             
@@ -202,24 +239,36 @@ export function InventoryPage({ quoteBuilderItems, session, getServiceImageHref 
             )}
 
             <div className="inventory-grid">
-                {services.map(service => (
+                {services.map(service => {
+                    const previewSrc = imageOverrides[service.key] || getServiceImageHref(service.image);
+                    return (
                     <div key={service.key} className="inventory-card">
                         <div className="inventory-image-wrapper">
-                            <img 
-                                src={getServiceImageHref(service.image)} 
+                            <img
+                                src={previewSrc}
                                 alt={service.label}
                                 className="inventory-image"
                             />
-                            <label className="image-upload-overlay">
-                                <input 
-                                    type="file" 
-                                    accept="image/*" 
+                            <label className="image-upload-overlay" aria-label={`Edit picture for ${service.label}`}>
+                                <input
+                                    type="file"
+                                    accept="image/*"
                                     onChange={(e) => handleImageUpload(e, service.key)}
                                     disabled={uploading === service.key}
                                     hidden
                                 />
-                                <span>{uploading === service.key ? '⏳ Uploading...' : '📷 Change'}</span>
+                                <span>{uploading === service.key ? '⏳ Uploading…' : '📷 Edit picture'}</span>
                             </label>
+                            {imageOverrides[service.key] && (
+                                <button
+                                    type="button"
+                                    className="inventory-reset-image"
+                                    onClick={() => resetImage(service.key)}
+                                    title="Reset to default picture"
+                                >
+                                    Reset
+                                </button>
+                            )}
                         </div>
                         <div className="inventory-info">
                             <h4>{service.label}</h4>
@@ -227,7 +276,8 @@ export function InventoryPage({ quoteBuilderItems, session, getServiceImageHref 
                             <p className="inventory-category">{service.category}</p>
                         </div>
                     </div>
-                ))}
+                    );
+                })}
             </div>
         </div>
         </div>

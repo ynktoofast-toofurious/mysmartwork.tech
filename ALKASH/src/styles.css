@@ -1239,19 +1239,48 @@ select {
 
     .image-upload-overlay {
         position: absolute;
-        inset: 0;
-        background: rgba(16,35,64,0.65);
+        left: 0.4rem;
+        right: 0.4rem;
+        bottom: 0.4rem;
+        background: rgba(16,35,64,0.82);
+        border-radius: var(--radius-sm);
         display: grid;
         place-items: center;
+        padding: 0.4rem 0.3rem;
         cursor: pointer;
-        opacity: 0;
-        transition: opacity 0.18s;
-        font-size: 0.82rem;
+        opacity: 0.92;
+        transition: opacity 0.18s, background 0.18s;
+        font-size: 0.78rem;
         font-weight: 600;
         color: #fff;
+        text-align: center;
     }
 
-    .inventory-card:hover .image-upload-overlay { opacity: 1; }
+    .inventory-card:hover .image-upload-overlay,
+    .image-upload-overlay:focus-within {
+        opacity: 1;
+        background: rgba(16,35,64,0.94);
+    }
+
+    .inventory-reset-image {
+        position: absolute;
+        top: 0.4rem;
+        right: 0.4rem;
+        border: none;
+        border-radius: 999px;
+        padding: 0.2rem 0.55rem;
+        background: rgba(255,255,255,0.92);
+        color: var(--navy);
+        font-size: 0.68rem;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 2px 6px rgba(15,23,42,0.18);
+    }
+
+    .inventory-reset-image:hover {
+        background: #fff;
+        color: #dc2626;
+    }
 
     .inventory-info { padding: 0.7rem 0.8rem; }
 
