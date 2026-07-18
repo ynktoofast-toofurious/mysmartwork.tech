@@ -737,7 +737,7 @@ function HomePage({ copy, language }) {
                             </div>
                         </div>
 
-                        <div className="floating-card" data-parallax-speed="-0.06">
+                        <div className="floating-card">
                             <span className="card-kicker">{copy.routeKicker}</span>
                             <h2>USA <span>to</span> Kinshasa</h2>
                             <p>{copy.routeText}</p>
@@ -745,7 +745,7 @@ function HomePage({ copy, language }) {
                                 {copy.routePoints.map((point) => <span key={point}>{point}</span>)}
                             </div>
                         </div>
-                        <img className="hero-logo" data-parallax-speed="-0.1" src={getAssetHref('Logo/logo-1.png')} alt="Alkash-Trans brand mark" />
+                        <img className="hero-logo" src={getAssetHref('Logo/logo-1.png')} alt="Alkash-Trans brand mark" />
                     </div>
                 </div>
             </section>
@@ -1467,6 +1467,28 @@ function SiteApp({ pageKey }) {
             body.classList.remove('scroll-enhanced-home');
         };
     }, [pageKey]);
+
+    useEffect(() => {
+        const header = document.querySelector('.site-header');
+        if (!header) {
+            return undefined;
+        }
+
+        const setOffset = () => {
+            document.documentElement.style.setProperty('--header-offset', `${header.offsetHeight + 16}px`);
+        };
+
+        setOffset();
+
+        if (typeof ResizeObserver !== 'undefined') {
+            const observer = new ResizeObserver(setOffset);
+            observer.observe(header);
+            return () => observer.disconnect();
+        }
+
+        window.addEventListener('resize', setOffset);
+        return () => window.removeEventListener('resize', setOffset);
+    }, []);
 
     useEffect(() => {
         if (pageKey === 'dashboard' && (!session || isAdminRole(session.role))) {

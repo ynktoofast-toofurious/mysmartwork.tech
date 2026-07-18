@@ -3447,7 +3447,16 @@ select {
 html.scroll-enhanced-home {
     scroll-behavior: smooth;
     scroll-snap-type: y proximity;
-    scroll-padding-top: 104px;
+    scroll-padding-top: var(--header-offset, 110px);
+}
+
+/* Mandatory snapping only where a viewport can comfortably fit a full
+   section, so the "locked into place" feel stays consistent instead of
+   trapping scroll on short/cramped viewports. */
+@media (min-width: 900px) and (min-height: 640px) {
+    html.scroll-enhanced-home {
+        scroll-snap-type: y mandatory;
+    }
 }
 
 body.scroll-enhanced-home .home-scroll-experience {
@@ -3457,25 +3466,50 @@ body.scroll-enhanced-home .home-scroll-experience {
 body.scroll-enhanced-home .snap-section {
     scroll-snap-align: start;
     scroll-snap-stop: always;
+    min-height: max(72vh, 520px);
 }
 
-body.scroll-enhanced-home .hero-home,
 body.scroll-enhanced-home .section.snap-section,
 body.scroll-enhanced-home .announcement-carousel-wrap.snap-section {
-    min-height: max(72vh, 520px);
     display: flex;
     align-items: center;
 }
 
+/* .hero-section normally ships a transform-based entrance animation and
+   overflow:hidden. Both silently break position:sticky for the quick-track
+   panel inside it (a transformed or overflow-clipped ancestor becomes the
+   sticky containing block instead of the viewport), so this variant swaps
+   to an opacity-only reveal and opens up the overflow while the enhanced
+   home experience is active. */
+body.scroll-enhanced-home .hero-section.snap-section {
+    animation: homeSectionReveal 0.5s ease both;
+    transform: none;
+    overflow: visible;
+}
+
+body.scroll-enhanced-home .section.snap-section {
+    animation: homeSectionReveal 0.5s ease both;
+    transform: none;
+}
+
+@keyframes homeSectionReveal {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
 body.scroll-enhanced-home .hero-panel-sticky {
     position: sticky;
-    top: 120px;
+    top: var(--header-offset, 110px);
     align-self: start;
 }
 
 body.scroll-enhanced-home [data-parallax-speed] {
     will-change: transform;
-    transition: transform 0.08s linear;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -3485,7 +3519,6 @@ body.scroll-enhanced-home [data-parallax-speed] {
     }
 
     body.scroll-enhanced-home [data-parallax-speed] {
-        transition: none;
         transform: none !important;
     }
 }
